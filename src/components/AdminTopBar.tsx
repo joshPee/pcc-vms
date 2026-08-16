@@ -104,6 +104,14 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
             >
               Meetings
             </Link>
+            <Link
+              href="/admin/qr-code"
+              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+                pathname === '/admin/qr-code' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
+              }`}
+            >
+              QR Code
+            </Link>
           </nav>
 
           <div className="relative">

@@ -1,0 +1,130 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Download, Share2 } from 'lucide-react';
+import QRCode from 'qrcode';
+
+export default function QRCodePage() {
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Get the base URL for the QR code
+  const pdfUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/api/pdf` 
+    : '/api/pdf';
+
+  useEffect(() => {
+    const generateQRCode = async () => {
+      try {
+        const qrDataUrl = await QRCode.toDataURL(pdfUrl, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#123B70',
+            light: '#ffffff',
+          },
+        });
+        setQrCodeUrl(qrDataUrl);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error generating QR code:', err);
+        setError('Failed to generate QR code');
+        setLoading(false);
+      }
+    };
+
+    generateQRCode();
+  }, [pdfUrl]);
+
+  const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = qrCodeUrl;
+    link.download = 'qcc-pdf-qr-code.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'QCC PDF',
+          text: 'Scan this QR code to access the QCC PDF document',
+          url: pdfUrl,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(pdfUrl);
+      alert('PDF URL copied to clipboard!');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>PDF QR Code Generator</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center space-y-6">
+            {loading ? (
+              <div className="h-64 w-64 bg-slate-100 animate-pulse rounded-lg flex items-center justify-center">
+                <span className="text-slate-400">Generating QR Code...</span>
+              </div>
+            ) : error ? (
+              <div className="text-destructive">{error}</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-lg shadow-md">
+                  <img 
+                    src={qrCodeUrl} 
+                    alt="QR Code for PDF" 
+                    className="w-64 h-64"
+                  />
+                </div>
+                <p className="text-sm text-muted-foreground text-center">
+                  Scan this QR code to access the PDF document
+                </p>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    onClick={handleDownload}
+                    className="bg-[#123B70] hover:bg-[#0d2d52]"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download QR Code
+                  </Button>
+                  <Button 
+                    onClick={handleShare}
+                    variant="outline"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Instructions</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground space-y-2">
+          <p>1. Place your PDF file in the <code className="bg-slate-100 px-1 py-0.5 rounded">public/qcc-info.pdf</code> directory</p>
+          <p>2. The QR code will automatically point to <code className="bg-slate-100 px-1 py-0.5 rounded">/api/pdf</code> route</p>
+          <p>3. Users can scan the QR code to download or view the PDF</p>
+          <p>4. You can download the QR code image for printing or sharing</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

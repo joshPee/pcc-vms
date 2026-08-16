@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { LayoutDashboard, UserCheck, ClipboardList, BarChart3, Building2, Calendar, Users, Scan } from 'lucide-react';
+import { LayoutDashboard, UserCheck, ClipboardList, BarChart3, Building2, Calendar, Users, Scan, QrCode } from 'lucide-react';
 
 interface NavItem {
   href: string;
@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { href: '/admin/check-in', label: 'Check-In', icon: Scan },
   { href: '/admin/attendance', label: 'Attendance', icon: BarChart3 },
   { href: '/admin/meetings', label: 'Meetings', icon: Calendar },
+  { href: '/admin/qr-code', label: 'QR Code', icon: QrCode },
 ];
 
 export default function AdminSidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (open: boolean) => void }) {
