@@ -11,6 +11,15 @@ import { Button } from '@/components/ui/button';
 import { Users, CheckCircle, Clock, Percent, ArrowRight, BarChart3 } from 'lucide-react';
 
 async function getDashboardStats() {
+  if (!sql) {
+    return {
+      totalRegistered: 0,
+      totalCheckedIn: 0,
+      notCheckedIn: 0,
+      attendancePercentage: 0,
+    };
+  }
+
   const stats = await sql`
     SELECT 
       COUNT(*) as total_registered,
@@ -37,6 +46,10 @@ async function getDashboardStats() {
 }
 
 async function getActiveEvent() {
+  if (!sql) {
+    return null;
+  }
+
   const events = await sql`
     SELECT id, name, date, venue, description, status, registration_open
     FROM events
