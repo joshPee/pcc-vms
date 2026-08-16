@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
-function generateRegistrationCode(): string {
-  const randomNum = Math.floor(Math.random() * 900000) + 100000;
-  return `CTS-${randomNum}`;
-}
-
 async function isDuplicate(fullName: string, organisation: string) {
   const similar = await sql`
     SELECT full_name, organisation 
@@ -18,22 +13,30 @@ async function isDuplicate(fullName: string, organisation: string) {
 }
 
 async function getUniqueCode(): Promise<string> {
-  let code = generateRegistrationCode();
-  let attempts = 0;
-  const maxAttempts = 10;
-
-  while (attempts < maxAttempts) {
-    const existing = await sql`
-      SELECT registration_code FROM participants WHERE registration_code = ${code}
-    `;
-    if (existing.length === 0) {
-      return code;
-    }
-    code = generateRegistrationCode();
-    attempts++;
+  if (!sql) {
+    throw new Error('Database connection not available');
   }
 
-  throw new Error('Could not generate unique registration code');
+  // Get the highest existing CTS code
+  const result = await sql`
+    SELECT registration_code 
+    FROM participants 
+    WHERE registration_code LIKE 'CTS-%'
+    ORDER BY registration_code DESC 
+    LIMIT 1
+  `;
+
+  let nextNumber = 100001; // Start from 100001
+
+  if (result.length > 0) {
+    const lastCode = result[0].registration_code;
+    const lastNumber = parseInt(lastCode.replace('CTS-', ''));
+    if (!isNaN(lastNumber)) {
+      nextNumber = lastNumber + 1;
+    }
+  }
+
+  return `CTS-${nextNumber}`;
 }
 
 export async function POST(request: NextRequest) {
