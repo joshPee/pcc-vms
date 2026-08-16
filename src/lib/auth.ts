@@ -38,6 +38,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Email and password required');
         }
 
+        if (!sql) {
+          throw new Error('Database connection not available');
+        }
+
         const users = await sql`
           SELECT id, email, password_hash, name 
           FROM users 
