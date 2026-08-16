@@ -1,9 +1,27 @@
-import Link from 'next/link';
-import { sql } from '@/lib/db';
+'use client';
 
-export default async function Home() {
-  const activeEventResult = await sql`SELECT name, date, registration_open FROM events WHERE status = 'ACTIVE' LIMIT 1`;
-  const activeEvent = activeEventResult.length > 0 ? activeEventResult[0] : null;
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+
+export default function Home() {
+  const [activeEvent, setActiveEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchActiveEvent = async () => {
+      try {
+        const response = await fetch('/api/events/active');
+        const data = await response.json();
+        setActiveEvent(data);
+      } catch (error) {
+        console.error('Error fetching active event:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveEvent();
+  }, []);
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-4 sm:px-6 py-6 sm:py-8">
@@ -24,12 +42,20 @@ export default async function Home() {
         
         {/* Event Title */}
         <h2 className="font-fraunces text-lg sm:text-xl text-forest mb-3 uppercase">
-          {activeEvent ? activeEvent.name : "NO ACTIVE MEETING"}
+          {loading ? (
+            <div className="h-6 w-3/4 mx-auto bg-line/50 animate-pulse rounded-md"></div>
+          ) : (
+            activeEvent?.name || "NO ACTIVE MEETING"
+          )}
         </h2>
         
         {/* Event Date */}
         <p className="font-ibm-plex-mono text-base sm:text-lg text-brick font-medium mb-5 uppercase">
-          {activeEvent ? new Date(activeEvent.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ""}
+          {loading ? (
+            <div className="h-6 w-1/2 mx-auto bg-line/50 animate-pulse rounded-md"></div>
+          ) : (
+            activeEvent?.date ? new Date(activeEvent.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ""
+          )}
         </p>
 
         {/* Three-band Divider */}
@@ -41,7 +67,7 @@ export default async function Home() {
         />
 
         {/* Register Button */}
-        {activeEvent?.registration_open ? (
+        {!loading && activeEvent?.registration_open ? (
           <>
             <Link
               href="/register"
@@ -55,10 +81,12 @@ export default async function Home() {
               Already registered? Keep your code and present it at the registration desk.
             </p>
           </>
-        ) : (
+        ) : !loading ? (
           <div className="bg-amber-50 text-amber-800 border border-amber-200 p-4 rounded-md mb-6">
             Registration is currently closed for this event.
           </div>
+        ) : (
+          <div className="h-12 w-full bg-line/50 animate-pulse rounded-md mb-6"></div>
         )}
       </div>
     </div>
