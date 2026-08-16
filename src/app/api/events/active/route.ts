@@ -3,6 +3,14 @@ import { sql } from '@/lib/db';
 
 export async function GET() {
   try {
+    if (!sql) {
+      return NextResponse.json({
+        name: 'NO ACTIVE MEETING',
+        date: '',
+        registration_open: false
+      });
+    }
+
     const result = await sql`
       SELECT name, date, registration_open 
       FROM events 
