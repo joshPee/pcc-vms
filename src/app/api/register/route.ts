@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
 function generateRegistrationCode(): string {
-  const randomNum = Math.floor(Math.random() * 9000) + 1000;
+  const randomNum = Math.floor(Math.random() * 900000) + 100000;
   return `CTS-${randomNum}`;
 }
 

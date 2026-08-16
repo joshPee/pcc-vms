@@ -62,58 +62,6 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/admin/dashboard"
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                pathname === '/admin/dashboard' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
-              }`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/participants"
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                pathname === '/admin/participants' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
-              }`}
-            >
-              Participants
-            </Link>
-            <Link
-              href="/admin/check-in"
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                pathname === '/admin/check-in' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
-              }`}
-            >
-              Check-In
-            </Link>
-            <Link
-              href="/admin/attendance"
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                pathname === '/admin/attendance' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
-              }`}
-            >
-              Attendance
-            </Link>
-            <Link
-              href="/admin/meetings"
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                pathname === '/admin/meetings' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
-              }`}
-            >
-              Meetings
-            </Link>
-            <Link
-              href="/admin/qr-code"
-              className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
-                pathname === '/admin/qr-code' ? 'bg-[#123B70]/10 text-[#123B70] font-medium' : 'text-muted-foreground hover:bg-slate-100'
-              }`}
-            >
-              QR Code
-            </Link>
-          </nav>
-
           <div className="relative">
             <Button
               variant="ghost"
