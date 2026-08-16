@@ -1,7 +1,13 @@
 import { neon } from '@neondatabase/serverless';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is not set');
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  // During build time, we might not have DATABASE_URL
+  // This is acceptable for static pages, but will fail at runtime if not set
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('DATABASE_URL environment variable is not set');
+  }
 }
 
-export const sql = neon(process.env.DATABASE_URL);
+export const sql = databaseUrl ? neon(databaseUrl) : null as any;
