@@ -33,8 +33,8 @@ async function getDashboardStats() {
   const result = stats[0];
   const totalRegistered = parseInt(result.total_registered);
   const totalCheckedIn = parseInt(result.total_checked_in);
-  const totalExpected = parseInt(result.total_expected);
-  const notCheckedIn = 34; // Fixed target of 34 total expected participants
+  const totalExpected = 34; // Fixed target of 34 total expected participants
+  const notCheckedIn = totalExpected - totalCheckedIn; // Calculate not checked in
   const attendancePercentage = totalRegistered > 0 
     ? Math.round((totalCheckedIn / totalRegistered) * 100) 
     : 0;
