@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Share2, Image as ImageIcon } from 'lucide-react';
+import { Download, Share2, Image as ImageIcon, RefreshCw } from 'lucide-react';
 import QRCode from 'qrcode';
 
 export default function QRCodePage() {
@@ -11,33 +11,38 @@ export default function QRCodePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Get the base URL for the QR code
-  const pdfUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/pdf` 
-    : '/pdf';
+  // Get the base URL for the QR code with timestamp
+  const getPdfUrl = () => {
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/pdf?t=${Date.now()}`;
+    }
+    return `/pdf?t=${Date.now()}`;
+  };
+
+  const generateQRCode = async () => {
+    setLoading(true);
+    try {
+      const pdfUrl = getPdfUrl();
+      const qrDataUrl = await QRCode.toDataURL(pdfUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#123B70',
+          light: '#ffffff',
+        },
+      });
+      setQrCodeUrl(qrDataUrl);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error generating QR code:', err);
+      setError('Failed to generate QR code');
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const generateQRCode = async () => {
-      try {
-        const qrDataUrl = await QRCode.toDataURL(pdfUrl, {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#123B70',
-            light: '#ffffff',
-          },
-        });
-        setQrCodeUrl(qrDataUrl);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error generating QR code:', err);
-        setError('Failed to generate QR code');
-        setLoading(false);
-      }
-    };
-
     generateQRCode();
-  }, [pdfUrl]);
+  }, []);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -49,19 +54,20 @@ export default function QRCodePage() {
   };
 
   const handleShare = async () => {
+    const url = getPdfUrl();
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'QCC Image',
           text: 'Scan this QR code to access the QCC information image',
-          url: pdfUrl,
+          url: url,
         });
       } catch (err) {
         console.error('Error sharing:', err);
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(pdfUrl);
+      navigator.clipboard.writeText(url);
       alert('PDF URL copied to clipboard!');
     }
   };
@@ -122,6 +128,14 @@ export default function QRCodePage() {
                   >
                     <Share2 className="h-4 w-4 mr-2" />
                     Share
+                  </Button>
+                  <Button 
+                    onClick={generateQRCode}
+                    variant="outline"
+                    disabled={loading}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Refresh QR Code
                   </Button>
                 </div>
               </div>
