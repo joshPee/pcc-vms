@@ -23,7 +23,7 @@ export async function GET() {
     const result = stats.rows[0];
     const totalRegistered = parseInt(result.total_registered);
     const totalCheckedIn = parseInt(result.total_checked_in);
-    const totalExpected = 34; // Fixed target of 34 total expected participants
+    const totalExpected = 39; // Fixed target of 39 total expected participants (33 existing + 6 TMA)
     const totalNotCheckedIn = totalExpected - totalCheckedIn; // Calculate not checked in
     const attendancePercentage = totalRegistered > 0 
       ? Math.round((totalCheckedIn / totalRegistered) * 100) 

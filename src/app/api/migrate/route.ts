@@ -319,11 +319,40 @@ export async function POST(request: NextRequest) {
       console.log('Add registration_source constraint error:', e);
     }
 
+    // Add TMA team members
+    let tmaAdded = 0;
+    try {
+      const tmaResult = await pool.query(`
+        INSERT INTO participants (
+          registration_code,
+          full_name,
+          organisation,
+          position,
+          participant_status,
+          registration_date,
+          registration_status
+        ) VALUES
+          ('TMA-' || floor(random() * 9000 + 1000)::text, 'Hon. Ebi Bright', 'TMA', 'MCE', 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING'),
+          ('TMA-' || floor(random() * 9000 + 1000)::text, 'Francis Mensah', 'TMA', 'MCD', 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING'),
+          ('TMA-' || floor(random() * 9000 + 1000)::text, 'Jeremiah Amoafo', 'TMA', 'Metro Development Planner', 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING'),
+          ('TMA-' || floor(random() * 9000 + 1000)::text, 'Eden Gbekorvor', 'TMA', 'Metro Physical Planner', 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING'),
+          ('TMA-' || floor(random() * 9000 + 1000)::text, 'Frank Asante', 'TMA', 'PRO', 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING'),
+          ('TMA-' || floor(random() * 9000 + 1000)::text, 'Augustine Pepraf', 'TMA', 'Incoming MCD', 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING')
+        ON CONFLICT (registration_code) DO NOTHING
+        RETURNING id
+      `);
+      tmaAdded = tmaResult.rowCount || 0;
+      console.log(`Added ${tmaAdded} TMA team members`);
+    } catch (e) {
+      console.log('TMA team addition error:', e);
+    }
+
     console.log('Migration completed successfully');
     return NextResponse.json({ 
       success: true, 
       message: 'Migration completed successfully',
-      migratedRows: migratedRows
+      migratedRows: migratedRows,
+      tmaAdded: tmaAdded
     });
   } catch (error) {
     console.error('Migration error:', error);

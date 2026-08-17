@@ -33,7 +33,7 @@ async function getDashboardStats() {
   const result = stats[0];
   const totalRegistered = parseInt(result.total_registered);
   const totalCheckedIn = parseInt(result.total_checked_in);
-  const totalExpected = 34; // Fixed target of 34 total expected participants
+  const totalExpected = 39; // Fixed target of 39 total expected participants (33 existing + 6 TMA)
   const notCheckedIn = totalExpected - totalCheckedIn; // Calculate not checked in
   const attendancePercentage = totalRegistered > 0 
     ? Math.round((totalCheckedIn / totalRegistered) * 100) 
@@ -90,9 +90,9 @@ export default async function Dashboard() {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(stats.totalRegistered / 34) * 100}%` }} />
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(stats.totalRegistered / 39) * 100}%` }} />
               </div>
-              <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">target: 34</span>
+              <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">target: 39</span>
             </div>
           </div>
 

@@ -38,4 +38,11 @@ INSERT INTO participants (registration_code, full_name, organisation, position, 
 ('MSI-4269', 'Pete Brosey', 'Mercy Ships', 'Infrastructure Project Manager', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'REGISTERED', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 30),
 ('MSI-6591', 'Jeff Scace', 'Mercy Ships', 'Senior Director of Global Security', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'REGISTERED', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 31),
 ('MSI-9824', 'Gerhard Venter', 'Mercy Ships', 'Regional Security Director', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'REGISTERED', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 32),
-('MSI-3147', 'Julius Milton', 'Mercy Ships', 'Field Security Officer', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'REGISTERED', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 33);
+('MSI-3147', 'Julius Milton', 'Mercy Ships', 'Field Security Officer', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'REGISTERED', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 33),
+-- TMA Team
+('TMA-8472', 'Hon. Ebi Bright', 'TMA', 'MCE', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 34),
+('TMA-3951', 'Francis Mensah', 'TMA', 'MCD', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 35),
+('TMA-7264', 'Jeremiah Amoafo', 'TMA', 'Metro Development Planner', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 36),
+('TMA-1589', 'Eden Gbekorvor', 'TMA', 'Metro Physical Planner', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 37),
+('TMA-6420', 'Frank Asante', 'TMA', 'PRO', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 38),
+('TMA-9183', 'Augustine Pepraf', 'TMA', 'Incoming MCD', NULL, 'EXPECTED', CURRENT_TIMESTAMP, 'PENDING', 'NOT_CHECKED_IN', 'PRE_REGISTERED', 39);

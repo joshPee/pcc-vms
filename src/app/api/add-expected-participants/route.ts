@@ -21,6 +21,13 @@ const expectedParticipants = [
   { full_name: 'Mr. Onasis', position: 'Principal Security Officer' },
   { full_name: 'Dominic Gyimah', position: 'Accounts Manager' },
   { full_name: 'Agyabeng Maxwell', position: 'Audit Manager' },
+  // TMA Team
+  { full_name: 'Hon. Ebi Bright', position: 'MCE', organisation: 'TMA' },
+  { full_name: 'Francis Mensah', position: 'MCD', organisation: 'TMA' },
+  { full_name: 'Jeremiah Amoafo', position: 'Metro Development Planner', organisation: 'TMA' },
+  { full_name: 'Eden Gbekorvor', position: 'Metro Physical Planner', organisation: 'TMA' },
+  { full_name: 'Frank Asante', position: 'PRO', organisation: 'TMA' },
+  { full_name: 'Augustine Pepraf', position: 'Incoming MCD', organisation: 'TMA' },
 ];
 
 export async function POST(request: NextRequest) {
@@ -32,7 +39,10 @@ export async function POST(request: NextRequest) {
     const addedParticipants = [];
     
     for (const participant of expectedParticipants) {
-      const registration_code = `QCC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
+      // Generate code based on organisation
+      const organisation = participant.organisation || 'QCC';
+      const randomDigits = Math.floor(1000 + Math.random() * 9000); // 4 random digits
+      const registration_code = `${organisation}-${randomDigits}`;
       
       const query = `
         INSERT INTO participants (
@@ -51,7 +61,7 @@ export async function POST(request: NextRequest) {
       const values = [
         registration_code,
         participant.full_name,
-        'QCC',
+        organisation,
         participant.position,
         'EXPECTED',
         'PENDING'
