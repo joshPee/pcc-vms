@@ -17,22 +17,24 @@ async function getDashboardStats() {
       totalCheckedIn: 0,
       notCheckedIn: 0,
       attendancePercentage: 0,
+      totalExpected: 0,
     };
   }
 
   const stats = await sql`
     SELECT 
-      COUNT(*) as total_registered,
+      COUNT(*) FILTER (WHERE participant_status = 'REGISTERED') as total_registered,
       COUNT(*) FILTER (WHERE check_in_status = 'CHECKED_IN') as total_checked_in,
-      COUNT(*) FILTER (WHERE check_in_status = 'NOT_CHECKED_IN') as not_checked_in
+      COUNT(*) as total_expected
     FROM participants
-    WHERE event_id = (SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1)
+    WHERE (event_id = (SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1) OR event_id IS NULL)
   `;
 
   const result = stats[0];
   const totalRegistered = parseInt(result.total_registered);
   const totalCheckedIn = parseInt(result.total_checked_in);
-  const notCheckedIn = parseInt(result.not_checked_in);
+  const totalExpected = parseInt(result.total_expected);
+  const notCheckedIn = 34; // Fixed target of 34 total expected participants
   const attendancePercentage = totalRegistered > 0 
     ? Math.round((totalCheckedIn / totalRegistered) * 100) 
     : 0;
@@ -41,7 +43,8 @@ async function getDashboardStats() {
     totalRegistered,
     totalCheckedIn,
     notCheckedIn,
-    attendancePercentage
+    attendancePercentage,
+    totalExpected
   };
 }
 
@@ -87,9 +90,9 @@ export default async function Dashboard() {
             </div>
             <div className="flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-blue-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 rounded-full" style={{ width: '68%' }} />
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: `${(stats.totalRegistered / 34) * 100}%` }} />
               </div>
-              <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">target: 50</span>
+              <span className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">target: 34</span>
             </div>
           </div>
 

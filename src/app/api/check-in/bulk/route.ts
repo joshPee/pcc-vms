@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { pool } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { clearCache } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,6 +46,9 @@ export async function POST(request: NextRequest) {
        WHERE id = ANY($3) AND check_in_status != 'CHECKED_IN'`,
       [checkInTime, userId, participantIds]
     );
+
+    // Clear cache to reflect updated stats
+    clearCache('attendance');
 
     return NextResponse.json({ success: true, checkedIn: participantIds.length });
   } catch (error) {

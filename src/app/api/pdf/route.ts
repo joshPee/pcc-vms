@@ -4,24 +4,28 @@ import { join } from 'path';
 
 export async function GET(request: NextRequest) {
   try {
-    // Path to your PDF file - you can change this to your actual PDF
-    const pdfPath = join(process.cwd(), 'public', 'qcc-info.pdf');
+    // Check if download parameter is present
+    const { searchParams } = new URL(request.url);
+    const download = searchParams.get('download') === 'true';
     
-    // Read the PDF file
-    const pdfBuffer = await readFile(pdfPath);
+    // Path to your JPG file - you can change this to your actual image
+    const imagePath = join(process.cwd(), 'public', 'qcc-info.jpg');
     
-    // Return the PDF with appropriate headers
-    return new NextResponse(pdfBuffer, {
+    // Read the JPG file
+    const imageBuffer = await readFile(imagePath);
+    
+    // Return the JPG with appropriate headers
+    return new NextResponse(imageBuffer, {
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': 'inline; filename="qcc-info.pdf"',
-        'Content-Length': pdfBuffer.length.toString(),
+        'Content-Type': 'image/jpeg',
+        'Content-Disposition': download ? 'attachment; filename="qcc-info.jpg"' : 'inline; filename="qcc-info.jpg"',
+        'Content-Length': imageBuffer.length.toString(),
       },
     });
   } catch (error) {
-    console.error('Error serving PDF:', error);
+    console.error('Error serving image:', error);
     return NextResponse.json(
-      { error: 'PDF file not found' },
+      { error: 'Image file not found' },
       { status: 404 }
     );
   }

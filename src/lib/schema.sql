@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS participants (
   registration_source VARCHAR(20) DEFAULT 'ONLINE',
   reminder_sent BOOLEAN DEFAULT false,
   reminder_sent_at TIMESTAMP,
+  sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT valid_participant_status CHECK (participant_status IN ('EXPECTED', 'REGISTERED')),

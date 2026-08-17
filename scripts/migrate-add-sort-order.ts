@@ -17,24 +17,23 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
-async function setupDatabase() {
+async function migrateAddSortOrder() {
   try {
-    console.log('Setting up database schema...');
+    console.log('Adding sort_order column to participants table...');
     
-    const schemaPath = path.join(__dirname, '../src/lib/schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf-8');
+    // Check if column already exists
+    const checkResult = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'participants' 
+      AND column_name = 'sort_order'
+    `);
     
-    await pool.query(schema);
-    
-    console.log('Database schema setup completed!');
-    
-    // Add sort_order column if it doesn't exist
-    console.log('Adding sort_order column if needed...');
-    try {
-      await pool.query(`ALTER TABLE participants ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0`);
-      console.log('sort_order column added or already exists');
-    } catch (error) {
-      console.log('sort_order column may already exist, continuing...');
+    if (checkResult.rows.length === 0) {
+      await pool.query('ALTER TABLE participants ADD COLUMN sort_order INTEGER DEFAULT 0');
+      console.log('Successfully added sort_order column');
+    } else {
+      console.log('sort_order column already exists');
     }
     
     // Reset participants with hierarchical order
@@ -45,12 +44,13 @@ async function setupDatabase() {
     await pool.query(resetScript);
     
     console.log('Participants reset completed with hierarchical order!');
+    console.log('Migration completed successfully');
     await pool.end();
   } catch (error) {
-    console.error('Error setting up database:', error);
+    console.error('Error during migration:', error);
     await pool.end();
     process.exit(1);
   }
 }
 
-setupDatabase();
+migrateAddSortOrder();

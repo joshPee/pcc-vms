@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, Share2 } from 'lucide-react';
+import { Download, Share2, Image as ImageIcon } from 'lucide-react';
 import QRCode from 'qrcode';
 
 export default function QRCodePage() {
@@ -13,8 +13,8 @@ export default function QRCodePage() {
 
   // Get the base URL for the QR code
   const pdfUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/api/pdf` 
-    : '/api/pdf';
+    ? `${window.location.origin}/pdf` 
+    : '/pdf';
 
   useEffect(() => {
     const generateQRCode = async () => {
@@ -52,8 +52,8 @@ export default function QRCodePage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'QCC PDF',
-          text: 'Scan this QR code to access the QCC PDF document',
+          title: 'QCC Image',
+          text: 'Scan this QR code to access the QCC information image',
           url: pdfUrl,
         });
       } catch (err) {
@@ -64,6 +64,15 @@ export default function QRCodePage() {
       navigator.clipboard.writeText(pdfUrl);
       alert('PDF URL copied to clipboard!');
     }
+  };
+
+  const handleDownloadImage = () => {
+    const link = document.createElement('a');
+    link.href = '/api/pdf?download=true';
+    link.download = 'qcc-info.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -92,10 +101,17 @@ export default function QRCodePage() {
                 <p className="text-sm text-muted-foreground text-center">
                   Scan this QR code to access the PDF document
                 </p>
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-2 justify-center flex-wrap">
+                  <Button 
+                    onClick={handleDownloadImage}
+                    className="bg-[#123B70] hover:bg-[#0d2d52]"
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    Download Image
+                  </Button>
                   <Button 
                     onClick={handleDownload}
-                    className="bg-[#123B70] hover:bg-[#0d2d52]"
+                    variant="outline"
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download QR Code
@@ -119,9 +135,9 @@ export default function QRCodePage() {
           <CardTitle className="text-base">Instructions</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>1. Place your PDF file in the <code className="bg-slate-100 px-1 py-0.5 rounded">public/qcc-info.pdf</code> directory</p>
-          <p>2. The QR code will automatically point to <code className="bg-slate-100 px-1 py-0.5 rounded">/api/pdf</code> route</p>
-          <p>3. Users can scan the QR code to download or view the PDF</p>
+          <p>1. Place your JPG file in the <code className="bg-slate-100 px-1 py-0.5 rounded">public/qcc-info.jpg</code> directory</p>
+          <p>2. The QR code will automatically point to <code className="bg-slate-100 px-1 py-0.5 rounded">/pdf</code> page</p>
+          <p>3. Users can scan the QR code to view and download the JPG image</p>
           <p>4. You can download the QR code image for printing or sharing</p>
         </CardContent>
       </Card>

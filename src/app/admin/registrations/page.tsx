@@ -367,9 +367,12 @@ export default function RegistrationsPage() {
                         <th className="px-4 py-3 sm:px-6 sm:py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">
                           Position
                         </th>
+                        <th className="px-4 py-3 sm:px-6 sm:py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">
+                          Phone
+                        </th>
                         <th
                           onClick={() => handleSort('registration_date')}
-                          className="px-4 py-3 sm:px-6 sm:py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted hidden md:table-cell"
+                          className="px-4 py-3 sm:px-6 sm:py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted hidden lg:table-cell"
                         >
                           Registration Date {sortBy === 'registration_date' && (sortOrder === 'ASC' ? '↑' : '↓')}
                         </th>
@@ -409,6 +412,9 @@ export default function RegistrationsPage() {
                             {registration.position}
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-muted-foreground hidden md:table-cell">
+                            {registration.phone || '-'}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-muted-foreground hidden lg:table-cell">
                             {new Date(registration.registration_date).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">

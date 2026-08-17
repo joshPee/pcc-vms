@@ -1,15 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 
-async function isDuplicate(fullName: string, organisation: string) {
-  const similar = await sql`
-    SELECT full_name, organisation 
+// Simple fuzzy name matching function
+function calculateSimilarity(str1: string, str2: string): number {
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
+  
+  if (s1 === s2) return 1.0;
+  
+  const words1 = s1.split(/\s+/);
+  const words2 = s2.split(/\s+/);
+  
+  // Check if one string contains the other
+  if (s1.includes(s2) || s2.includes(s1)) return 0.9;
+  
+  // Compare word by word
+  let matches = 0;
+  const maxWords = Math.max(words1.length, words2.length);
+  
+  for (const word1 of words1) {
+    for (const word2 of words2) {
+      if (word1 === word2 || 
+          word1.includes(word2) || 
+          word2.includes(word1) ||
+          levenshteinDistance(word1, word2) <= 2) {
+        matches++;
+        break;
+      }
+    }
+  }
+  
+  return matches / maxWords;
+}
+
+// Simple Levenshtein distance for word comparison
+function levenshteinDistance(str1: string, str2: string): number {
+  const m = str1.length;
+  const n = str2.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+  }
+  
+  return dp[m][n];
+}
+
+async function findSimilarParticipant(fullName: string, organisation: string) {
+  const allParticipants = await sql`
+    SELECT id, registration_code, participant_status, full_name, organisation 
     FROM participants 
-    WHERE 
-      LOWER(full_name) = LOWER(${fullName}) 
-      AND LOWER(organisation) = LOWER(${organisation})
+    WHERE LOWER(organisation) = LOWER(${organisation})
+      AND participant_status = 'EXPECTED'
   `;
-  return similar.length > 0;
+  
+  const threshold = 0.7; // 70% similarity threshold
+  
+  for (const participant of allParticipants) {
+    const nameSimilarity = calculateSimilarity(fullName, participant.full_name);
+    if (nameSimilarity >= threshold) {
+      console.log(`Found similar participant: ${participant.full_name} (similarity: ${nameSimilarity.toFixed(2)})`);
+      return participant;
+    }
+  }
+  
+  return null;
 }
 
 async function getUniqueCode(): Promise<string> {
@@ -17,32 +81,38 @@ async function getUniqueCode(): Promise<string> {
     throw new Error('Database connection not available');
   }
 
-  // Get the highest existing CTS code
-  const result = await sql`
-    SELECT registration_code 
-    FROM participants 
-    WHERE registration_code LIKE 'CTS-%'
-    ORDER BY registration_code DESC 
-    LIMIT 1
-  `;
-
-  let nextNumber = 100001; // Start from 100001
-
-  if (result.length > 0) {
-    const lastCode = result[0].registration_code;
-    const lastNumber = parseInt(lastCode.replace('CTS-', ''));
-    if (!isNaN(lastNumber)) {
-      nextNumber = lastNumber + 1;
+  // Generate a unique 4-digit code
+  const generateCode = () => {
+    // Generate 4 random digits
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+      code += Math.floor(Math.random() * 10);
     }
+    return `CTS-${code}`;
+  };
+
+  // Try to generate a unique code
+  let attempts = 0;
+  const maxAttempts = 50;
+
+  while (attempts < maxAttempts) {
+    const code = generateCode();
+    const existing = await sql`
+      SELECT registration_code FROM participants WHERE registration_code = ${code}
+    `;
+    if (existing.length === 0) {
+      return code;
+    }
+    attempts++;
   }
 
-  return `CTS-${nextNumber}`;
+  throw new Error('Could not generate unique registration code');
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fullName, organisation, position, forceSubmit = false } = body;
+    const { fullName, organisation, position, phone, forceSubmit = false } = body;
 
     // Validate input
     if (!fullName || !organisation || !position) {
@@ -71,15 +141,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if participant already exists in participants table (as expected participant)
-    const existingParticipant = await sql`
-      SELECT id, registration_code, participant_status, full_name, organisation 
-      FROM participants 
-      WHERE LOWER(full_name) = LOWER(${trimmedName})
-        AND LOWER(organisation) = LOWER(${trimmedOrg})
-    `;
-
-    console.log('Registration - Existing participant check:', existingParticipant);
+    // Check for similar expected participant using fuzzy matching
+    const similarParticipant = await findSimilarParticipant(trimmedName, trimmedOrg);
+    
+    console.log('Registration - Similar participant check:', similarParticipant);
+    console.log('Looking for:', trimmedName, trimmedOrg);
 
     // Get ACTIVE event
     let event = await sql`SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1`;
@@ -97,35 +163,48 @@ export async function POST(request: NextRequest) {
     let registrationCode;
     let participantId;
 
-    if (existingParticipant.length > 0) {
-      // Participant already exists - reject duplicate registration
-      console.log('Duplicate registration rejected:', existingParticipant[0]);
-      return NextResponse.json(
-        { 
-          error: 'You have already registered for this event',
-          existingCode: existingParticipant[0].registration_code,
-          fullName: existingParticipant[0].full_name,
-          organisation: existingParticipant[0].organisation
-        },
-        { status: 409 }
-      );
-    } else {
-      // Check for duplicates in expected_attendees table
-      const duplicate = await isDuplicate(trimmedName, trimmedOrg);
-      if (duplicate && !forceSubmit) {
+    if (similarParticipant) {
+      const participant = similarParticipant;
+      console.log('Found similar participant:', participant);
+      
+      // If participant is already registered, reject duplicate
+      if (participant.participant_status === 'REGISTERED') {
+        console.log('Duplicate registration rejected:', participant);
         return NextResponse.json(
           { 
-            duplicate: true,
-            error: 'A similar registration already exists',
-            fullName: trimmedName,
-            organisation: trimmedOrg,
-            position: trimmedPos
+            error: 'You have already registered for this event',
+            existingCode: participant.registration_code,
+            fullName: participant.full_name,
+            organisation: participant.organisation
           },
           { status: 409 }
         );
       }
-
-      // Generate unique registration code
+      
+      // If participant is expected, update them to registered and use their assigned code
+      if (participant.participant_status === 'EXPECTED') {
+        console.log('Expected participant registering with code:', participant.registration_code);
+        const result = await sql`
+          UPDATE participants 
+          SET 
+            participant_status = 'REGISTERED',
+            registration_status = 'REGISTERED',
+            registration_source = 'ONLINE',
+            position = ${trimmedPos},
+            phone = ${body.phone || null}
+          WHERE id = ${participant.id}
+          RETURNING id
+        `;
+        
+        return NextResponse.json({
+          success: true,
+          registrationCode: participant.registration_code,
+          participantId: participant.id,
+          fullName: participant.full_name
+        });
+      }
+    } else {
+      // No similar participant found, generate new code and register
       registrationCode = await getUniqueCode();
 
       // Insert new participant
@@ -135,6 +214,7 @@ export async function POST(request: NextRequest) {
           full_name, 
           organisation, 
           position, 
+          phone,
           event_id,
           participant_status,
           registration_status,
@@ -145,6 +225,7 @@ export async function POST(request: NextRequest) {
           ${trimmedName}, 
           ${trimmedOrg}, 
           ${trimmedPos},
+          ${body.phone || null},
           ${eventId},
           'REGISTERED',
           'REGISTERED',

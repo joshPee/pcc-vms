@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, CheckCircle, Clock, Percent, Download } from 'lucide-react';
+import { Users, CheckCircle, Clock, Percent, Download, ArrowUpDown } from 'lucide-react';
 
 export default function AttendancePage() {
   const [stats, setStats] = useState({
@@ -21,16 +21,27 @@ export default function AttendancePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [sortBy, setSortBy] = useState('sort_order');
+  const [sortOrder, setSortOrder] = useState('ASC');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   useEffect(() => {
     fetchAttendanceData();
-  }, [searchQuery, filterStatus]);
+  }, [searchQuery, filterStatus, sortBy, sortOrder]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, filterStatus]);
+  }, [searchQuery, filterStatus, sortBy, sortOrder]);
+
+  // Refresh data every 10 seconds to keep stats updated
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAttendanceData();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [searchQuery, filterStatus, sortBy, sortOrder]);
 
   const fetchAttendanceData = async () => {
     setLoading(true);
@@ -44,6 +55,8 @@ export default function AttendancePage() {
       const params = new URLSearchParams({
         q: searchQuery,
         status: filterStatus,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
       });
 
       const response = await fetch(`/api/registrations?${params}`);
@@ -103,14 +116,14 @@ export default function AttendancePage() {
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <Label className="flex items-center gap-2 mb-1.5 text-xs">Search</Label>
                 <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Name, code, or organisation"
+                  placeholder="Name, code, organisation, or phone"
                   className="h-9 text-sm"
                 />
               </div>
@@ -125,6 +138,31 @@ export default function AttendancePage() {
                   <option value="CHECKED_IN">Checked In</option>
                   <option value="NOT_CHECKED_IN">Not Checked In</option>
                 </select>
+              </div>
+              <div>
+                <Label className="flex items-center gap-2 mb-1.5 text-xs">Sort By</Label>
+                <div className="flex gap-2">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="flex-1 h-9 px-3 py-2 border border-input bg-background rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#123B70]/20"
+                  >
+                    <option value="sort_order">Registration Order</option>
+                    <option value="registration_code">Code</option>
+                    <option value="full_name">Name</option>
+                    <option value="organisation">Organisation</option>
+                    <option value="registration_date">Registration Date</option>
+                  </select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC')}
+                    className="h-9 px-2"
+                  >
+                    <ArrowUpDown className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -159,6 +197,9 @@ export default function AttendancePage() {
                           Position
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Phone
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Registration Date
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
@@ -185,6 +226,9 @@ export default function AttendancePage() {
                             {registration.position}
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-muted-foreground hidden md:table-cell">
+                            {registration.phone || '-'}
+                          </td>
+                          <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-muted-foreground hidden lg:table-cell">
                             {new Date(registration.registration_date).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap">

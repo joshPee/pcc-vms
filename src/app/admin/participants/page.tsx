@@ -249,13 +249,6 @@ export default function ParticipantsPage() {
             <span className="hidden sm:inline">Export CSV</span>
             <span className="sm:hidden">Export</span>
           </Button>
-          <Button
-                onClick={fetchParticipants}
-                variant="outline"
-                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
-              >
-                <RefreshCw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              </Button>
             </div>
           </div>
 

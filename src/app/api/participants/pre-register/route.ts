@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { pool } from '@/lib/db';
+import { clearCache } from '@/lib/db';
 
 // Generate a unique registration code
 function generateRegistrationCode(): string {
@@ -58,6 +55,9 @@ export async function POST(request: NextRequest) {
     );
 
     console.log('Insert successful:', result.rows[0]);
+
+    // Clear cache to reflect updated data
+    clearCache('registrations');
 
     return NextResponse.json({
       success: true,

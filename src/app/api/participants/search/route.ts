@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { pool } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,11 +25,12 @@ export async function GET(request: NextRequest) {
         full_name,
         organisation,
         position,
+        phone,
         check_in_status,
         check_in_date,
         registration_source
       FROM participants
-      WHERE event_id = (SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1)
+      WHERE (event_id = (SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1) OR event_id IS NULL)
     `;
 
     const params: any[] = [];
@@ -44,7 +41,8 @@ export async function GET(request: NextRequest) {
       const paramNum = paramIndex++;
       return `(LOWER(registration_code) LIKE LOWER($${paramNum}) OR
               LOWER(full_name) LIKE LOWER($${paramNum}) OR
-              LOWER(organisation) LIKE LOWER($${paramNum}))`;
+              LOWER(organisation) LIKE LOWER($${paramNum}) OR
+              LOWER(phone) LIKE LOWER($${paramNum}))`;
     }).join(' AND ');
 
     sqlQuery += ` AND (${searchConditions})`;

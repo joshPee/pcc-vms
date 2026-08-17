@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       paramIndex++;
     }
 
-    query += ' ORDER BY p.created_at DESC';
+    query += ' ORDER BY p.sort_order ASC, p.created_at DESC';
 
     const result = await pool.query(query, params);
     return NextResponse.json(result.rows);

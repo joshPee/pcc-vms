@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'DESC';
 
     // Build the WHERE clause conditions
-    const conditions = ["event_id = (SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1)"];
+    const conditions = ["(event_id = (SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1) OR event_id IS NULL)"];
     const params: any[] = [];
     let paramIndex = 1;
 
@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     // Validate and set sort column
-    const validSortColumns = ['registration_code', 'full_name', 'organisation', 'registration_date'];
-    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'registration_date';
+    const validSortColumns = ['registration_code', 'full_name', 'organisation', 'registration_date', 'sort_order'];
+    const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'sort_order';
     const order = sortOrder === 'ASC' ? 'ASC' : 'DESC';
 
     // Build the full query
@@ -52,10 +52,12 @@ export async function GET(request: NextRequest) {
         full_name,
         organisation,
         position,
+        phone,
         registration_date,
         check_in_status,
         check_in_date,
-        registration_source
+        registration_source,
+        sort_order
       FROM participants
       ${whereClause}
       ORDER BY ${sortColumn} ${order}
@@ -64,12 +66,13 @@ export async function GET(request: NextRequest) {
     const result = await pool.query(query, params);
 
     // Generate CSV
-    const headers = ['Registration Code', 'Full Name', 'Organisation', 'Position', 'Registration Date', 'Check-in Status', 'Check-in Time', 'Source'];
+    const headers = ['Registration Code', 'Full Name', 'Organisation', 'Position', 'Phone', 'Registration Date', 'Check-in Status', 'Check-in Time', 'Source'];
     const rows = result.rows.map(row => [
       row.registration_code,
       row.full_name,
       row.organisation,
       row.position,
+      row.phone || '',
       new Date(row.registration_date).toLocaleDateString(),
       row.check_in_status === 'CHECKED_IN' ? 'Checked In' : 'Not Checked In',
       row.check_in_date ? new Date(row.check_in_date).toLocaleString() : '',

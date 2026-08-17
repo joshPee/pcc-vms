@@ -259,6 +259,7 @@ export default function CheckInPage() {
                         <p className="text-sm font-semibold text-foreground truncate">{participant.full_name}</p>
                         <p className="text-sm text-muted-foreground truncate">{participant.organisation}</p>
                         <p className="text-sm text-muted-foreground truncate">{participant.position}</p>
+                        {participant.phone && <p className="text-xs text-muted-foreground truncate">{participant.phone}</p>}
                       </div>
                       <div className="ml-4 text-right shrink-0">
                         <p className="text-sm font-medium text-foreground">{participant.registration_code}</p>

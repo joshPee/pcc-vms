@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { clearCache } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -102,6 +103,9 @@ export async function POST(request: NextRequest) {
       const hrUser = await sql`
         SELECT name FROM users WHERE id = ${hrUserId}
       `;
+
+      // Clear cache to reflect updated stats
+      clearCache('attendance');
 
       return NextResponse.json({
         success: true,
