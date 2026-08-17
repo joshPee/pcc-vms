@@ -20,6 +20,9 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'image/jpeg',
         'Content-Disposition': download ? 'attachment; filename="qcc-info.jpg"' : 'inline; filename="qcc-info.jpg"',
         'Content-Length': imageBuffer.length.toString(),
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     });
   } catch (error) {
