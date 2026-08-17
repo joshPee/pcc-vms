@@ -3,8 +3,16 @@
 import { Button } from '@/components/ui/button';
 import { Download, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function PDFPage() {
+  const [imageUrl, setImageUrl] = useState('');
+
+  useEffect(() => {
+    // Generate URL with timestamp to prevent caching
+    setImageUrl(`/api/pdf?t=${Date.now()}`);
+  }, []);
+
   return (
     <div className="min-h-screen bg-cream p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
@@ -18,7 +26,7 @@ export default function PDFPage() {
           <Button 
             onClick={() => {
               const link = document.createElement('a');
-              link.href = '/api/pdf?download=true';
+              link.href = `/api/pdf?download=true&t=${Date.now()}`;
               link.download = 'qcc-info.jpg';
               document.body.appendChild(link);
               link.click();
@@ -38,12 +46,14 @@ export default function PDFPage() {
           </div>
           
           <div className="p-4 flex justify-center">
-            <img
-              src="/api/pdf"
-              alt="QCC Information"
-              className="max-w-full h-auto"
-              style={{ maxHeight: 'calc(100vh - 300px)' }}
-            />
+            {imageUrl && (
+              <img
+                src={imageUrl}
+                alt="QCC Information"
+                className="max-w-full h-auto"
+                style={{ maxHeight: 'calc(100vh - 300px)' }}
+              />
+            )}
           </div>
         </div>
       </div>

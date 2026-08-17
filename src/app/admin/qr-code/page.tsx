@@ -11,10 +11,10 @@ export default function QRCodePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Get the base URL for the QR code with cache-busting timestamp
+  // Get the base URL for the QR code
   const pdfUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/pdf?t=${Date.now()}` 
-    : `/pdf?t=${Date.now()}`;
+    ? `${window.location.origin}/pdf` 
+    : '/pdf';
 
   useEffect(() => {
     const generateQRCode = async () => {
