@@ -35,6 +35,23 @@ export async function POST(request: NextRequest) {
     }
     const userId = userResult.rows[0].id;
 
+    // Check if all participants have completed registration
+    const participantsCheck = await pool.query(
+      `SELECT id, full_name, registration_status 
+       FROM participants 
+       WHERE id = ANY($1)`,
+      [participantIds]
+    );
+
+    const notRegistered = participantsCheck.rows.filter(p => p.registration_status !== 'REGISTERED');
+    if (notRegistered.length > 0) {
+      const notRegisteredNames = notRegistered.map(p => p.full_name).join(', ');
+      return NextResponse.json(
+        { error: `The following participants have not completed registration: ${notRegisteredNames}` },
+        { status: 400 }
+      );
+    }
+
     // Bulk check-in participants
     const checkInTime = new Date();
     

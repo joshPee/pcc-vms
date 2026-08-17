@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     try {
       // First check if participant exists and their current status
       const participant = await sql`
-        SELECT id, full_name, registration_code, check_in_status
+        SELECT id, full_name, registration_code, check_in_status, participant_status, registration_status
         FROM participants
         WHERE id = ${participantId}
       `;
@@ -41,6 +41,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'Participant not found' },
           { status: 404 }
+        );
+      }
+
+      // Only allow check-in for participants who have completed registration
+      if (participant[0].registration_status !== 'REGISTERED') {
+        return NextResponse.json(
+          { error: 'Participant has not completed registration. Please complete registration first.' },
+          { status: 400 }
         );
       }
 
