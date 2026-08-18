@@ -1,5 +1,8 @@
 -- Reset participants to the official QCC meeting list
--- This script deletes all existing participants and inserts the official list
+-- This script deletes all existing participants and check-ins, then inserts the official list
+
+-- Delete all existing check-ins
+DELETE FROM check_ins;
 
 -- Delete all existing participants
 DELETE FROM participants;

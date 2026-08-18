@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS participants (
   registration_status VARCHAR(50) DEFAULT 'PENDING',
   check_in_status VARCHAR(50) DEFAULT 'NOT_CHECKED_IN',
   check_in_date TIMESTAMP,
-  checked_in_by INTEGER REFERENCES users(id),
+  checked_in_by INTEGER,
   registration_source VARCHAR(20) DEFAULT 'ONLINE',
   reminder_sent BOOLEAN DEFAULT false,
   reminder_sent_at TIMESTAMP,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS expected_attendees (
 CREATE TABLE IF NOT EXISTS check_ins (
   id SERIAL PRIMARY KEY,
   participant_id INTEGER UNIQUE NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
-  user_id INTEGER NOT NULL REFERENCES users(id),
+  user_id INTEGER NOT NULL,
   check_in_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
