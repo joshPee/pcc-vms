@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const filterSource = searchParams.get('source') || 'ALL';
     const filterPreset = searchParams.get('preset') || 'ALL';
     const searchByCode = searchParams.get('searchByCode') === 'true';
-    const sortBy = searchParams.get('sortBy') || 'registration_code';
+    const sortBy = searchParams.get('sortBy') || 'sort_order';
     const sortOrder = searchParams.get('sortOrder') || 'ASC';
 
     // Create cache key based on query parameters
