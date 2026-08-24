@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('q');
+    const checkInStatus = searchParams.get('checkInStatus');
 
     if (!query || query.trim().length < 3) {
       return NextResponse.json([]);
@@ -47,11 +48,18 @@ export async function GET(request: NextRequest) {
 
     sqlQuery += ` AND (${searchConditions})`;
 
-    // Push parameters for each word
+    // Push parameters for each word first
     searchWords.forEach(word => {
       const searchTerm = `%${word}%`;
       params.push(searchTerm);
     });
+
+    // Filter by check-in status if provided
+    if (checkInStatus && checkInStatus !== 'ALL') {
+      sqlQuery += ` AND check_in_status = $${paramIndex}`;
+      params.push(checkInStatus);
+      paramIndex++;
+    }
 
     sqlQuery += ` ORDER BY full_name LIMIT 20`;
 
