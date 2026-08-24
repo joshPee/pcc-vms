@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
 
     const result = await pool.query(sqlQuery, params);
 
+    console.log('Search results:', result.rows);
     return NextResponse.json(result.rows);
   } catch (error) {
     console.error('Search error:', error);

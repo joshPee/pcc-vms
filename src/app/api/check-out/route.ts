@@ -18,6 +18,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { participantId, notes } = body;
 
+    console.log('Check-out request body:', body);
+    console.log('Participant ID:', participantId);
+
     if (!participantId) {
       return NextResponse.json(
         { error: 'Participant ID is required' },

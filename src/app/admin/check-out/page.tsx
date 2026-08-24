@@ -93,10 +93,20 @@ export default function CheckOutPage() {
     setAlreadyCheckedOut(false);
 
     try {
+      console.log('Checking out visitor:', visitor);
+      const participantId = visitor.id || visitor.participant_id;
+      console.log('Participant ID:', participantId);
+      
+      if (!participantId) {
+        setError('Invalid visitor data - missing ID');
+        setLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/check-out', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantId: visitor.id, notes }),
+        body: JSON.stringify({ participantId, notes }),
       });
 
       const data = await response.json();
