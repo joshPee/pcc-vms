@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CheckCircle, AlertCircle, Search, LogOut, XCircle } from 'lucide-react';
+import ProtectedPage from '@/components/ProtectedPage';
 
 export default function CheckOutPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -148,7 +149,8 @@ export default function CheckOutPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <ProtectedPage resourcePath="/admin/check-out">
+      <div className="space-y-6">
       {/* Search Section */}
       <Card>
         <div className="p-6">
@@ -406,5 +408,6 @@ export default function CheckOutPage() {
         </Card>
       )}
     </div>
+    </ProtectedPage>
   );
 }
