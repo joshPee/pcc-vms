@@ -94,11 +94,11 @@ export default function CheckOutPage() {
 
     try {
       console.log('Checking out visitor:', visitor);
-      const participantId = visitor.id || visitor.participant_id;
-      console.log('Participant ID:', participantId);
+      const registrationCode = visitor.registration_code;
+      console.log('Registration Code:', registrationCode);
       
-      if (!participantId) {
-        setError('Invalid visitor data - missing ID');
+      if (!registrationCode) {
+        setError('Invalid visitor data - missing registration code');
         setLoading(false);
         return;
       }
@@ -106,7 +106,7 @@ export default function CheckOutPage() {
       const response = await fetch('/api/check-out', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantId, notes }),
+        body: JSON.stringify({ registrationCode, notes }),
       });
 
       const data = await response.json();

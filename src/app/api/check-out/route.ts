@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { participantId, notes } = body;
+    const { registrationCode, notes } = body;
 
     console.log('Check-out request body:', body);
-    console.log('Participant ID:', participantId);
+    console.log('Registration Code:', registrationCode);
 
-    if (!participantId) {
+    if (!registrationCode) {
       return NextResponse.json(
-        { error: 'Participant ID is required' },
+        { error: 'Registration code is required' },
         { status: 400 }
       );
     }
@@ -33,11 +33,11 @@ export async function POST(request: NextRequest) {
 
     // Use a transaction to ensure atomic check-out
     try {
-      // First check if participant exists and their current status
+      // First check if participant exists and their current status by registration code
       const participant = await sql`
         SELECT id, full_name, registration_code, check_in_status, check_in_date
         FROM participants
-        WHERE id = ${participantId}
+        WHERE registration_code = ${registrationCode}
       `;
 
       if (participant.length === 0) {
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       // Insert check-out record with unique constraint
       const checkOutResult = await sql`
         INSERT INTO check_outs (participant_id, user_id, check_out_time, notes)
-        VALUES (${participantId}, ${hrUserId}, NOW(), ${notes || null})
+        VALUES (${participant[0].id}, ${hrUserId}, NOW(), ${notes || null})
         ON CONFLICT (participant_id) DO NOTHING
         RETURNING id, check_out_time
       `;
@@ -84,13 +84,13 @@ export async function POST(request: NextRequest) {
           check_in_status = 'CHECKED_OUT',
           check_out_date = NOW(),
           check_out_by = ${hrUserId}
-        WHERE id = ${participantId}
+        WHERE id = ${participant[0].id}
       `;
 
       // Log the check-out action
       await sql`
         INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
-        VALUES (${participantId}, 'CHECK_OUT', ${hrUserId}, ${notes || 'Standard check-out'}, ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null})
+        VALUES (${participant[0].id}, 'CHECK_OUT', ${hrUserId}, ${notes || 'Standard check-out'}, ${request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || null})
       `;
 
       // Get the HR user name for the response
