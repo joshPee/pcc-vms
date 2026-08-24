@@ -42,17 +42,17 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 border border-slate-200 rounded-lg shadow-sm">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4">
+      <div className="max-w-md w-full space-y-6 bg-white p-6 border border-gray-200 rounded-lg shadow-sm">
         <div className="text-center">
-          <div className="w-32 h-32 mx-auto mb-4">
-            <img src="/qcc.png" alt="QCC Logo" className="object-contain w-full h-full" />
+          <div className="w-48 h-48 mx-auto mb-4">
+            <img src="/pcc.png" alt="PCC Logo" className="object-contain w-full h-full" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900">
-            HR Admin Login
+            Admin Login
           </h2>
           <p className="mt-2 text-sm text-slate-600">
-            Secure access to meeting management
+            Secure access to visitor management
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -63,7 +63,7 @@ export default function AdminLogin() {
           )}
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-slate-700 uppercase tracking-widest mb-1">
+              <label htmlFor="email" className="block text-xs font-semibold text-gray-900 uppercase tracking-widest mb-1">
                 Email address
               </label>
               <input
@@ -74,11 +74,11 @@ export default function AdminLogin() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full px-3 py-2 border border-slate-300 bg-slate-50 rounded-lg placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#123B70] focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-700 focus:border-transparent"
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-slate-700 uppercase tracking-widest mb-1">
+              <label htmlFor="password" className="block text-xs font-semibold text-gray-900 uppercase tracking-widest mb-1">
                 Password
               </label>
               <input
@@ -89,7 +89,7 @@ export default function AdminLogin() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full px-3 py-2 border border-slate-300 bg-slate-50 rounded-lg placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#123B70] focus:border-transparent"
+                className="block w-full px-3 py-2 border border-gray-200 bg-gray-50 rounded-lg placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-700 focus:border-transparent"
               />
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-[#123B70] hover:bg-[#0d2d52] focus:outline-none focus:ring-2 focus:ring-[#123B70] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>

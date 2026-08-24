@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "QCC Training School - MercyShips International Hope Centre Meeting",
-  description: "Registration system for MercyShips International Hope Centre Meeting",
+  title: "Pentecost Convention Center - Visitor Management System",
+  description: "Visitor management system for Pentecost Convention Center",
   viewport: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
 };
 

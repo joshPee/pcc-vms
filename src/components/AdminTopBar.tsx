@@ -48,11 +48,11 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
             <Menu className="h-4 w-4" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="h-10 w-10 flex items-center justify-center">
-              <img src="/qcc.png" alt="QCC Logo" className="object-contain w-full h-full" />
+            <div className="h-16 w-16 flex items-center justify-center">
+              <img src="/pcc.png" alt="PCC Logo" className="object-contain w-full h-full" />
             </div>
             <div className="hidden sm:block">
-              <p className="text-xs font-bold text-[#123B70]">QCC Training School</p>
+              <p className="text-sm font-bold text-blue-700">PCC-VMS</p>
               <p className="text-[10px] text-muted-foreground">Admin Portal</p>
             </div>
           </div>

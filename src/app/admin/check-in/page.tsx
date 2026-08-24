@@ -8,18 +8,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CheckCircle, AlertCircle, Search, UserCheck, XCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle, Search, UserCheck, XCircle, Repeat } from 'lucide-react';
 
 export default function CheckInPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedParticipant, setSelectedParticipant] = useState<any>(null);
+  const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false);
   const [showWalkInModal, setShowWalkInModal] = useState(false);
-  const [walkInData, setWalkInData] = useState({ fullName: '', organisation: '', position: '', phone: '' });
+  const [walkInData, setWalkInData] = useState({ fullName: '', organisation: '', position: '', phone: '', isRecurring: false });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [activeEvent, setActiveEvent] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,7 +40,7 @@ export default function CheckInPage() {
         performSearch();
       } else if (searchQuery.trim().length === 0) {
         setSearchResults([]);
-        setSelectedParticipant(null);
+        setSelectedVisitor(null);
         setError('');
       }
     }, 300); // 300ms debounce
@@ -58,7 +58,7 @@ export default function CheckInPage() {
     setLoading(true);
     setError('');
     setSearchResults([]);
-    setSelectedParticipant(null);
+    setSelectedVisitor(null);
     setSuccess(false);
     setAlreadyCheckedIn(false);
 
@@ -69,7 +69,17 @@ export default function CheckInPage() {
       if (!response.ok) {
         setError(data.error || 'Search failed');
       } else {
-        setSearchResults(data);
+        // Prioritize recurring visitors in search results
+        const sortedResults = [...data].sort((a, b) => {
+          if (a.is_recurring && !b.is_recurring) return -1;
+          if (!a.is_recurring && b.is_recurring) return 1;
+          return 0;
+        });
+        setSearchResults(sortedResults);
+        // Auto-select first result for faster security guard workflow
+        if (sortedResults.length === 1) {
+          setSelectedVisitor(sortedResults[0]);
+        }
       }
     } catch (error) {
       setError('An error occurred during search');
@@ -83,8 +93,8 @@ export default function CheckInPage() {
     await performSearch();
   };
 
-  const handleCheckIn = async (participant: any) => {
-    setSelectedParticipant(participant);
+  const handleCheckIn = async (visitor: any) => {
+    setSelectedVisitor(visitor);
     setLoading(true);
     setError('');
     setSuccess(false);
@@ -94,7 +104,7 @@ export default function CheckInPage() {
       const response = await fetch('/api/check-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantId: participant.id }),
+        body: JSON.stringify({ participantId: visitor.id }),
       });
 
       const data = await response.json();
@@ -102,17 +112,21 @@ export default function CheckInPage() {
       if (!response.ok) {
         if (data.alreadyCheckedIn) {
           setAlreadyCheckedIn(true);
-          setSelectedParticipant({ ...participant, checkInData: data });
+          setSelectedVisitor({ ...visitor, checkInData: data });
         } else {
           setError(data.error || 'Check-in failed');
         }
       } else {
         setSuccess(true);
-        setSelectedParticipant({ ...participant, checkInData: data });
-        // Update the participant in search results
+        setSelectedVisitor({ ...visitor, checkInData: data });
+        // Update the visitor in search results
         setSearchResults(prev => 
-          prev.map(p => p.id === participant.id ? { ...p, check_in_status: 'CHECKED_IN' } : p)
+          prev.map(p => p.id === visitor.id ? { ...p, check_in_status: 'CHECKED_IN' } : p)
         );
+        // Auto-reset after 3 seconds for faster security guard workflow
+        setTimeout(() => {
+          resetSearch();
+        }, 3000);
       }
     } catch (error) {
       setError('An error occurred during check-in');
@@ -124,7 +138,7 @@ export default function CheckInPage() {
   const resetSearch = () => {
     setSearchQuery('');
     setSearchResults([]);
-    setSelectedParticipant(null);
+    setSelectedVisitor(null);
     setError('');
     setSuccess(false);
     setAlreadyCheckedIn(false);
@@ -151,7 +165,11 @@ export default function CheckInPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...walkInData,
+          fullName: walkInData.fullName,
+          organisation: walkInData.organisation,
+          position: walkInData.position,
+          phone: walkInData.phone,
+          isRecurring: walkInData.isRecurring,
           checkInImmediately,
         }),
       });
@@ -163,7 +181,7 @@ export default function CheckInPage() {
       } else {
         if (checkInImmediately && data.checkInData) {
           setSuccess(true);
-          setSelectedParticipant({
+          setSelectedVisitor({
             full_name: walkInData.fullName,
             organisation: walkInData.organisation,
             position: walkInData.position,
@@ -172,7 +190,7 @@ export default function CheckInPage() {
           });
         } else {
           setShowWalkInModal(false);
-          setWalkInData({ fullName: '', organisation: '', position: '', phone: '' });
+          setWalkInData({ fullName: '', organisation: '', position: '', phone: '', isRecurring: false });
           // Auto-search for the new participant
           setSearchQuery(data.registrationCode);
           handleSearch(e);
@@ -192,10 +210,7 @@ export default function CheckInPage() {
         <div className="p-6">
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-6">
-            <h2 className="text-lg font-bold text-foreground uppercase">{activeEvent?.name || "CHECK-IN PARTICIPANT"}</h2>
-            <span className="text-xs text-muted-foreground uppercase">
-              {activeEvent?.date ? new Date(activeEvent.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ""}
-            </span>
+            <h2 className="text-lg font-bold text-foreground uppercase">VISITOR CHECK-IN</h2>
           </div>
 
           {/* Search Form */}
@@ -203,7 +218,7 @@ export default function CheckInPage() {
             <div>
               <Label htmlFor="search" className="flex items-center gap-2 mb-1.5 text-xs">
                 <Search className="w-3.5 h-3.5" />
-                Registration Code or Name
+                Visitor Code or Name
               </Label>
               <div className="flex gap-2">
                 <Input
@@ -212,7 +227,7 @@ export default function CheckInPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Enter Registration Code or Name"
+                  placeholder="Enter Visitor Code or Name"
                   className="flex-1 h-9 text-sm"
                 />
                 <Button
@@ -231,11 +246,11 @@ export default function CheckInPage() {
               onClick={() => setShowWalkInModal(true)}
               className="w-full bg-[#123B70] hover:bg-[#0d2d52] h-10 text-sm"
             >
-              + Add Walk-in Participant
+              + Add Walk-in Visitor
             </Button>
           </div>
 
-          {error && !selectedParticipant && (
+          {error && !selectedVisitor && (
             <div className="bg-destructive/10 border border-destructive/20 text-destructive px-3 py-2 rounded-lg flex items-start gap-2 text-xs mb-4">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{error}</span>
@@ -245,27 +260,36 @@ export default function CheckInPage() {
       </Card>
 
           {/* Search Results */}
-          {searchResults.length > 0 && !selectedParticipant && (
+          {searchResults.length > 0 && !selectedVisitor && (
             <Card>
               <CardContent className="divide-y p-0">
                 {paginatedResults.map((participant) => (
                   <div
                     key={participant.id}
                     className="p-4 hover:bg-muted cursor-pointer"
-                    onClick={() => setSelectedParticipant(participant)}
+                    onClick={() => setSelectedVisitor(participant)}
                   >
                     <div className="flex justify-between items-start">
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">{participant.full_name}</p>
-                        <p className="text-sm text-muted-foreground truncate">{participant.organisation}</p>
-                        <p className="text-sm text-muted-foreground truncate">{participant.position}</p>
-                        {participant.phone && <p className="text-xs text-muted-foreground truncate">{participant.phone}</p>}
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="text-sm font-semibold text-foreground truncate">{participant.full_name}</p>
+                          {participant.is_recurring && (
+                            <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                              <Repeat className="w-3 h-3 mr-1" />
+                              Recurring
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground truncate">{participant.phone}</p>
+                        <p className="text-sm text-muted-foreground truncate">{participant.location}</p>
+                        {participant.organisation && <p className="text-xs text-muted-foreground truncate">{participant.organisation}</p>}
+                        <p className="text-xs text-muted-foreground truncate">Visiting: {participant.host_name}</p>
                       </div>
                       <div className="ml-4 text-right shrink-0">
                         <p className="text-sm font-medium text-foreground">{participant.registration_code}</p>
                         <Badge className={`${
-                          participant.check_in_status === 'CHECKED_IN' 
-                            ? 'bg-green-100 text-green-700 border-green-200' 
+                          participant.check_in_status === 'CHECKED_IN'
+                            ? 'bg-green-100 text-green-700 border-green-200'
                             : 'bg-[#123B70]/10 text-[#123B70] border-[#123B70]/20'
                         } text-xs`}>
                           {participant.check_in_status === 'CHECKED_IN' ? 'Checked In' : 'Not Checked In'}
@@ -334,8 +358,8 @@ export default function CheckInPage() {
             </Card>
           )}
 
-          {/* Selected Participant / Verification Card */}
-          {selectedParticipant && (
+          {/* Selected Visitor / Verification Card */}
+          {selectedVisitor && (
             <Card>
               {success ? (
                 <CardContent className="text-center py-8">
@@ -343,16 +367,16 @@ export default function CheckInPage() {
                     <CheckCircle className="h-8 w-8 text-green-700" />
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">CHECK-IN SUCCESSFUL</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{selectedParticipant.full_name}</p>
-                  <p className="text-sm font-semibold text-[#123B70] mb-2">{selectedParticipant.registration_code}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{selectedVisitor.full_name}</p>
+                  <p className="text-sm font-semibold text-[#123B70] mb-2">{selectedVisitor.registration_code}</p>
                   <p className="text-sm text-muted-foreground">
-                    Checked in at {new Date(selectedParticipant.checkInData?.check_in_time).toLocaleTimeString()}
+                    Checked in at {new Date(selectedVisitor.checkInData?.check_in_time).toLocaleTimeString()}
                   </p>
                   <Button
                     onClick={resetSearch}
                     className="mt-6 bg-[#123B70] hover:bg-[#0d2d52] h-9 px-4 text-xs sm:h-10 sm:px-6 sm:text-sm w-full"
                   >
-                    <span className="hidden sm:inline">Check In Another Participant</span>
+                    <span className="hidden sm:inline">Check In Another Visitor</span>
                     <span className="sm:hidden">Check In Another</span>
                   </Button>
                 </CardContent>
@@ -362,18 +386,18 @@ export default function CheckInPage() {
                     <XCircle className="h-8 w-8 text-amber-700" />
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">ALREADY CHECKED IN</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{selectedParticipant.full_name}</p>
+                  <p className="text-sm text-muted-foreground mb-2">{selectedVisitor.full_name}</p>
                   <p className="text-sm text-muted-foreground mb-2">
-                    Checked in at {new Date(selectedParticipant.checkInData?.check_in_time).toLocaleTimeString()}
+                    Checked in at {new Date(selectedVisitor.checkInData?.check_in_time).toLocaleTimeString()}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Checked in by {selectedParticipant.checkInData?.checked_in_by}
+                    Checked in by {selectedVisitor.checkInData?.checked_in_by}
                   </p>
                   <Button
                     onClick={resetSearch}
                     className="mt-6 bg-[#123B70] hover:bg-[#0d2d52] h-9 px-4 text-xs sm:h-10 sm:px-6 sm:text-sm w-full"
                   >
-                    <span className="hidden sm:inline">Check In Another Participant</span>
+                    <span className="hidden sm:inline">Check In Another Visitor</span>
                     <span className="sm:hidden">Check In Another</span>
                   </Button>
                 </CardContent>
@@ -382,34 +406,56 @@ export default function CheckInPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-base">
                       <UserCheck className="h-4 w-4" />
-                      Verify Participant
+                      Verify Visitor
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between border-b pb-3">
                       <span className="text-xs text-muted-foreground">Full Name</span>
-                      <span className="text-sm font-semibold text-foreground">{selectedParticipant.full_name}</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.full_name}</span>
                     </div>
                     <div className="flex justify-between border-b pb-3">
-                      <span className="text-xs text-muted-foreground">Organisation</span>
-                      <span className="text-sm font-semibold text-foreground">{selectedParticipant.organisation}</span>
+                      <span className="text-xs text-muted-foreground">Phone Number</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.phone}</span>
                     </div>
                     <div className="flex justify-between border-b pb-3">
-                      <span className="text-xs text-muted-foreground">Position</span>
-                      <span className="text-sm font-semibold text-foreground">{selectedParticipant.position}</span>
+                      <span className="text-xs text-muted-foreground">Location</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.location}</span>
                     </div>
                     <div className="flex justify-between border-b pb-3">
-                      <span className="text-xs text-muted-foreground">Registration Code</span>
-                      <span className="text-sm font-semibold text-foreground">{selectedParticipant.registration_code}</span>
+                      <span className="text-xs text-muted-foreground">Organization</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.organisation || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-xs text-muted-foreground">Person to Visit</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.host_name}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-xs text-muted-foreground">Department</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.host_department}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-xs text-muted-foreground">Purpose of Visit</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.visit_purpose}</span>
+                    </div>
+                    {selectedVisitor.vehicle_registration && (
+                      <div className="flex justify-between border-b pb-3">
+                        <span className="text-xs text-muted-foreground">Vehicle Registration</span>
+                        <span className="text-sm font-semibold text-foreground">{selectedVisitor.vehicle_registration}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between border-b pb-3">
+                      <span className="text-xs text-muted-foreground">Visitor Code</span>
+                      <span className="text-sm font-semibold text-foreground">{selectedVisitor.registration_code}</span>
                     </div>
                     <div className="flex justify-between pb-3">
                       <span className="text-xs text-muted-foreground">Check-In Status</span>
                       <Badge className={`${
-                        selectedParticipant.check_in_status === 'CHECKED_IN' 
-                          ? 'bg-green-100 text-green-700 border-green-200' 
+                        selectedVisitor.check_in_status === 'CHECKED_IN'
+                          ? 'bg-green-100 text-green-700 border-green-200'
                           : 'bg-[#123B70]/10 text-[#123B70] border-[#123B70]/20'
                       } text-xs`}>
-                        {selectedParticipant.check_in_status === 'CHECKED_IN' ? 'Checked In' : 'Not Checked In'}
+                        {selectedVisitor.check_in_status === 'CHECKED_IN' ? 'Checked In' : 'Not Checked In'}
                       </Badge>
                     </div>
 
@@ -422,14 +468,14 @@ export default function CheckInPage() {
 
                     <div className="flex gap-2 pt-4">
                       <Button
-                        onClick={() => handleCheckIn(selectedParticipant)}
-                        disabled={loading || selectedParticipant.check_in_status === 'CHECKED_IN'}
+                        onClick={() => handleCheckIn(selectedVisitor)}
+                        disabled={loading || selectedVisitor.check_in_status === 'CHECKED_IN'}
                         className="flex-1 bg-[#123B70] hover:bg-[#0d2d52] h-10 text-sm"
                       >
                         {loading ? 'Checking in...' : 'Confirm & Check In'}
                       </Button>
                       <Button
-                        onClick={() => setSelectedParticipant(null)}
+                        onClick={() => setSelectedVisitor(null)}
                         variant="outline"
                         className="h-10 text-sm"
                       >
@@ -447,7 +493,7 @@ export default function CheckInPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <Card className="max-w-md w-full">
             <CardHeader>
-              <CardTitle className="text-base">Add Walk-in Participant</CardTitle>
+              <CardTitle className="text-base">Add Walk-in Visitor</CardTitle>
             </CardHeader>
             <CardContent>
               {error && (
@@ -512,6 +558,20 @@ export default function CheckInPage() {
                   />
                 </div>
 
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="isRecurring"
+                    checked={walkInData.isRecurring}
+                    onChange={(e) => setWalkInData({ ...walkInData, isRecurring: e.target.checked })}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="isRecurring" className="flex items-center gap-2 text-xs cursor-pointer">
+                    <Repeat className="w-3.5 h-3.5" />
+                    Mark as Recurring Visitor
+                  </Label>
+                </div>
+
                 <div className="flex gap-2">
                   <Button
                     type="submit"
@@ -534,7 +594,7 @@ export default function CheckInPage() {
                   type="button"
                   onClick={() => {
                     setShowWalkInModal(false);
-                    setWalkInData({ fullName: '', organisation: '', position: '', phone: '' });
+                    setWalkInData({ fullName: '', organisation: '', position: '', phone: '', isRecurring: false });
                     setError('');
                   }}
                   variant="outline"

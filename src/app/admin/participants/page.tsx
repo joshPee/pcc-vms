@@ -332,10 +332,12 @@ export default function ParticipantsPage() {
                             {getStatusBadge(participant.participant_status)}
                             {getCheckInBadge(participant.check_in_status)}
                           </div>
-                          <p className="text-sm text-muted-foreground">{participant.organisation}</p>
-                          <p className="text-sm text-muted-foreground">{participant.position}</p>
-                          {participant.email && <p className="text-xs text-muted-foreground">{participant.email}</p>}
-                          {participant.phone && <p className="text-xs text-muted-foreground">{participant.phone}</p>}
+                          {participant.phone && <p className="text-sm text-muted-foreground">{participant.phone}</p>}
+                          {participant.location && <p className="text-sm text-muted-foreground">{participant.location}</p>}
+                          {participant.organisation && <p className="text-sm text-muted-foreground">{participant.organisation}</p>}
+                          {participant.host_name && <p className="text-xs text-muted-foreground">Visiting: {participant.host_name}</p>}
+                          {participant.host_department && <p className="text-xs text-muted-foreground">Dept: {participant.host_department}</p>}
+                          {participant.vehicle_registration && <p className="text-xs text-muted-foreground">Vehicle: {participant.vehicle_registration}</p>}
                           {participant.registration_code && (
                             <p className="text-xs font-medium text-[#123B70]">{participant.registration_code}</p>
                           )}

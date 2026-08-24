@@ -112,31 +112,29 @@ async function getUniqueCode(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { fullName, organisation, position, phone, forceSubmit = false } = body;
+    const { fullName, phone, location, organisation, personToVisit, department, visitPurpose, vehicleRegistration, forceSubmit = false } = body;
 
     // Validate input
-    if (!fullName || !organisation || !position) {
+    if (!fullName || !phone || !location || !personToVisit || !department || !visitPurpose) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'All required fields must be filled' },
         { status: 400 }
       );
     }
 
     const trimmedName = fullName.trim();
-    const trimmedOrg = organisation.trim();
-    const trimmedPos = position.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedLocation = location.trim();
+    const trimmedOrg = organisation?.trim() || '';
+    const trimmedPersonToVisit = personToVisit.trim();
+    const trimmedDepartment = department.trim();
+    const trimmedVisitPurpose = visitPurpose.trim();
+    const trimmedVehicleRegistration = vehicleRegistration?.trim() || '';
 
     // Basic validation
-    if (trimmedName.length < 2 || trimmedOrg.length < 2 || trimmedPos.length < 2) {
+    if (trimmedName.length < 2) {
       return NextResponse.json(
-        { error: 'Each field must be at least 2 characters' },
-        { status: 400 }
-      );
-    }
-
-    if (/^\d+$/.test(trimmedName) || /^\d+$/.test(trimmedOrg) || /^\d+$/.test(trimmedPos)) {
-      return NextResponse.json(
-        { error: 'Numbers only are not allowed in any field' },
+        { error: 'Full name must be at least 2 characters' },
         { status: 400 }
       );
     }
@@ -146,19 +144,6 @@ export async function POST(request: NextRequest) {
     
     console.log('Registration - Similar participant check:', similarParticipant);
     console.log('Looking for:', trimmedName, trimmedOrg);
-
-    // Get ACTIVE event
-    let event = await sql`SELECT id FROM events WHERE status = 'ACTIVE' LIMIT 1`;
-    let eventId;
-    
-    if (event.length === 0) {
-      return NextResponse.json(
-        { error: 'No active event found. Registration is closed.' },
-        { status: 400 }
-      );
-    } else {
-      eventId = event[0].id;
-    }
 
     let registrationCode;
     let participantId;
@@ -181,21 +166,28 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      // If participant is expected, update them to registered and use their assigned code
+      // If participant is expected, update them to registered and check them in
       if (participant.participant_status === 'EXPECTED') {
         console.log('Expected participant registering with code:', participant.registration_code);
         const result = await sql`
-          UPDATE participants 
-          SET 
+          UPDATE participants
+          SET
             participant_status = 'REGISTERED',
             registration_status = 'REGISTERED',
             registration_source = 'ONLINE',
-            position = ${trimmedPos},
-            phone = ${body.phone || null}
+            check_in_status = 'CHECKED_IN',
+            check_in_date = CURRENT_TIMESTAMP,
+            phone = ${trimmedPhone},
+            location = ${trimmedLocation},
+            organisation = ${trimmedOrg},
+            host_name = ${trimmedPersonToVisit},
+            host_department = ${trimmedDepartment},
+            visit_purpose = ${trimmedVisitPurpose},
+            vehicle_registration = ${trimmedVehicleRegistration || null}
           WHERE id = ${participant.id}
           RETURNING id
         `;
-        
+
         return NextResponse.json({
           success: true,
           registrationCode: participant.registration_code,
@@ -207,29 +199,41 @@ export async function POST(request: NextRequest) {
       // No similar participant found, generate new code and register
       registrationCode = await getUniqueCode();
 
-      // Insert new participant
+      // Insert new participant and check them in
       const result = await sql`
         INSERT INTO participants (
-          registration_code, 
-          full_name, 
-          organisation, 
-          position, 
+          registration_code,
+          full_name,
           phone,
-          event_id,
+          location,
+          organisation,
+          host_name,
+          host_department,
+          visit_purpose,
+          vehicle_registration,
           participant_status,
           registration_status,
-          registration_source
+          registration_source,
+          check_in_status,
+          check_in_date,
+          event_id
         )
         VALUES (
-          ${registrationCode}, 
-          ${trimmedName}, 
-          ${trimmedOrg}, 
-          ${trimmedPos},
-          ${body.phone || null},
-          ${eventId},
+          ${registrationCode},
+          ${trimmedName},
+          ${trimmedPhone},
+          ${trimmedLocation},
+          ${trimmedOrg},
+          ${trimmedPersonToVisit},
+          ${trimmedDepartment},
+          ${trimmedVisitPurpose},
+          ${trimmedVehicleRegistration || null},
           'REGISTERED',
           'REGISTERED',
-          'ONLINE'
+          'ONLINE',
+          'CHECKED_IN',
+          CURRENT_TIMESTAMP,
+          NULL
         )
         RETURNING id
       `;

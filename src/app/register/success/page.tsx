@@ -62,20 +62,11 @@ Please remember this code. Give it at the registration desk on
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
           <h1 className="font-fraunces font-medium text-2xl text-ink mb-2">
-            QCC TRAINING SCHOOL
+            PENTECOST CONVENTION CENTRE
           </h1>
-          {fetchingEvent ? (
-            <div className="h-12 w-3/4 mx-auto bg-line/50 animate-pulse rounded-md mt-4"></div>
-          ) : (
-            <>
-              <h2 className="font-fraunces text-lg text-forest mb-2 uppercase">
-                {activeEvent?.name || "NO ACTIVE MEETING"}
-              </h2>
-              <p className="font-ibm-plex-mono text-brick uppercase">
-                {activeEvent?.date ? new Date(activeEvent.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : ""}
-              </p>
-            </>
-          )}
+          <h2 className="font-fraunces text-lg text-forest mb-2 uppercase">
+            Visitor Registration
+          </h2>
         </div>
 
         {/* Credential Card */}

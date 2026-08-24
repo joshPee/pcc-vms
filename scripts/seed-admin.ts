@@ -21,9 +21,9 @@ async function seedAdmin() {
   try {
     console.log('Seeding admin user...');
 
-    const email = 'admin@cocobod.gov.gh';
+    const email = 'admin@pcc.gov.gh';
     const password = 'admin123'; // Change this in production
-    const name = 'HR Administrator';
+    const name = 'Administrator';
 
     const passwordHash = await bcrypt.hash(password, 10);
 

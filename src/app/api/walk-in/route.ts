@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { fullName, organisation, position, checkInImmediately = false } = body;
+    const { fullName, organisation, position, phone, isRecurring = false, checkInImmediately = false } = body;
 
     // Validate input
     if (!fullName || !organisation || !position) {
@@ -95,12 +95,14 @@ export async function POST(request: NextRequest) {
         full_name, 
         organisation, 
         position, 
+        phone,
+        is_recurring,
         event_id,
         registration_source
       )
-      VALUES ($1, $2, $3, $4, $5, 'WALK_IN')
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'WALK_IN')
       RETURNING id, registration_code`,
-      [registrationCode, trimmedName, trimmedOrg, trimmedPos, eventId]
+      [registrationCode, trimmedName, trimmedOrg, trimmedPos, phone || null, isRecurring, eventId]
     );
 
     const participantId = result.rows[0].id;

@@ -12,7 +12,16 @@ function generateRegistrationCode(): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { full_name, organisation, position } = body;
+    const { 
+      full_name, 
+      organisation, 
+      position,
+      phone,
+      expected_arrival,
+      host_name,
+      host_department,
+      visit_purpose
+    } = body;
 
     console.log('Pre-register request received:', { full_name, organisation, position });
 
@@ -46,12 +55,12 @@ export async function POST(request: NextRequest) {
     const registration_code = generateRegistrationCode();
     console.log('Generated registration code:', registration_code);
 
-    // Insert participant
+    // Insert participant with additional fields
     const result = await pool.query(
-      `INSERT INTO participants (registration_code, full_name, organisation, position, registration_source)
-       VALUES ($1, $2, $3, $4, 'PRE_REGISTERED')
+      `INSERT INTO participants (registration_code, full_name, organisation, position, phone, expected_arrival, host_name, host_department, visit_purpose, registration_source)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PRE_REGISTERED')
        RETURNING id, registration_code, full_name`,
-      [registration_code, full_name, organisation, position]
+      [registration_code, full_name, organisation, position, phone || null, expected_arrival || null, host_name || null, host_department || null, visit_purpose || null]
     );
 
     console.log('Insert successful:', result.rows[0]);
