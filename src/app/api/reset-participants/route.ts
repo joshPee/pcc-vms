@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       
       return NextResponse.json({ 
         success: true, 
-        message: 'Participants reset successfully. 39 participants added (33 QCC + 6 TMA).' 
+        message: 'All visitor data cleared successfully. System is ready for fresh start.' 
       });
     } catch (error) {
       await client.query('ROLLBACK');
