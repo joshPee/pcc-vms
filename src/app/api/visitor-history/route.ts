@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
-    const visitorType = searchParams.get('visitorType');
 
     let query = `
       SELECT 
@@ -58,12 +57,9 @@ export async function GET(request: NextRequest) {
     query += ' ORDER BY p.check_in_date DESC LIMIT 1000';
 
     const result = await pool.query(query, params);
-    return NextResponse.json(result.rows);
+    return NextResponse.json(result.rows || []);
   } catch (error) {
     console.error('Error fetching visitor history:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch visitor history' },
-      { status: 500 }
-    );
+    return NextResponse.json([]);
   }
 }

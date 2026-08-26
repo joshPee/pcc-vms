@@ -26,14 +26,22 @@ export default function VisitorHistoryPage() {
       const params = new URLSearchParams();
       if (startDate) params.append('startDate', startDate);
       if (endDate) params.append('endDate', endDate);
-      if (visitorTypeFilter !== 'ALL') params.append('visitorType', visitorTypeFilter);
 
       const response = await fetch(`/api/visitor-history?${params.toString()}`);
       const data = await response.json();
-      setVisitorHistory(data);
-      setFilteredHistory(data);
+      
+      if (Array.isArray(data)) {
+        setVisitorHistory(data);
+        setFilteredHistory(data);
+      } else {
+        console.error('Unexpected data format:', data);
+        setVisitorHistory([]);
+        setFilteredHistory([]);
+      }
     } catch (error) {
       console.error('Error fetching visitor history:', error);
+      setVisitorHistory([]);
+      setFilteredHistory([]);
     } finally {
       setLoading(false);
     }
