@@ -130,7 +130,7 @@ export default function Register() {
     <div className="min-h-screen bg-white px-4 py-4 flex items-center justify-center">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
-          <div className="w-40 h-40 mx-auto mb-0">
+          <div className="w-40 h-40 mx-auto mb-4">
             <img
               src="/pcc.png"
               alt="PCC Logo"
