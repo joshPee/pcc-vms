@@ -15,7 +15,6 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [greeting, setGreeting] = useState('');
   const [showToast, setShowToast] = useState(false);
-  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -32,19 +31,10 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
 
   const handleSignOut = () => {
     setShowProfileMenu(false);
-    setShowLogoutDialog(true);
-  };
-
-  const confirmLogout = () => {
-    setShowLogoutDialog(false);
     setShowToast(true);
     setTimeout(() => {
       window.location.href = '/api/auth/signout?callbackUrl=/admin/login';
     }, 1500);
-  };
-
-  const cancelLogout = () => {
-    setShowLogoutDialog(false);
   };
 
   return (
@@ -119,30 +109,6 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
           <LogOut className="h-4 w-4" />
           <span className="text-sm">Signing out...</span>
         </Toast>
-      )}
-
-      {showLogoutDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold mb-2">Confirm Logout</h3>
-            <p className="text-sm text-gray-600 mb-6">Are you sure you want to log out of the admin portal?</p>
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={cancelLogout}
-                className="px-4"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={confirmLogout}
-                className="px-4 bg-red-600 hover:bg-red-700"
-              >
-                Log Out
-              </Button>
-            </div>
-          </div>
-        </div>
       )}
     </>
   );

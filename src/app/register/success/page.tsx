@@ -58,7 +58,7 @@ Please remember this code. Give it at the registration desk on
   };
 
   return (
-    <div className="min-h-screen bg-cream px-4 py-8">
+    <div className="min-h-screen bg-white px-4 py-8">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-8">
           <h1 className="font-fraunces font-medium text-2xl text-ink mb-2">
@@ -112,7 +112,7 @@ Please remember this code. Give it at the registration desk on
 export default function RegistrationSuccess() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-cream px-4 py-8 flex items-center justify-center">
+      <div className="min-h-screen bg-white px-4 py-8 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#123B70]"></div>
       </div>
     }>
