@@ -15,6 +15,7 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [greeting, setGreeting] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,10 +32,19 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
 
   const handleSignOut = () => {
     setShowProfileMenu(false);
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
     setShowToast(true);
     setTimeout(() => {
       window.location.href = '/api/auth/signout?callbackUrl=/admin/login';
     }, 1500);
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
   };
 
   return (
@@ -96,6 +106,34 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
                       <LogOut className="h-4 w-4" />
                       Log out
                     </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {showLogoutConfirm && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={cancelLogout}
+                />
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                  <div className="p-3 space-y-2">
+                    <p className="text-sm font-medium text-gray-900">Confirm logout?</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={cancelLogout}
+                        className="flex-1 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmLogout}
+                        className="flex-1 px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 rounded-md text-white"
+                      >
+                        Log out
+                      </button>
+                    </div>
                   </div>
                 </div>
               </>
