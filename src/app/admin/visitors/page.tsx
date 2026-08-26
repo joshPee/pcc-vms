@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Users, Clock, CheckCircle, LogOut, Repeat } from 'lucide-react';
+import { Search, Users, Clock, CheckCircle, LogOut, Repeat, Download } from 'lucide-react';
 
 export default function VisitorsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,12 +89,58 @@ export default function VisitorsPage() {
     });
   };
 
+  const formatDuration = (checkIn: string | null, checkOut: string | null) => {
+    if (!checkIn) return 'N/A';
+    if (!checkOut) {
+      // For currently inside visitors, calculate duration from check-in to now
+      const diff = new Date().getTime() - new Date(checkIn).getTime();
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours}h ${minutes}m`;
+    }
+    const diff = new Date(checkOut).getTime() - new Date(checkIn).getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
+  };
+
+  const handleExportCSV = (data: any[]) => {
+    const csvContent = [
+      ['Registration Code', 'Name', 'Phone', 'Location', 'Organisation', 'Host', 'Department', 'Purpose', 'Vehicle', 'Status', 'Check-in', 'Check-out', 'Duration'],
+      ...data.map(v => [
+        v.registration_code,
+        v.full_name,
+        v.phone || '',
+        v.location || '',
+        v.organisation,
+        v.host_name || '',
+        v.host_department || '',
+        v.visit_purpose || '',
+        v.vehicle_registration || '',
+        v.check_in_status,
+        formatDateTime(v.check_in_date) || '',
+        formatDateTime(v.check_out_date) || '',
+        formatDuration(v.check_in_date, v.check_out_date)
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `visitor-history-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="all">All Visitors</TabsTrigger>
-          <TabsTrigger value="inside">Currently Inside</TabsTrigger>
+          <TabsTrigger value="inside">Visitors</TabsTrigger>
           <TabsTrigger value="history">Visitor History</TabsTrigger>
         </TabsList>
 
@@ -239,7 +285,7 @@ export default function VisitorsPage() {
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -266,7 +312,7 @@ export default function VisitorsPage() {
                               <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
                               <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_out_date) || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900">{formatDuration(visitor.check_in_date, visitor.check_out_date)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -318,6 +364,21 @@ export default function VisitorsPage() {
         <TabsContent value="history" className="space-y-4">
           <Card>
             <CardContent>
+              <div className="flex justify-between items-center mb-4">
+                <div className="text-sm text-gray-600">
+                  {visitorHistory.length} visitor{visitorHistory.length !== 1 ? 's' : ''} in history
+                </div>
+                <Button
+                  onClick={() => handleExportCSV(visitorHistory)}
+                  disabled={visitorHistory.length === 0}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </Button>
+              </div>
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-700"></div>
@@ -343,6 +404,7 @@ export default function VisitorsPage() {
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
@@ -370,6 +432,7 @@ export default function VisitorsPage() {
                               <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_out_date) || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900">{formatDuration(visitor.check_in_date, visitor.check_out_date)}</td>
                             </tr>
                           ))}
                         </tbody>

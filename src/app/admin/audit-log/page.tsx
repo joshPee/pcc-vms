@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollText, Search, RefreshCw, CheckCircle, XCircle, LogIn, LogOut, UserCheck, Edit } from 'lucide-react';
+import { ScrollText, Search, RefreshCw, CheckCircle, XCircle, LogIn, LogOut, UserCheck, Edit, Download, Calendar } from 'lucide-react';
 
 export default function AuditLogPage() {
   const [logs, setLogs] = useState<any[]>([]);
@@ -13,16 +13,22 @@ export default function AuditLogPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const itemsPerPage = 20;
 
   useEffect(() => {
     fetchLogs();
-  }, [currentPage]);
+  }, [currentPage, startDate, endDate]);
 
   const fetchLogs = async () => {
     try {
       const offset = (currentPage - 1) * itemsPerPage;
-      const response = await fetch(`/api/audit-log?limit=${itemsPerPage}&offset=${offset}`);
+      let url = `/api/audit-log?limit=${itemsPerPage}&offset=${offset}`;
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+      
+      const response = await fetch(url);
       const data = await response.json();
       setLogs(data.logs || []);
       setTotalLogs(data.total || 0);
@@ -83,27 +89,81 @@ export default function AuditLogPage() {
     });
   };
 
+  const handleExportCSV = async () => {
+    try {
+      let url = '/api/audit-log?export=true';
+      if (startDate) url += `&startDate=${startDate}`;
+      if (endDate) url += `&endDate=${endDate}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        alert('No data to export for the selected date range');
+        return;
+      }
+
+      const csvContent = [
+        ['Timestamp', 'Action', 'User', 'User Email', 'Participant', 'Registration Code', 'Details', 'IP Address'],
+        ...data.map(log => [
+          formatDateTime(log.action_time),
+          log.action,
+          log.user_name || 'System',
+          log.user_email || '',
+          log.participant_name || 'N/A',
+          log.registration_code || '',
+          log.details || '',
+          log.ip_address || ''
+        ])
+      ].map(row => row.join(',')).join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url2 = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url2;
+      a.download = `visitor-logs-${startDate || 'all'}-${endDate || 'all'}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url2);
+    } catch (error) {
+      console.error('Error exporting logs:', error);
+      alert('Failed to export logs');
+    }
+  };
+
   return (
     <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <Button
-            onClick={() => {
-              setLoading(true);
-              fetchLogs();
-            }}
-            disabled={loading}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => {
+                setLoading(true);
+                fetchLogs();
+              }}
+              disabled={loading}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button
+              onClick={handleExportCSV}
+              disabled={loading}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
       <Card>
         <CardContent className="pt-6">
-          <div className="mb-4">
-            <div className="relative">
+          <div className="mb-4 flex gap-4">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search by action, user, participant, or details..."
@@ -111,6 +171,28 @@ export default function AuditLogPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
+            </div>
+            <div className="flex gap-2">
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="date"
+                  placeholder="Start Date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="date"
+                  placeholder="End Date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
 

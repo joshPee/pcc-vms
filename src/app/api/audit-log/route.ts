@@ -6,35 +6,88 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
+    const exportMode = searchParams.get('export') === 'true';
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
-    const logs = await sql`
-      SELECT 
-        vl.id,
-        vl.action,
-        vl.action_time,
-        vl.details,
-        vl.ip_address,
-        p.full_name as participant_name,
-        p.registration_code,
-        u.name as user_name,
-        u.email as user_email
-      FROM visitor_logs vl
-      LEFT JOIN participants p ON vl.participant_id = p.id
-      LEFT JOIN users u ON vl.user_id = u.id
-      ORDER BY vl.action_time DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
+    if (!sql) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
+    }
 
-    const countResult = await sql`
-      SELECT COUNT(*) as total FROM visitor_logs
-    `;
+    let logs: any[];
+    
+    if (exportMode) {
+      // Export mode - return all data without pagination
+      let query = sql`
+        SELECT 
+          vl.id,
+          vl.action,
+          vl.action_time,
+          vl.details,
+          vl.ip_address,
+          p.full_name as participant_name,
+          p.registration_code,
+          u.name as user_name,
+          u.email as user_email
+        FROM visitor_logs vl
+        LEFT JOIN participants p ON vl.participant_id = p.id
+        LEFT JOIN users u ON vl.user_id = u.id
+        WHERE 1=1
+      `;
+      
+      if (startDate) {
+        query = sql`${query} AND vl.action_time >= ${startDate}`;
+      }
+      
+      if (endDate) {
+        query = sql`${query} AND vl.action_time <= ${endDate}`;
+      }
+      
+      query = sql`${query} ORDER BY vl.action_time DESC`;
+      logs = await query;
+      
+      return NextResponse.json(logs);
+    } else {
+      // Normal pagination mode
+      let query = sql`
+        SELECT 
+          vl.id,
+          vl.action,
+          vl.action_time,
+          vl.details,
+          vl.ip_address,
+          p.full_name as participant_name,
+          p.registration_code,
+          u.name as user_name,
+          u.email as user_email
+        FROM visitor_logs vl
+        LEFT JOIN participants p ON vl.participant_id = p.id
+        LEFT JOIN users u ON vl.user_id = u.id
+        WHERE 1=1
+      `;
+      
+      if (startDate) {
+        query = sql`${query} AND vl.action_time >= ${startDate}`;
+      }
+      
+      if (endDate) {
+        query = sql`${query} AND vl.action_time <= ${endDate}`;
+      }
+      
+      query = sql`${query} ORDER BY vl.action_time DESC LIMIT ${limit} OFFSET ${offset}`;
+      logs = await query;
 
-    return NextResponse.json({
-      logs,
-      total: countResult[0]?.total || 0,
-      limit,
-      offset
-    });
+      const countResult = await sql`
+        SELECT COUNT(*) as total FROM visitor_logs
+      `;
+
+      return NextResponse.json({
+        logs,
+        total: countResult[0]?.total || 0,
+        limit,
+        offset
+      });
+    }
   } catch (error) {
     console.error('Error fetching audit log:', error);
     return NextResponse.json(
