@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
         p.organisation,
         p.position,
         p.phone,
+        p.is_recurring,
         p.check_in_date,
         p.check_out_date,
         p.check_in_status,

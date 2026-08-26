@@ -41,13 +41,14 @@ export default function VisitorHistoryPage() {
 
   const handleExport = () => {
     const csvContent = [
-      ['Registration Code', 'Name', 'Organisation', 'Position', 'Phone', 'Check-In', 'Check-Out', 'Status', 'Duration (hrs)', 'Checked In By', 'Checked Out By', 'Notes'],
+      ['Registration Code', 'Name', 'Organisation', 'Position', 'Phone', 'Recurring', 'Check-In', 'Check-Out', 'Status', 'Duration (hrs)', 'Checked In By', 'Checked Out By', 'Notes'],
       ...filteredHistory.map(v => [
         v.registration_code || '',
         v.full_name,
         v.organisation,
         v.position,
         v.phone || '',
+        v.is_recurring ? 'Yes' : 'No',
         new Date(v.check_in_date).toLocaleString(),
         v.check_out_date ? new Date(v.check_out_date).toLocaleString() : 'N/A',
         v.check_in_status,
@@ -164,6 +165,8 @@ export default function VisitorHistoryPage() {
                     <th className="text-left py-3 px-4 font-semibold">Name</th>
                     <th className="text-left py-3 px-4 font-semibold">Organisation</th>
                     <th className="text-left py-3 px-4 font-semibold">Position</th>
+                    <th className="text-left py-3 px-4 font-semibold">Phone</th>
+                    <th className="text-left py-3 px-4 font-semibold">Recurring</th>
                     <th className="text-left py-3 px-4 font-semibold">Check-In</th>
                     <th className="text-left py-3 px-4 font-semibold">Check-Out</th>
                     <th className="text-left py-3 px-4 font-semibold">Status</th>
@@ -174,12 +177,17 @@ export default function VisitorHistoryPage() {
                   {filteredHistory.map((visitor) => (
                     <tr key={visitor.id} className="border-b hover:bg-muted/50">
                       <td className="py-3 px-4 font-mono text-xs">{visitor.registration_code}</td>
-                      <td className="py-3 px-4">
-                        <div className="font-medium">{visitor.full_name}</div>
-                        <div className="text-xs text-muted-foreground">{visitor.phone || ''}</div>
-                      </td>
+                      <td className="py-3 px-4 font-medium">{visitor.full_name}</td>
                       <td className="py-3 px-4">{visitor.organisation}</td>
                       <td className="py-3 px-4">{visitor.position}</td>
+                      <td className="py-3 px-4">{visitor.phone || 'N/A'}</td>
+                      <td className="py-3 px-4">
+                        {visitor.is_recurring ? (
+                          <Badge className="bg-purple-100 text-purple-800 border-purple-200">Yes</Badge>
+                        ) : (
+                          <Badge className="bg-gray-100 text-gray-800 border-gray-200">No</Badge>
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         {new Date(visitor.check_in_date).toLocaleString()}
                       </td>
