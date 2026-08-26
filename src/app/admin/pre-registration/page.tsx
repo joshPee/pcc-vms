@@ -233,11 +233,11 @@ export default function PreRegistrationPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800 mb-2">
+              <div className="bg-[#123B70]/10 border border-[#123B70]/20 rounded-lg p-4">
+                <p className="text-sm text-[#123B70] mb-2">
                   <strong>CSV Format:</strong> Include headers: full_name, organisation, position, phone, expected_date, expected_time, host_name, host_department, visit_purpose
                 </p>
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-[#123B70]/80">
                   Example: John Doe, ABC Corp, Manager, 555-1234, 2026-08-25, 09:00, Jane Smith, HR, Meeting
                 </p>
               </div>
@@ -422,7 +422,7 @@ export default function PreRegistrationPage() {
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#123B70]"></div>
             </div>
           ) : (
             <>

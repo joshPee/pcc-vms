@@ -35,7 +35,7 @@ interface NavItem {
 const allNavItems: NavItem[] = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/check-in', label: 'Check-In/ Out', icon: LogIn },
-  { href: '/admin/visitors', label: 'Active Visitors', icon: Users },
+  { href: '/admin/visitors', label: 'Visitors', icon: Users },
   { href: '/admin/pre-registration', label: 'Pre-Registration', icon: CalendarCheck },
   { href: '/admin/visitor-history', label: 'Visitor Log', icon: History },
   { href: '/admin/watchlist', label: 'Watchlist', icon: ShieldAlert },

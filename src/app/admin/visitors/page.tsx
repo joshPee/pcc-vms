@@ -140,7 +140,7 @@ export default function VisitorsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="all">All Visitors</TabsTrigger>
-          <TabsTrigger value="inside">Visitors</TabsTrigger>
+          <TabsTrigger value="inside">Active Visitors</TabsTrigger>
           <TabsTrigger value="history">Visitor History</TabsTrigger>
         </TabsList>
 
