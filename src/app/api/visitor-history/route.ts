@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN users u_in ON ci.user_id = u_in.id
       LEFT JOIN check_outs co ON p.id = co.participant_id
       LEFT JOIN users u_out ON co.user_id = u_out.id
-      WHERE 1=1
+      WHERE p.check_in_date IS NOT NULL
     `;
     const params: any[] = [];
     let paramIndex = 1;
@@ -56,7 +56,9 @@ export async function GET(request: NextRequest) {
 
     query += ' ORDER BY p.check_in_date DESC LIMIT 1000';
 
+    console.log('Visitor history query:', query);
     const result = await pool.query(query, params);
+    console.log('Visitor history result count:', result.rows.length);
     return NextResponse.json(result.rows || []);
   } catch (error) {
     console.error('Error fetching visitor history:', error);
