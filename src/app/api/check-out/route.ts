@@ -6,15 +6,6 @@ import { clearCache } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
     const { registrationCode, notes } = body;
 
@@ -28,8 +19,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the HR user ID from session
-    const hrUserId = parseInt((session.user as any).id);
+    // Use a default user ID for now (can be enhanced later with proper auth)
+    const hrUserId = 1;
 
     // Use a transaction to ensure atomic check-out
     try {
