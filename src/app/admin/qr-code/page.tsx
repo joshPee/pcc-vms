@@ -27,7 +27,7 @@ export default function QRCodePage() {
         width: 300,
         margin: 2,
         color: {
-          dark: '#123B70',
+          dark: '#000000',
           light: '#ffffff',
         },
       });

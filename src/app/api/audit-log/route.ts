@@ -36,11 +36,11 @@ export async function GET(request: NextRequest) {
       `;
       
       if (startDate) {
-        query = sql`${query} AND vl.action_time >= ${startDate}`;
+        query = sql`${query} AND vl.action_time >= ${startDate}::date`;
       }
       
       if (endDate) {
-        query = sql`${query} AND vl.action_time <= ${endDate}`;
+        query = sql`${query} AND vl.action_time <= ${endDate}::date + INTERVAL '1 day'`;
       }
       
       query = sql`${query} ORDER BY vl.action_time DESC`;
@@ -67,11 +67,11 @@ export async function GET(request: NextRequest) {
       `;
       
       if (startDate) {
-        query = sql`${query} AND vl.action_time >= ${startDate}`;
+        query = sql`${query} AND vl.action_time >= ${startDate}::date`;
       }
       
       if (endDate) {
-        query = sql`${query} AND vl.action_time <= ${endDate}`;
+        query = sql`${query} AND vl.action_time <= ${endDate}::date + INTERVAL '1 day'`;
       }
       
       query = sql`${query} ORDER BY vl.action_time DESC LIMIT ${limit} OFFSET ${offset}`;
