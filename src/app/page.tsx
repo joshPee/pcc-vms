@@ -8,7 +8,7 @@ export default function Home() {
     <div className="min-h-screen px-4 flex items-center justify-center">
       <div className="max-w-md mx-auto text-center">
           {/* Logo */}
-          <div className="w-48 h-48 mx-auto mb-6">
+          <div className="w-48 h-48 mx-auto mb-4">
             <img
               src="/pcc.png"
               alt="PCC Logo"
