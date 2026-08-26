@@ -14,6 +14,13 @@ export async function GET() {
       );
     }
 
+    if (!sql) {
+      return NextResponse.json(
+        { error: 'Database connection not available' },
+        { status: 500 }
+      );
+    }
+
     const users = await sql`
       SELECT id, name, email, role
       FROM users
