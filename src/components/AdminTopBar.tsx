@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Settings, Menu } from 'lucide-react';
-import { Toast } from '@/components/ui/toast';
 
 interface AdminTopBarProps {
   onMobileMenuToggle?: () => void;
@@ -14,7 +13,6 @@ interface AdminTopBarProps {
 export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [greeting, setGreeting] = useState('');
-  const [showToast, setShowToast] = useState(false);
   const [confirmingLogout, setConfirmingLogout] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -37,10 +35,7 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const confirmLogout = () => {
     setShowProfileMenu(false);
     setConfirmingLogout(false);
-    setShowToast(true);
-    setTimeout(() => {
-      window.location.href = '/api/auth/signout?callbackUrl=/admin/login';
-    }, 1500);
+    window.location.href = '/api/auth/signout?callbackUrl=/admin/login';
   };
 
   const cancelLogout = () => {
@@ -66,8 +61,9 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
               <p className="text-[10px] text-muted-foreground">Admin Portal</p>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-sm font-medium text-muted-foreground ml-8">
-            <span>{greeting}, Administrator</span>
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground ml-2 md:ml-8">
+            <span className="hidden md:inline">{greeting}, Administrator</span>
+            <span className="md:hidden">{greeting}</span>
           </div>
         </div>
 
@@ -136,13 +132,6 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
           </div>
         </div>
       </header>
-      
-      {showToast && (
-        <Toast variant="default" className="flex items-center gap-2">
-          <LogOut className="h-4 w-4" />
-          <span className="text-sm">Signing out...</span>
-        </Toast>
-      )}
     </>
   );
 }
