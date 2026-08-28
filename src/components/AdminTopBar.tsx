@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Settings, Menu } from 'lucide-react';
 
@@ -35,7 +36,7 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const confirmLogout = () => {
     setShowProfileMenu(false);
     setConfirmingLogout(false);
-    window.location.href = '/api/auth/signout?callbackUrl=/admin/login';
+    signOut({ callbackUrl: '/admin/login' });
   };
 
   const cancelLogout = () => {

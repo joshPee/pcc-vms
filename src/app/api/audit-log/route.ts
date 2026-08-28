@@ -36,11 +36,11 @@ export async function GET(request: NextRequest) {
       `;
       
       if (startDate) {
-        query = sql`${query} AND DATE(vl.action_time) >= ${startDate}`;
+        query = sql`${query} AND vl.action_time >= ${startDate} 00:00:00`;
       }
       
       if (endDate) {
-        query = sql`${query} AND DATE(vl.action_time) <= ${endDate}`;
+        query = sql`${query} AND vl.action_time <= ${endDate} 23:59:59`;
       }
       
       query = sql`${query} ORDER BY vl.action_time DESC`;
@@ -67,11 +67,11 @@ export async function GET(request: NextRequest) {
       `;
       
       if (startDate) {
-        query = sql`${query} AND DATE(vl.action_time) >= ${startDate}`;
+        query = sql`${query} AND vl.action_time >= ${startDate} 00:00:00`;
       }
       
       if (endDate) {
-        query = sql`${query} AND DATE(vl.action_time) <= ${endDate}`;
+        query = sql`${query} AND vl.action_time <= ${endDate} 23:59:59`;
       }
       
       query = sql`${query} ORDER BY vl.action_time DESC LIMIT ${limit} OFFSET ${offset}`;
@@ -80,10 +80,10 @@ export async function GET(request: NextRequest) {
       // Count with same date filters
       let countQuery = sql`SELECT COUNT(*) as total FROM visitor_logs WHERE 1=1`;
       if (startDate) {
-        countQuery = sql`${countQuery} AND DATE(action_time) >= ${startDate}`;
+        countQuery = sql`${countQuery} AND action_time >= ${startDate} 00:00:00`;
       }
       if (endDate) {
-        countQuery = sql`${countQuery} AND DATE(action_time) <= ${endDate}`;
+        countQuery = sql`${countQuery} AND action_time <= ${endDate} 23:59:59`;
       }
       const countResult = await countQuery;
 
