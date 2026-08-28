@@ -189,17 +189,7 @@ export default function VisitorsPage() {
                           {paginatedVisitors.map((visitor) => (
                             <tr key={visitor.id} className="hover:bg-gray-50">
                               <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.registration_code}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
-                                <div className="flex items-center gap-2">
-                                  {visitor.full_name}
-                                  {visitor.is_recurring && (
-                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                                      <Repeat className="w-3 h-3 mr-1" />
-                                      Recurring
-                                    </Badge>
-                                  )}
-                                </div>
-                              </td>
+                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.full_name}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>

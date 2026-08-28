@@ -14,7 +14,6 @@ interface AdminTopBarProps {
 export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [greeting, setGreeting] = useState('');
-  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -30,17 +29,11 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   }, []);
 
   const handleSignOut = () => {
-    setConfirmingLogout(true);
-  };
-
-  const confirmLogout = () => {
     setShowProfileMenu(false);
-    setConfirmingLogout(false);
-    signOut({ callbackUrl: '/admin/login' });
-  };
-
-  const cancelLogout = () => {
-    setConfirmingLogout(false);
+    signOut({ 
+      callbackUrl: '/admin/login',
+      redirect: true
+    });
   };
 
   return (
@@ -84,49 +77,26 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
               <>
                 <div
                   className="fixed inset-0 z-40"
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    setConfirmingLogout(false);
-                  }}
+                  onClick={() => setShowProfileMenu(false)}
                 />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  {confirmingLogout ? (
-                    <div className="p-3 space-y-2">
-                      <p className="text-sm font-medium text-gray-900">Confirm logout?</p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={cancelLogout}
-                          className="flex-1 px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={confirmLogout}
-                          className="flex-1 px-3 py-1.5 text-xs bg-red-600 hover:bg-red-700 rounded-md text-white"
-                        >
-                          Log out
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="p-2 space-y-1">
-                      <Link
-                        href="/admin/settings"
-                        className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100 rounded-md"
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        <Settings className="h-4 w-4" />
-                        Settings
-                      </Link>
-                      <button
-                        onClick={handleSignOut}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Log out
-                      </button>
-                    </div>
-                  )}
+                  <div className="p-2 space-y-1">
+                    <Link
+                      href="/admin/settings"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100 rounded-md"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log out
+                    </button>
+                  </div>
                 </div>
               </>
             )}
