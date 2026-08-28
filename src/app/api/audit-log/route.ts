@@ -77,9 +77,15 @@ export async function GET(request: NextRequest) {
       query = sql`${query} ORDER BY vl.action_time DESC LIMIT ${limit} OFFSET ${offset}`;
       logs = await query;
 
-      const countResult = await sql`
-        SELECT COUNT(*) as total FROM visitor_logs
-      `;
+      // Count with same date filters
+      let countQuery = sql`SELECT COUNT(*) as total FROM visitor_logs WHERE 1=1`;
+      if (startDate) {
+        countQuery = sql`${countQuery} AND action_time >= ${startDate}::date`;
+      }
+      if (endDate) {
+        countQuery = sql`${countQuery} AND action_time <= ${endDate}::date + INTERVAL '1 day'`;
+      }
+      const countResult = await countQuery;
 
       return NextResponse.json({
         logs,

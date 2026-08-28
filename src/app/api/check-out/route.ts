@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
       if (participant.length === 0) {
         return NextResponse.json(
-          { error: 'Participant not found' },
+          { error: 'Visitor not found' },
           { status: 404 }
         );
       }
