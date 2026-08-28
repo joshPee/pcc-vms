@@ -3,7 +3,7 @@ import { fraunces, ibmPlexSans, ibmPlexMono } from "@/lib/fonts";
 import "./globals.css";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { SessionProvider } from "next-auth/react";
+import { Providers } from "@/components/providers";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -21,9 +21,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn("h-full", "antialiased", fraunces.variable, ibmPlexSans.variable, ibmPlexMono.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <SessionProvider>
+        <Providers>
           {children}
-        </SessionProvider>
+        </Providers>
       </body>
     </html>
   );
