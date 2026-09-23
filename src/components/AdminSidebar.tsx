@@ -39,7 +39,7 @@ const allNavItems: NavItem[] = [
   { href: '/admin/pre-registration', label: 'Pre-Registration', icon: CalendarCheck },
   { href: '/admin/visitor-history', label: 'Visitor Log', icon: History },
   { href: '/admin/watchlist', label: 'Watchlist', icon: ShieldAlert },
-  { href: '/admin/reports', label: 'Reports', icon: BarChart3, requiredRole: 'Supervisor' },
+  { href: '/admin/reports', label: 'Reports', icon: BarChart3, requiredRole: 'supervisor' },
   { 
     label: 'Settings', 
     icon: Settings, 
@@ -55,7 +55,7 @@ const allNavItems: NavItem[] = [
 export default function AdminSidebar({ mobileMenuOpen, setMobileMenuOpen }: { mobileMenuOpen: boolean; setMobileMenuOpen: (open: boolean) => void }) {
   const pathname = usePathname();
   const [openMenus, setOpenMenus] = useState<Set<string>>(new Set());
-  const [userRole, setUserRole] = useState<UserRole>('Security Officer');
+  const [userRole, setUserRole] = useState<UserRole>('security_officer');
   const [navItems, setNavItems] = useState<NavItem[]>(allNavItems); // Start with all items
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function AdminSidebar({ mobileMenuOpen, setMobileMenuOpen }: { mo
         
         if (response.ok) {
           const data = await response.json();
-          const role = data.role || 'Security Officer';
+          const role = data.role || 'security_officer';
           setUserRole(role);
           
           // Filter nav items based on role
@@ -73,10 +73,10 @@ export default function AdminSidebar({ mobileMenuOpen, setMobileMenuOpen }: { mo
             // Check if item has a required role
             if (item.requiredRole) {
               const roleHierarchy: Record<string, number> = {
-                'Security Officer': 1,
-                'Supervisor': 2,
-                'Sector Head': 3,
-                'Admin': 4,
+                'security_officer': 1,
+                'supervisor': 2,
+                'sector_head': 3,
+                'admin': 4,
               };
               const userLevel = roleHierarchy[role] || 0;
               const requiredLevel = roleHierarchy[item.requiredRole] || 999;

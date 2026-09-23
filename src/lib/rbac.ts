@@ -1,4 +1,4 @@
-export type UserRole = 'Security Officer' | 'Supervisor' | 'Sector Head' | 'Admin';
+export type UserRole = 'admin' | 'security_officer' | 'supervisor' | 'sector_head';
 
 export interface Permission {
   canView: boolean;
@@ -7,45 +7,45 @@ export interface Permission {
 }
 
 export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  'Security Officer': 1,
-  'Supervisor': 2,
-  'Sector Head': 3,
-  'Admin': 4,
+  'security_officer': 1,
+  'supervisor': 2,
+  'sector_head': 3,
+  'admin': 4,
 };
 
 export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
   // Dashboard - accessible by all
-  '/admin/dashboard': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
+  '/admin/dashboard': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   
   // Visitors section - accessible by all
-  '/admin/check-in': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
-  '/admin/visitors': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
-  '/admin/pre-registration': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
-  '/admin/visitor-history': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
-  '/admin/check-out': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
+  '/admin/check-in': ['security_officer', 'supervisor', 'sector_head', 'admin'],
+  '/admin/visitors': ['security_officer', 'supervisor', 'sector_head', 'admin'],
+  '/admin/pre-registration': ['security_officer', 'supervisor', 'sector_head', 'admin'],
+  '/admin/visitor-history': ['security_officer', 'supervisor', 'sector_head', 'admin'],
+  '/admin/check-out': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   
-  // Watchlist - view all, edit only Supervisor+
-  '/admin/watchlist': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
+  // Watchlist - view all, edit only supervisor+
+  '/admin/watchlist': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   
-  // Hosts & Staff - view all, edit only Supervisor+
-  '/admin/hosts-staff': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
+  // Hosts & Staff - view all, edit only supervisor+
+  '/admin/hosts-staff': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   
   // Vehicles - accessible by all
-  '/admin/vehicles': ['Security Officer', 'Supervisor', 'Sector Head', 'Admin'],
+  '/admin/vehicles': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   
-  // Incidents - Supervisor+
-  '/admin/incidents': ['Supervisor', 'Sector Head', 'Admin'],
+  // Incidents - supervisor+
+  '/admin/incidents': ['supervisor', 'sector_head', 'admin'],
   
-  // Shift Handover - Supervisor+
-  '/admin/shift-handover': ['Supervisor', 'Sector Head', 'Admin'],
+  // Shift Handover - supervisor+
+  '/admin/shift-handover': ['supervisor', 'sector_head', 'admin'],
   
-  // Reports - Supervisor+
-  '/admin/reports': ['Supervisor', 'Sector Head', 'Admin'],
+  // Reports - supervisor+
+  '/admin/reports': ['supervisor', 'sector_head', 'admin'],
   
-  // Settings - Sector Head only
-  '/admin/settings': ['Sector Head', 'Admin'],
-  '/admin/visitor-categories': ['Sector Head', 'Admin'],
-  '/admin/audit-log': ['Sector Head', 'Admin'],
+  // Settings - sector_head only
+  '/admin/settings': ['sector_head', 'admin'],
+  '/admin/visitor-categories': ['sector_head', 'admin'],
+  '/admin/audit-log': ['sector_head', 'admin'],
 };
 
 export function canAccessPage(userRole: UserRole, path: string): boolean {
@@ -56,11 +56,11 @@ export function canAccessPage(userRole: UserRole, path: string): boolean {
 
 export function canEditResource(userRole: UserRole, resource: string): boolean {
   const editPermissions: Record<string, UserRole[]> = {
-    'watchlist': ['Supervisor', 'Sector Head', 'Admin'],
-    'hosts-staff': ['Supervisor', 'Sector Head', 'Admin'],
-    'visitor-categories': ['Sector Head', 'Admin'],
-    'audit-log': ['Sector Head', 'Admin'],
-    'settings': ['Sector Head', 'Admin'],
+    'watchlist': ['supervisor', 'sector_head', 'admin'],
+    'hosts-staff': ['supervisor', 'sector_head', 'admin'],
+    'visitor-categories': ['sector_head', 'admin'],
+    'audit-log': ['sector_head', 'admin'],
+    'settings': ['sector_head', 'admin'],
   };
   
   const allowedRoles = editPermissions[resource];
