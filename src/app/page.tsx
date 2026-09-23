@@ -77,7 +77,7 @@ export default function Home() {
       {/* Carousel */}
       <div
         ref={carouselRef}
-        className="relative flex-1 flex items-center justify-center px-4 py-8 max-w-2xl mx-auto w-full"
+        className="relative flex-1 overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -89,44 +89,45 @@ export default function Home() {
         aria-roledescription="carousel"
         aria-label="Welcome information carousel"
       >
-        <div className="text-center space-y-6 w-full">
-          {/* Image */}
-          <div className="flex justify-center">
-            <div className="w-full max-w-md h-48 rounded-lg overflow-hidden shadow-lg">
-              <img
-                src={CAROUSEL_SLIDES[currentSlide].image}
-                alt={CAROUSEL_SLIDES[currentSlide].heading}
-                className="w-full h-full object-cover"
-              />
+        {CAROUSEL_SLIDES.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={slide.image}
+              alt={slide.heading}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 max-w-3xl">
+                {slide.heading}
+              </h2>
+              <p className="text-lg sm:text-xl md:text-2xl opacity-90 max-w-2xl">
+                {slide.text}
+              </p>
             </div>
           </div>
+        ))}
 
-          {/* Slide Content */}
-          <div className="space-y-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {CAROUSEL_SLIDES[currentSlide].heading}
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-lg mx-auto">
-              {CAROUSEL_SLIDES[currentSlide].text}
-            </p>
-          </div>
-
-          {/* Dot Indicators */}
-          <div className="flex justify-center gap-2">
-            {CAROUSEL_SLIDES.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentSlide
-                    ? 'bg-blue-700 w-8'
-                    : 'bg-gray-300 hover:bg-gray-400'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-                aria-current={index === currentSlide ? 'true' : 'false'}
-              />
-            ))}
-          </div>
+        {/* Dot Indicators */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+          {CAROUSEL_SLIDES.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentSlide
+                  ? 'bg-white w-8'
+                  : 'bg-white/50 hover:bg-white/70'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+              aria-current={index === currentSlide ? 'true' : 'false'}
+            />
+          ))}
         </div>
       </div>
 

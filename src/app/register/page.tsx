@@ -130,14 +130,14 @@ export default function Register() {
     <div className="min-h-screen bg-white px-4 py-4 flex items-center justify-center">
       <div className="max-w-md mx-auto">
         <div className="text-center mb-6">
-          <div className="w-40 h-40 mx-auto mb-4">
+          <div className="w-40 h-40 mx-auto mb-2">
             <img
               src="/pcc.png"
               alt="PCC Logo"
               className="object-contain w-full h-full"
             />
           </div>
-          <h2 className="font-fraunces text-base text-green-700 mb-2 uppercase">
+          <h2 className="font-fraunces text-xl text-green-700 mb-2 uppercase">
             Visitor Check-In
           </h2>
         </div>
