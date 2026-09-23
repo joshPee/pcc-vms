@@ -137,9 +137,6 @@ export default function Register() {
               className="object-contain w-full h-full"
             />
           </div>
-          <h1 className="font-fraunces font-medium text-xl text-ink mb-1">
-            PENTECOST CONVENTION CENTRE
-          </h1>
           <h2 className="font-fraunces text-base text-green-700 mb-2 uppercase">
             Visitor Check-In
           </h2>

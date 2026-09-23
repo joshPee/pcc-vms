@@ -57,8 +57,6 @@ export default function Home() {
 
   const goToSlide = (index: number) => setCurrentSlide(index);
 
-  const IconComponent = CAROUSEL_SLIDES[currentSlide].icon;
-
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header with Logo */}
@@ -92,10 +90,14 @@ export default function Home() {
         aria-label="Welcome information carousel"
       >
         <div className="text-center space-y-6 w-full">
-          {/* Icon */}
+          {/* Image */}
           <div className="flex justify-center">
-            <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center">
-              <IconComponent className="w-10 h-10 text-blue-700" />
+            <div className="w-full max-w-md h-48 rounded-lg overflow-hidden shadow-lg">
+              <img
+                src={CAROUSEL_SLIDES[currentSlide].image}
+                alt={CAROUSEL_SLIDES[currentSlide].heading}
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
 
