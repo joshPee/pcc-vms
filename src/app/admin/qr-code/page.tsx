@@ -21,10 +21,10 @@ export default function QRCodePage() {
       if (qrType === 'pdf') {
         return `${baseUrl}/pdf?t=${Date.now()}`;
       } else {
-        return `${baseUrl}/register`;
+        return `${baseUrl}/`;
       }
     }
-    return qrType === 'pdf' ? `/pdf?t=${Date.now()}` : '/register';
+    return qrType === 'pdf' ? `/pdf?t=${Date.now()}` : '/';
   };
 
   const generateQRCode = async () => {
@@ -66,10 +66,10 @@ export default function QRCodePage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: qrType === 'pdf' ? 'QCC Image' : 'Visitor Registration',
-          text: qrType === 'pdf' 
+          title: qrType === 'pdf' ? 'QCC Image' : 'PCC Visitor Check-In',
+          text: qrType === 'pdf'
             ? 'Scan this QR code to access the QCC information image'
-            : 'Scan this QR code to register as a visitor',
+            : 'Scan this QR code to visit the PCC landing page and check in',
           url: url,
         });
       } catch (err) {
@@ -136,9 +136,9 @@ export default function QRCodePage() {
                     />
                   </div>
                   <p className="text-sm text-muted-foreground text-center">
-                    {qrType === 'pdf' 
+                    {qrType === 'pdf'
                       ? 'Scan this QR code to access the PDF document'
-                      : 'Scan this QR code to register as a visitor'}
+                      : 'Scan this QR code to visit the landing page and check in'}
                   </p>
                   <div className="flex gap-2 justify-center flex-wrap">
                     {qrType === 'pdf' && (
@@ -194,9 +194,9 @@ export default function QRCodePage() {
             </>
           ) : (
             <>
-              <p>1. The QR code points to the visitor registration form</p>
+              <p>1. The QR code points to the PCC landing page</p>
               <p>2. Visitors can scan the QR code with their phone camera</p>
-              <p>3. They will be directed to fill in their visitor details</p>
+              <p>3. They will see the welcome carousel and can click "Check In" to register</p>
               <p>4. Print this QR code and place it at the entrance for self-registration</p>
             </>
           )}
