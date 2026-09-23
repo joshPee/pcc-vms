@@ -19,7 +19,8 @@ import {
   ClipboardList,
   FileText,
   Tag,
-  ScrollText
+  ScrollText,
+  QrCode
 } from 'lucide-react';
 import { canAccessPage, type UserRole } from '@/lib/rbac';
 
@@ -39,6 +40,7 @@ const allNavItems: NavItem[] = [
   { href: '/admin/pre-registration', label: 'Pre-Registration', icon: CalendarCheck },
   { href: '/admin/visitor-history', label: 'Visitor Log', icon: History },
   { href: '/admin/watchlist', label: 'Watchlist', icon: ShieldAlert },
+  { href: '/admin/qr-code', label: 'QR Code Generator', icon: QrCode },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3, requiredRole: 'supervisor' },
   { 
     label: 'Settings', 
