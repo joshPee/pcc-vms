@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { authOptions, UserRole } from '@/lib/auth';
 import { clearCache } from '@/lib/db';
+
+const GUARD_ROLES: UserRole[] = ['admin', 'security_officer', 'supervisor', 'sector_head'];
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const userRole = session.user.role as UserRole;
+    if (!userRole || !GUARD_ROLES.includes(userRole)) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions. Guard access required.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { registrationCode, notes } = body;
 
@@ -19,8 +38,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use a default user ID for now (can be enhanced later with proper auth)
-    const hrUserId = 1;
+    // Use the authenticated user's ID
+    const hrUserId = parseInt(session.user.id);
 
     // Use a transaction to ensure atomic check-out
     try {
