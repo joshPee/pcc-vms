@@ -56,7 +56,7 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         <div
           ref={carouselRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-0"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-3"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {CAROUSEL_SLIDES.map((slide, index) => (
@@ -92,7 +92,7 @@ export default function Home() {
         </div>
 
         {/* Progress Indicator */}
-        <div className="flex justify-center gap-[6px] mb-2">
+        <div className="flex justify-center gap-[6px] mb-3">
           {CAROUSEL_SLIDES.map((_, index) => (
             <div
               key={index}
@@ -109,7 +109,7 @@ export default function Home() {
 
         {/* Swipe Hint */}
         {!hasScrolled && !prefersReducedMotion && (
-          <div className="flex items-center justify-center gap-2 text-[12px]" style={{ color: '#4b5a55' }}>
+          <div className="flex items-center justify-center gap-2 text-[12px] mb-2" style={{ color: '#4b5a55' }}>
             <span>Swipe to see all steps</span>
             <ChevronRight className="w-4 h-4 animate-pulse" />
           </div>
