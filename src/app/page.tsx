@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronRight, ChevronLeft, ShieldCheck } from 'lucide-react';
 import { CAROUSEL_SLIDES } from '@/lib/carousel-slides';
 
 export default function Home() {
@@ -10,132 +10,270 @@ export default function Home() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const prefersReducedMotion = typeof window !== 'undefined'
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : false;
+  // Smoothly scroll to a specific slide
+  const scrollToSlide = useCallback((index: number) => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
+    const slides = carousel.children;
+    if (slides[index]) {
+      (slides[index] as HTMLElement).scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+      setActiveSlide(index);
+      setHasScrolled(true);
+    }
+  }, []);
+
+  const handlePrev = () => {
+    const prev = Math.max(0, activeSlide - 1);
+    scrollToSlide(prev);
+  };
+
+  const handleNext = () => {
+    const next = Math.min(CAROUSEL_SLIDES.length - 1, activeSlide + 1);
+    scrollToSlide(next);
+  };
 
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
 
+    let timeoutId: NodeJS.Timeout;
     const handleScroll = () => {
       setHasScrolled(true);
-      const scrollLeft = carousel.scrollLeft;
-      const cardWidth = carousel.offsetWidth * 0.86;
-      const gap = 12;
-      const slideIndex = Math.round(scrollLeft / (cardWidth + gap));
-      setActiveSlide(Math.min(slideIndex, CAROUSEL_SLIDES.length - 1));
+
+      // Debounce slightly to ensure smooth calculation during touch inertia
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (!carousel) return;
+        const children = Array.from(carousel.children) as HTMLElement[];
+        if (children.length === 0) return;
+
+        const carouselCenter = carousel.scrollLeft + carousel.offsetWidth / 2;
+        let closestIdx = 0;
+        let minDistance = Infinity;
+
+        children.forEach((child, idx) => {
+          const childCenter = child.offsetLeft + child.offsetWidth / 2;
+          const distance = Math.abs(carouselCenter - childCenter);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIdx = idx;
+          }
+        });
+
+        setActiveSlide(closestIdx);
+      }, 50);
     };
 
-    carousel.addEventListener('scroll', handleScroll);
-    return () => carousel.removeEventListener('scroll', handleScroll);
+    carousel.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      carousel.removeEventListener('scroll', handleScroll);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf8f4' }}>
-      {/* Header */}
-      <div className="px-4 pt-safe-top pb-4 flex items-center" style={{ paddingTop: 'max(18px, env(safe-area-inset-top))' }}>
-        <div className="w-[64px] h-[64px] rounded-[9px] overflow-hidden flex-shrink-0">
-          <img
-            src="/pcc.png"
-            alt="PCC Logo"
-            className="w-full h-full object-contain"
-          />
-        </div>
-        <div className="ml-3 flex flex-col justify-center">
-          <h1 className="font-fraunces font-semibold text-[17px] leading-tight" style={{ color: '#152420' }}>
-            Pentecost Convention Centre
-          </h1>
-          <p className="text-[13px] mt-[1px]" style={{ color: '#4b5a55' }}>
-            Visitor check-in
-          </p>
-        </div>
-      </div>
-
-      {/* Carousel */}
-      <div className="flex-1 overflow-hidden">
-        <div
-          ref={carouselRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-4"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+    <main
+      className="h-dvh min-h-dvh w-full overflow-hidden flex flex-col justify-between"
+      style={{ backgroundColor: '#FAF8F4' }}
+    >
+      <div className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-between h-full px-4 sm:px-6">
+        {/* Header */}
+        <header
+          className="pt-[max(14px,env(safe-area-inset-top))] pb-2 sm:pb-3 flex items-center justify-between flex-shrink-0"
         >
-          {CAROUSEL_SLIDES.map((slide, index) => (
-            <div
-              key={index}
-              className="flex-shrink-0 snap-center rounded-[16px] overflow-hidden relative"
-              style={{ width: 'min(86vw, 400px)', aspectRatio: '4/5' }}
-            >
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border border-[#E4EBDF] shadow-xs p-1.5 flex items-center justify-center flex-shrink-0">
               <img
-                src={slide.image}
-                alt={slide.heading}
-                className="w-full h-full object-cover"
+                src="/pcc.png"
+                alt="PCC Logo"
+                className="w-full h-full object-contain"
               />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(to bottom, transparent 0%, rgba(13, 59, 32, 0.3) 50%, rgba(13, 59, 32, 0.85) 100%)'
-                }}
-              />
-              <div className="absolute bottom-0 left-0 right-0 p-5 pb-[22px]">
-                <div className="w-[26px] h-[26px] rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: '#c99a3f' }}>
-                  <span className="font-bold text-[14px]" style={{ color: '#0d3b20' }}>{slide.badge}</span>
-                </div>
-                <h2 className="font-fraunces font-semibold text-[22px] text-white mb-2">
-                  {slide.heading}
-                </h2>
-                <p className="text-[14px] text-white opacity-88 leading-snug">
-                  {slide.text}
+            </div>
+            <div className="flex flex-col">
+              <h1 className="font-fraunces font-semibold text-[17px] sm:text-[19px] text-[#152420] leading-tight tracking-tight">
+                Pentecost Convention Centre
+              </h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#0B3D2E]" />
+                <p className="text-[12px] sm:text-[13px] text-[#556960] font-medium tracking-wide">
+                  Visitor Check-in
                 </p>
               </div>
             </div>
-          ))}
-        </div>
-
-        {/* Progress Indicator */}
-        <div className="flex justify-center gap-[6px] mb-1">
-          {CAROUSEL_SLIDES.map((_, index) => (
-            <div
-              key={index}
-              className="transition-all duration-300"
-              style={{
-                width: index === activeSlide ? '18px' : '6px',
-                height: '6px',
-                borderRadius: '4px',
-                backgroundColor: index === activeSlide ? '#14532d' : '#d1d5db'
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Swipe Hint */}
-        {!hasScrolled && !prefersReducedMotion && (
-          <div className="flex items-center justify-center gap-2 text-[12px] mb-1" style={{ color: '#4b5a55' }}>
-            <span>Swipe to see all steps</span>
-            <ChevronRight className="w-4 h-4 animate-pulse" />
           </div>
-        )}
-      </div>
 
-      {/* Bottom Action Area */}
-      <div className="px-4 pb-safe-bottom" style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom) + 18px)' }}>
-        <Link
-          href="/register"
-          className="flex items-center justify-center gap-2 w-full py-[17px] rounded-[14px] text-white font-semibold text-[16px] transition-all active:scale-95"
-          style={{
-            backgroundColor: '#1d4ed8',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-          }}
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0B3D2E]/5 border border-[#0B3D2E]/10 text-[#0B3D2E] text-xs font-medium">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Official Gate Pass</span>
+          </div>
+        </header>
+
+        {/* Carousel Area */}
+        <section
+          aria-label="How Check-in Works"
+          className="flex-1 min-h-0 flex flex-col justify-center my-auto relative py-1 sm:py-2"
         >
-          Check in
-          <ArrowRight className="w-5 h-5" />
-        </Link>
-        <p className="text-center text-[13px] mt-3" style={{ color: '#4b5a55' }}>
-          Trouble with the form?{' '}
-          <span className="font-bold cursor-pointer" style={{ color: '#1d4ed8' }}>
-            Ask the officer at the gate
-          </span>
-        </p>
+          {/* Desktop Arrow Controls */}
+          {activeSlide > 0 && (
+            <button
+              type="button"
+              onClick={handlePrev}
+              aria-label="Previous step"
+              className="hidden sm:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-xs shadow-md border border-stone-200 items-center justify-center text-[#152420] hover:bg-white hover:scale-105 transition-all"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          )}
+          {activeSlide < CAROUSEL_SLIDES.length - 1 && (
+            <button
+              type="button"
+              onClick={handleNext}
+              aria-label="Next step"
+              className="hidden sm:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-xs shadow-md border border-stone-200 items-center justify-center text-[#152420] hover:bg-white hover:scale-105 transition-all"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Cards Container */}
+          <div
+            ref={carouselRef}
+            tabIndex={0}
+            aria-label="Visitor steps carousel"
+            className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-1 py-1 scroll-smooth focus:outline-hidden"
+            style={{
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            {CAROUSEL_SLIDES.map((slide, index) => (
+              <article
+                key={index}
+                aria-roledescription="slide"
+                aria-label={`Step ${index + 1} of ${CAROUSEL_SLIDES.length}: ${slide.heading}`}
+                className="flex-shrink-0 snap-center rounded-[20px] overflow-hidden relative shadow-lg shadow-black/8 border border-black/5"
+                style={{
+                  width: 'min(84vw, 360px)',
+                  height: 'min(50vh, 380px)',
+                  minHeight: '260px',
+                }}
+              >
+                <img
+                  src={slide.image}
+                  alt={slide.heading}
+                  className="w-full h-full object-cover"
+                />
+
+                {/* Multi-layered gradient for optimal legibility */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(8,44,33,0.35) 45%, rgba(8,44,33,0.92) 85%, rgba(8,44,33,0.98) 100%)',
+                  }}
+                />
+
+                {/* Card Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 flex flex-col justify-end">
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center mb-2.5 shadow-xs"
+                    style={{ backgroundColor: '#C89B3C' }}
+                  >
+                    <span
+                      className="font-bold text-[13px] leading-none"
+                      style={{ color: '#082C21' }}
+                    >
+                      {slide.badge}
+                    </span>
+                  </div>
+                  <h2 className="font-fraunces font-semibold text-[20px] sm:text-[22px] text-white leading-tight mb-1.5 drop-shadow-xs">
+                    {slide.heading}
+                  </h2>
+                  <p className="text-[13px] sm:text-[14px] text-white/90 leading-snug line-clamp-3">
+                    {slide.text}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {/* Dots Indicator & Swipe Hint */}
+          <div className="mt-3 flex flex-col items-center gap-1.5 flex-shrink-0">
+            {/* Interactive Dots */}
+            <div
+              className="flex justify-center items-center gap-2"
+              role="tablist"
+              aria-label="Slide indicators"
+            >
+              {CAROUSEL_SLIDES.map((slide, index) => {
+                const isActive = index === activeSlide;
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-label={`Jump to step ${index + 1}: ${slide.heading}`}
+                    onClick={() => scrollToSlide(index)}
+                    className="p-1 -m-1 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0B3D2E] rounded-full"
+                  >
+                    <span
+                      className="block transition-all duration-300 rounded-full"
+                      style={{
+                        width: isActive ? '22px' : '6px',
+                        height: '6px',
+                        backgroundColor: isActive ? '#0B3D2E' : '#D1D5DB',
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Zero-CLS Swipe Hint with smooth fade */}
+            <div
+              className={`h-5 flex items-center justify-center gap-1.5 text-[12px] text-[#556960] transition-opacity duration-300 ${
+                hasScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <span>Swipe to see all steps</span>
+              <ChevronRight className="w-3.5 h-3.5 animate-pulse text-[#0B3D2E]" />
+            </div>
+          </div>
+        </section>
+
+        {/* Bottom Action Area */}
+        <footer
+          className="flex-shrink-0 pt-2 pb-[max(14px,calc(env(safe-area-inset-bottom)+12px))]"
+        >
+          <Link
+            href="/register"
+            className="group flex items-center justify-center gap-2 w-full py-3.5 sm:py-4 rounded-2xl text-white font-semibold text-[16px] transition-all duration-200 active:scale-[0.98] shadow-md hover:shadow-xl hover:brightness-105"
+            style={{
+              backgroundColor: '#0B3D2E',
+              boxShadow: '0 4px 14px rgba(11, 61, 46, 0.28)',
+            }}
+          >
+            <span>Check in</span>
+            <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
+          </Link>
+
+          <p className="text-center text-[12.5px] sm:text-[13px] mt-2.5 text-[#556960]">
+            Trouble with the form?{' '}
+            <span
+              className="font-semibold cursor-pointer underline decoration-[#0B3D2E]/40 hover:decoration-[#0B3D2E] transition-colors"
+              style={{ color: '#0B3D2E' }}
+            >
+              Ask the officer at the gate
+            </span>
+          </p>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
