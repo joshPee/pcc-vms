@@ -92,7 +92,7 @@ export default function Home() {
         </div>
 
         {/* Progress Indicator */}
-        <div className="flex justify-center gap-[6px] mb-3">
+        <div className="flex justify-center gap-[6px] mb-2">
           {CAROUSEL_SLIDES.map((_, index) => (
             <div
               key={index}
@@ -109,7 +109,7 @@ export default function Home() {
 
         {/* Swipe Hint */}
         {!hasScrolled && !prefersReducedMotion && (
-          <div className="flex items-center justify-center gap-2 text-[12px] mb-2" style={{ color: '#4b5a55' }}>
+          <div className="flex items-center justify-center gap-2 text-[12px] mb-1" style={{ color: '#4b5a55' }}>
             <span>Swipe to see all steps</span>
             <ChevronRight className="w-4 h-4 animate-pulse" />
           </div>
