@@ -63,7 +63,7 @@ export default function Home() {
             <div
               key={index}
               className="flex-shrink-0 snap-center rounded-[16px] overflow-hidden relative"
-              style={{ width: '86vw', aspectRatio: '4/5' }}
+              style={{ width: 'min(86vw, 400px)', aspectRatio: '4/5' }}
             >
               <img
                 src={slide.image}
