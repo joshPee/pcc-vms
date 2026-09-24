@@ -56,7 +56,7 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         <div
           ref={carouselRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-3"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-2"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {CAROUSEL_SLIDES.map((slide, index) => (
@@ -92,7 +92,7 @@ export default function Home() {
         </div>
 
         {/* Progress Indicator */}
-        <div className="flex justify-center gap-[6px] mb-1">
+        <div className="flex justify-center gap-[6px] mb-0">
           {CAROUSEL_SLIDES.map((_, index) => (
             <div
               key={index}
