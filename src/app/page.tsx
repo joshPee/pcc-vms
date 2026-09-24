@@ -2,156 +2,138 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronRight } from 'lucide-react';
 import { CAROUSEL_SLIDES } from '@/lib/carousel-slides';
 
-const AUTO_ADVANCE_INTERVAL = 6000;
-const SWIPE_THRESHOLD = 50;
-
 export default function Home() {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const prefersReducedMotion = typeof window !== 'undefined' 
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches 
+  const prefersReducedMotion = typeof window !== 'undefined'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
     : false;
 
   useEffect(() => {
-    if (prefersReducedMotion || isPaused) return;
+    const carousel = carouselRef.current;
+    if (!carousel) return;
 
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
-    }, AUTO_ADVANCE_INTERVAL);
+    const handleScroll = () => {
+      setHasScrolled(true);
+      const scrollLeft = carousel.scrollLeft;
+      const cardWidth = carousel.offsetWidth * 0.86;
+      const gap = 12;
+      const slideIndex = Math.round(scrollLeft / (cardWidth + gap));
+      setActiveSlide(Math.min(slideIndex, CAROUSEL_SLIDES.length - 1));
+    };
 
-    return () => clearInterval(timer);
-  }, [isPaused, prefersReducedMotion]);
-
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % CAROUSEL_SLIDES.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + CAROUSEL_SLIDES.length) % CAROUSEL_SLIDES.length);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowRight') nextSlide();
-    if (e.key === 'ArrowLeft') prevSlide();
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(0);
-    setTouchStart(e.targetTouches[0].clientX);
-    setIsPaused(true);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    if (distance > SWIPE_THRESHOLD) nextSlide();
-    if (distance < -SWIPE_THRESHOLD) prevSlide();
-    setIsPaused(false);
-  };
-
-  const goToSlide = (index: number) => setCurrentSlide(index);
+    carousel.addEventListener('scroll', handleScroll);
+    return () => carousel.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Header with Logo */}
-      <div className="px-4 py-4 flex items-center justify-center border-b border-gray-100">
-        <div className="w-16 h-16">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf8f4' }}>
+      {/* Header */}
+      <div className="px-4 pt-safe-top pb-4 flex items-center" style={{ paddingTop: 'max(18px, env(safe-area-inset-top))' }}>
+        <div className="w-[38px] h-[38px] rounded-[9px] overflow-hidden flex-shrink-0">
           <img
             src="/pcc.png"
             alt="PCC Logo"
-            className="object-contain w-full h-full"
+            className="w-full h-full object-contain"
           />
         </div>
-        <div className="ml-3">
-          <h1 className="text-lg font-bold text-gray-900">Pentecost Convention Centre</h1>
-          <p className="text-sm text-gray-600">Visitor Management System</p>
+        <div className="ml-3 flex flex-col justify-center">
+          <h1 className="font-fraunces font-semibold text-[19px] leading-tight" style={{ color: '#152420' }}>
+            Pentecost Convention Centre
+          </h1>
+          <p className="text-[13px] mt-[1px]" style={{ color: '#4b5a55' }}>
+            Visitor check-in
+          </p>
         </div>
       </div>
 
       {/* Carousel */}
-      <div
-        ref={carouselRef}
-        className="relative flex-1 overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onKeyDown={handleKeyDown}
-        tabIndex={0}
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="Welcome information carousel"
-      >
-        {CAROUSEL_SLIDES.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <img
-              src={slide.image}
-              alt={slide.heading}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 max-w-3xl">
-                {slide.heading}
-              </h2>
-              <p className="text-lg sm:text-xl md:text-2xl opacity-90 max-w-2xl">
-                {slide.text}
-              </p>
-            </div>
-          </div>
-        ))}
-
-        {/* Dot Indicators */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-          {CAROUSEL_SLIDES.map((_, index) => (
-            <button
+      <div className="flex-1 overflow-hidden">
+        <div
+          ref={carouselRef}
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-4"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {CAROUSEL_SLIDES.map((slide, index) => (
+            <div
               key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentSlide
-                  ? 'bg-white w-8'
-                  : 'bg-white/50 hover:bg-white/70'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-              aria-current={index === currentSlide ? 'true' : 'false'}
+              className="flex-shrink-0 snap-center rounded-[16px] overflow-hidden relative"
+              style={{ width: '86vw', aspectRatio: '4/5' }}
+            >
+              <img
+                src={slide.image}
+                alt={slide.heading}
+                className="w-full h-full object-cover"
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(to bottom, transparent 0%, rgba(13, 59, 32, 0.3) 50%, rgba(13, 59, 32, 0.85) 100%)'
+                }}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-5 pb-[22px]">
+                <div className="w-[26px] h-[26px] rounded-full flex items-center justify-center mb-3" style={{ backgroundColor: '#c99a3f' }}>
+                  <span className="font-bold text-[14px]" style={{ color: '#0d3b20' }}>{slide.badge}</span>
+                </div>
+                <h2 className="font-fraunces font-semibold text-[22px] text-white mb-2">
+                  {slide.heading}
+                </h2>
+                <p className="text-[14px] text-white opacity-88 leading-snug">
+                  {slide.text}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress Indicator */}
+        <div className="flex justify-center gap-[6px] mb-2">
+          {CAROUSEL_SLIDES.map((_, index) => (
+            <div
+              key={index}
+              className="transition-all duration-300"
+              style={{
+                width: index === activeSlide ? '18px' : '6px',
+                height: '6px',
+                borderRadius: '4px',
+                backgroundColor: index === activeSlide ? '#14532d' : '#d1d5db'
+              }}
             />
           ))}
         </div>
+
+        {/* Swipe Hint */}
+        {!hasScrolled && !prefersReducedMotion && (
+          <div className="flex items-center justify-center gap-2 text-[12px]" style={{ color: '#4b5a55' }}>
+            <span>Swipe to see all steps</span>
+            <ChevronRight className="w-4 h-4 animate-pulse" />
+          </div>
+        )}
       </div>
 
-      {/* Check In Button - Full width, always visible */}
-      <div className="px-4 py-6 bg-white border-t border-gray-100">
+      {/* Bottom Action Area */}
+      <div className="px-4 pb-safe-bottom" style={{ paddingBottom: 'max(14px, env(safe-area-inset-bottom) + 18px)' }}>
         <Link
           href="/register"
-          className="flex items-center justify-center gap-3 w-full py-4 px-6 text-white font-bold rounded-lg hover:opacity-90 transition-opacity min-h-[56px] text-lg"
-          style={{ backgroundColor: '#0F6E56' }}
+          className="flex items-center justify-center gap-2 w-full py-[17px] rounded-[14px] text-white font-semibold text-[16px] transition-all active:scale-95"
+          style={{
+            backgroundColor: '#1d4ed8',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+          }}
         >
-          <ArrowRight className="w-6 h-6" />
-          CHECK IN
+          Check in
+          <ArrowRight className="w-5 h-5" />
         </Link>
-      </div>
-
-      {/* Footer with Security Staff Login */}
-      <div className="px-4 py-4 bg-gray-50 border-t border-gray-100">
-        <p className="text-center text-sm text-gray-600">
-          <Link
-            href="/admin/login"
-            className="text-blue-700 hover:underline font-medium"
-          >
-            Security staff login
-          </Link>
+        <p className="text-center text-[13px] mt-3" style={{ color: '#4b5a55' }}>
+          Trouble with the form?{' '}
+          <span className="font-bold cursor-pointer" style={{ color: '#1d4ed8' }}>
+            Ask the officer at the gate
+          </span>
         </p>
       </div>
     </div>
