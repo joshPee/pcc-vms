@@ -1,364 +1,582 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Calendar, Download, BarChart3, TrendingUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import {
+  Download,
+  Printer,
+  Calendar,
+  Search,
+  Users,
+  LogOut,
+  Clock,
+  Building,
+  TrendingUp,
+  ShieldAlert,
+  Car,
+  Filter,
+  CheckCircle2,
+  RefreshCw,
+} from 'lucide-react';
 
 export default function ReportsPage() {
-  const [dateRange, setDateRange] = useState('today');
-  const [reportType, setReportType] = useState('daily');
-  const [visitorData, setVisitorData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState('today');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState<any>({
+    summary: {
+      totalCheckIns: 0,
+      totalCheckOuts: 0,
+      currentlyInside: 0,
+      avgDurationMinutes: 0,
+      peakHour: 'N/A',
+    },
+    trends: [],
+    departments: [],
+    purposes: [],
+    visitorLogs: [],
+  });
 
-  // Calculate date range labels
-  const getDateRangeLabel = (range: string) => {
-    const today = new Date();
-    const formatDate = (date: Date) => date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    
-    switch (range) {
-      case 'today':
-        return formatDate(today);
-      case 'week':
-        const weekStart = new Date(today);
-        weekStart.setDate(today.getDate() - 7);
-        return `${formatDate(weekStart)} - ${formatDate(today)}`;
-      case '3months':
-        const threeMonthsStart = new Date(today);
-        threeMonthsStart.setMonth(today.getMonth() - 3);
-        return `${formatDate(threeMonthsStart)} - ${formatDate(today)}`;
-      case 'custom':
-        return startDate && endDate ? `${formatDate(new Date(startDate))} - ${formatDate(new Date(endDate))}` : 'Custom Range';
-      default:
-        return range;
-    }
-  };
-
-  // Validate custom date range doesn't exceed 3 months
-  const validateDateRange = () => {
-    if (dateRange === 'custom' && startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const diffTime = Math.abs(end.getTime() - start.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      const maxDays = 90; // 3 months approximately
-      
-      if (diffDays > maxDays) {
-        alert('Date range cannot exceed 3 months (90 days)');
-        setEndDate('');
-        return false;
-      }
-    }
-    return true;
-  };
-
-  useEffect(() => {
-    if (validateDateRange()) {
-      fetchVisitorData();
-    }
-  }, [reportType, dateRange, startDate, endDate]);
-
-  const fetchVisitorData = async () => {
+  const fetchReports = async () => {
     setLoading(true);
     try {
-      let url = `/api/reports?type=${reportType}`;
-      
-      if (dateRange === 'custom' && startDate && endDate) {
+      let url = `/api/reports?range=${range}&department=${encodeURIComponent(departmentFilter)}`;
+      if (range === 'custom' && startDate && endDate) {
         url += `&startDate=${startDate}&endDate=${endDate}`;
-      } else {
-        url += `&range=${dateRange}`;
       }
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      setVisitorData(data);
-    } catch (error) {
-      console.error('Error fetching report data:', error);
-      setVisitorData([]);
+
+      const res = await fetch(url);
+      const data = await res.json();
+      setReportData(data);
+    } catch (err) {
+      console.error('Failed to load reports:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleExport = (format: string) => {
-    if (visitorData.length === 0) {
-      alert('No data to export');
+  useEffect(() => {
+    fetchReports();
+  }, [range, startDate, endDate, departmentFilter]);
+
+  // Client-side search and status filter on detailed visitor logs
+  const filteredLogs = useMemo(() => {
+    const logs = reportData.visitorLogs || [];
+    return logs.filter((item: any) => {
+      const matchesSearch =
+        searchQuery === '' ||
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.host.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.vehicle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.department.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesStatus =
+        statusFilter === 'ALL' || item.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [reportData.visitorLogs, searchQuery, statusFilter]);
+
+  const handleExportCSV = () => {
+    const logs = filteredLogs;
+    if (logs.length === 0) {
+      alert('No visitor logs available to export.');
       return;
     }
 
-    if (format === 'csv') {
-      // Create CSV content
-      const headers = ['Date', 'Check-ins', 'Check-outs', 'Active'];
-      const rows = visitorData.map(item => [
-        item.date || item.week || item.month || '',
-        item.checkIns,
-        item.checkOuts,
-        item.checkIns - item.checkOuts
-      ]);
-      
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.join(','))
-      ].join('\n');
-      
-      // Create and download CSV file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `visitor-report-${reportType}-${dateRange}-${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else if (format === 'pdf') {
-      // For PDF, we'll create a simple text-based report for now
-      // In a real implementation, you'd use a library like jsPDF
-      const reportText = visitorData.map(item => 
-        `${item.date || item.week || item.month}: Check-ins: ${item.checkIns}, Check-outs: ${item.checkOuts}, Active: ${item.checkIns - item.checkOuts}`
-      ).join('\n');
-      
-      const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `visitor-report-${reportType}-${dateRange}-${new Date().toISOString().split('T')[0]}.txt`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
+    const headers = [
+      'Registration Code',
+      'Visitor Name',
+      'Phone Number',
+      'Organization',
+      'Origin / Location',
+      'Host Name',
+      'Department',
+      'Purpose of Visit',
+      'Vehicle Plate',
+      'Date',
+      'Check-in Time',
+      'Check-out Time',
+      'Duration (Mins)',
+      'Status',
+    ];
+
+    const rows = logs.map((log: any) => [
+      `"${log.code}"`,
+      `"${log.name}"`,
+      `"${log.phone}"`,
+      `"${log.organisation}"`,
+      `"${log.location}"`,
+      `"${log.host}"`,
+      `"${log.department}"`,
+      `"${log.purpose}"`,
+      `"${log.vehicle}"`,
+      `"${log.date}"`,
+      `"${log.checkInTime}"`,
+      `"${log.checkOutTime || 'Still on site'}"`,
+      `"${log.durationMinutes}"`,
+      `"${log.status}"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r: string[]) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `pcc-visitor-report-${range}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const totalCheckIns = visitorData.reduce((sum, item) => sum + (item.checkIns || 0), 0);
-  const totalCheckOuts = visitorData.reduce((sum, item) => sum + (item.checkOuts || 0), 0);
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const formatDuration = (mins: number) => {
+    if (!mins || mins <= 0) return '< 5 mins';
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h === 0) return `${m} mins`;
+    return `${h}h ${m}m`;
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Printable Report Header */}
+      <div className="hidden print:block mb-6 border-b pb-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-black uppercase">
+              Pentecost Convention Centre
+            </h1>
+            <p className="text-sm text-gray-600">
+              Security Gate Operations & Visitor Attendance Report
+            </p>
+          </div>
+          <p className="text-xs text-gray-500">
+            Generated: {new Date().toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Screen Header Controls */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">
+            Gate Analytics & Reports
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            Real-time visitor footfall, gate clearance volume, and detailed entry logs
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="outline"
-            onClick={() => handleExport('csv')}
-            className="flex items-center gap-2"
+            size="sm"
+            onClick={fetchReports}
+            className="flex items-center gap-1.5 h-9"
           >
-            <Download className="h-4 w-4" />
-            Export CSV
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
           </Button>
+
           <Button
             variant="outline"
-            onClick={() => handleExport('pdf')}
-            className="flex items-center gap-2"
+            size="sm"
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 h-9 border-[#123B70]/30 text-[#123B70] hover:bg-[#123B70]/10"
           >
-            <Download className="h-4 w-4" />
-            Export PDF
+            <Download className="w-3.5 h-3.5" />
+            <span>Export CSV</span>
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={handlePrint}
+            className="flex items-center gap-1.5 h-9 bg-[#123B70] hover:bg-[#0d2d52] text-white"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            <span>Print Report</span>
           </Button>
         </div>
       </div>
 
-      {/* Report Type Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Visitor Statistics
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Report Type</label>
-              <Select value={reportType} onValueChange={setReportType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select report type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily Visitors</SelectItem>
-                  <SelectItem value="weekly">Weekly Visitors</SelectItem>
-                  <SelectItem value="monthly">Monthly Visitors</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Filter Toolbar */}
+      <Card className="print:hidden">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+            {/* Range Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {[
+                { id: 'today', label: 'Today' },
+                { id: '7days', label: 'Past 7 Days' },
+                { id: '30days', label: 'Past 30 Days' },
+                { id: '3months', label: 'Past 3 Months' },
+                { id: 'custom', label: 'Custom Range' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setRange(tab.id)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
+                    range === tab.id
+                      ? 'bg-[#123B70] text-white shadow-xs'
+                      : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
-            <div className="flex-1">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">Date Range</label>
-              <Select value={dateRange} onValueChange={setDateRange}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={getDateRangeLabel(dateRange)} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="today">Today - {getDateRangeLabel('today')}</SelectItem>
-                  <SelectItem value="week">This Week - {getDateRangeLabel('week')}</SelectItem>
-                  <SelectItem value="3months">Last 3 Months - {getDateRangeLabel('3months')}</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          {dateRange === 'custom' && (
-            <div className="flex gap-4 mb-6">
-              <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Start Date</label>
+            {/* Custom Date Pickers */}
+            {range === 'custom' && (
+              <div className="flex items-center gap-2">
                 <Input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full"
+                  className="h-8 text-xs w-36"
                 />
-              </div>
-              <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">End Date</label>
+                <span className="text-xs text-muted-foreground">to</span>
                 <Input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full"
+                  className="h-8 text-xs w-36"
                 />
               </div>
-            </div>
-          )}
-
-          {/* Summary Stats */}
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-700"></div>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                    <span className="text-sm font-semibold text-blue-600">Total Check-ins</span>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-700">{totalCheckIns}</p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-green-600" />
-                    <span className="text-sm font-semibold text-green-600">Total Check-outs</span>
-                  </div>
-                  <p className="text-2xl font-bold text-green-700">{totalCheckOuts}</p>
-                </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-5 w-5 text-purple-600" />
-                    <span className="text-sm font-semibold text-purple-600">Average Daily</span>
-                  </div>
-                  <p className="text-2xl font-bold text-purple-700">
-                    {visitorData.length > 0 ? Math.round(totalCheckIns / visitorData.length) : 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* Visitor Data Table */}
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        {reportType === 'daily' ? 'Date' : reportType === 'weekly' ? 'Week' : 'Month'}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Check-ins
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Check-outs
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Active
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {visitorData.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-sm text-gray-500">
-                          No data available for the selected period
-                        </td>
-                      </tr>
-                    ) : (
-                      visitorData.map((item, index) => (
-                        <tr key={index} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm text-gray-900">
-                            {'date' in item ? item.date : 'week' in item ? item.week : 'month' in item ? item.month : ''}
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{item.checkIns}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{item.checkOuts}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{item.checkIns - item.checkOuts}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Export Records */}
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Check-ins */}
+        <Card className="border border-border/70 shadow-xs">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Total Entries
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-[#123B70] mt-1.5">
+                  {reportData.summary?.totalCheckIns || 0}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3 text-emerald-600" />
+                  <span>Gate processed</span>
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-[#123B70]/10 flex items-center justify-center">
+                <Users className="w-5 h-5 text-[#123B70]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Currently on Grounds */}
+        <Card className="border border-border/70 shadow-xs bg-emerald-50/30">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
+                  Active Inside
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-emerald-700 mt-1.5">
+                  {reportData.summary?.currentlyInside || 0}
+                </p>
+                <p className="text-[11px] text-emerald-600 font-medium mt-1">
+                  On convention grounds
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-emerald-100 flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Total Exited */}
+        <Card className="border border-border/70 shadow-xs">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Cleared Out
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-slate-700 mt-1.5">
+                  {reportData.summary?.totalCheckOuts || 0}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Exit gate checked
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center">
+                <LogOut className="w-5 h-5 text-slate-700" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Peak Flow / Duration */}
+        <Card className="border border-border/70 shadow-xs">
+          <CardContent className="pt-5 pb-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Avg Dwell / Peak
+                </p>
+                <p className="text-lg sm:text-xl font-bold text-[#123B70] mt-1.5">
+                  {formatDuration(reportData.summary?.avgDurationMinutes)}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Peak: {reportData.summary?.peakHour || 'N/A'}
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-[#123B70]/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-[#123B70]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Visual Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Daily Trend Chart Visualization */}
+        <Card className="lg:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-[#123B70]" />
+                Gate Traffic Flow
+              </span>
+              <div className="flex items-center gap-3 text-xs font-normal">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#123B70]" />
+                  Check-ins
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  Check-outs
+                </span>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {reportData.trends && reportData.trends.length > 0 ? (
+              <div className="space-y-3 pt-2">
+                {reportData.trends.map((t: any, idx: number) => {
+                  const maxCount = Math.max(
+                    ...reportData.trends.map((x: any) => Math.max(x.checkIns, x.checkOuts)),
+                    1
+                  );
+                  const inPct = Math.round((t.checkIns / maxCount) * 100);
+                  const outPct = Math.round((t.checkOuts / maxCount) * 100);
+
+                  return (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="font-semibold text-foreground">{t.date}</span>
+                        <span className="text-muted-foreground text-[11px]">
+                          {t.checkIns} in · {t.checkOuts} out
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 h-2.5 bg-muted/40 rounded-full p-0.5">
+                        <div className="h-full flex items-center justify-end">
+                          <div
+                            className="h-full bg-[#123B70] rounded-full transition-all duration-500"
+                            style={{ width: `${inPct}%` }}
+                          />
+                        </div>
+                        <div className="h-full flex items-center justify-start">
+                          <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            style={{ width: `${outPct}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No entry activity recorded for this period.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top Destination Departments */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Building className="w-4 h-4 text-[#123B70]" />
+              Visitors by Department
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {reportData.departments && reportData.departments.length > 0 ? (
+              <div className="space-y-3 pt-1">
+                {reportData.departments.map((dept: any, i: number) => (
+                  <div key={i} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-medium text-foreground truncate max-w-[180px]">
+                        {dept.name}
+                      </span>
+                      <span className="font-semibold text-[#123B70]">
+                        {dept.count} ({dept.percentage}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#123B70] rounded-full"
+                        style={{ width: `${dept.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-12 text-center text-sm text-muted-foreground">
+                No department data available.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Visitor Log Records */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            Export Records
-          </CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#123B70]" />
+              Detailed Entry Audit Logs ({filteredLogs.length})
+            </CardTitle>
+
+            {/* Filter controls */}
+            <div className="flex items-center gap-2">
+              <div className="relative w-48 sm:w-64">
+                <Search className="w-3.5 h-3.5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  type="text"
+                  placeholder="Search name, code, host..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-xs"
+                />
+              </div>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-8 text-xs rounded-md border border-input bg-background px-2 font-medium"
+              >
+                <option value="ALL">All Status</option>
+                <option value="CHECKED_IN">Inside</option>
+                <option value="CHECKED_OUT">Checked Out</option>
+              </select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="font-medium text-gray-900">Visitor Records</p>
-                  <p className="text-sm text-gray-500">Export all visitor check-in/check-out records</p>
-                </div>
-              </div>
-              <Button onClick={() => handleExport('csv')} className="bg-blue-700 hover:bg-blue-800">
-                Export CSV
-              </Button>
-            </div>
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="font-medium text-gray-900">Daily Report</p>
-                  <p className="text-sm text-gray-500">Export daily visitor statistics</p>
-                </div>
-              </div>
-              <Button onClick={() => handleExport('csv')} className="bg-blue-700 hover:bg-blue-800">
-                Export CSV
-              </Button>
-            </div>
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="font-medium text-gray-900">Weekly Report</p>
-                  <p className="text-sm text-gray-500">Export weekly visitor statistics</p>
-                </div>
-              </div>
-              <Button onClick={() => handleExport('csv')} className="bg-blue-700 hover:bg-blue-800">
-                Export CSV
-              </Button>
-            </div>
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <div>
-                  <p className="font-medium text-gray-900">Monthly Report</p>
-                  <p className="text-sm text-gray-500">Export monthly visitor statistics</p>
-                </div>
-              </div>
-              <Button onClick={() => handleExport('csv')} className="bg-blue-700 hover:bg-blue-800">
-                Export CSV
-              </Button>
-            </div>
+          <div className="border border-border/80 rounded-xl overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/50 border-b border-border/80">
+                <tr>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Code
+                  </th>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Visitor
+                  </th>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Host & Dept
+                  </th>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Purpose
+                  </th>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Vehicle
+                  </th>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Time In / Out
+                  </th>
+                  <th className="py-3 px-3 text-left font-semibold text-muted-foreground uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/60">
+                {filteredLogs.length > 0 ? (
+                  filteredLogs.map((log: any) => (
+                    <tr key={log.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-3 px-3 font-mono font-bold text-[#123B70]">
+                        {log.code}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-semibold text-foreground">{log.name}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {log.phone} {log.organisation !== 'N/A' && `· ${log.organisation}`}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-foreground">{log.host}</div>
+                        <div className="text-[11px] text-muted-foreground">{log.department}</div>
+                      </td>
+                      <td className="py-3 px-3 text-muted-foreground max-w-[140px] truncate">
+                        {log.purpose}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-[11px]">
+                        {log.vehicle !== 'None' ? (
+                          <span className="inline-flex items-center gap-1 bg-stone-100 px-1.5 py-0.5 rounded font-bold text-stone-700">
+                            <Car className="w-3 h-3" />
+                            {log.vehicle}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-foreground">{log.checkInTime}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {log.checkOutTime ? `Out: ${log.checkOutTime}` : 'Active'}
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        {log.status === 'CHECKED_IN' ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[10px] font-semibold hover:bg-emerald-100">
+                            Inside
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-slate-100 text-slate-700 border-slate-200 text-[10px] font-medium hover:bg-slate-100">
+                            Cleared
+                          </Badge>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="py-10 text-center text-muted-foreground">
+                      No matching visitor records found.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
