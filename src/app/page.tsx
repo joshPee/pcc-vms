@@ -35,7 +35,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf8f4' }}>
       {/* Header */}
       <div className="px-4 pt-safe-top pb-4 flex items-center" style={{ paddingTop: 'max(18px, env(safe-area-inset-top))' }}>
-        <div className="w-[48px] h-[48px] rounded-[9px] overflow-hidden flex-shrink-0">
+        <div className="w-[56px] h-[56px] rounded-[9px] overflow-hidden flex-shrink-0">
           <img
             src="/pcc.png"
             alt="PCC Logo"
@@ -56,7 +56,7 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         <div
           ref={carouselRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-2"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-1"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {CAROUSEL_SLIDES.map((slide, index) => (
