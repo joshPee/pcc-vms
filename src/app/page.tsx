@@ -35,7 +35,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#faf8f4' }}>
       {/* Header */}
       <div className="px-4 pt-safe-top pb-4 flex items-center" style={{ paddingTop: 'max(18px, env(safe-area-inset-top))' }}>
-        <div className="w-[56px] h-[56px] rounded-[9px] overflow-hidden flex-shrink-0">
+        <div className="w-[64px] h-[64px] rounded-[9px] overflow-hidden flex-shrink-0">
           <img
             src="/pcc.png"
             alt="PCC Logo"
@@ -43,7 +43,7 @@ export default function Home() {
           />
         </div>
         <div className="ml-3 flex flex-col justify-center">
-          <h1 className="font-fraunces font-semibold text-[19px] leading-tight" style={{ color: '#152420' }}>
+          <h1 className="font-fraunces font-semibold text-[17px] leading-tight" style={{ color: '#152420' }}>
             Pentecost Convention Centre
           </h1>
           <p className="text-[13px] mt-[1px]" style={{ color: '#4b5a55' }}>
@@ -56,7 +56,7 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         <div
           ref={carouselRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-1"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-0"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {CAROUSEL_SLIDES.map((slide, index) => (
