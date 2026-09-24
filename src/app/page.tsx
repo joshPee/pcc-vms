@@ -86,7 +86,7 @@ export default function Home() {
           className="pt-[max(14px,env(safe-area-inset-top))] pb-2 sm:pb-3 flex items-center justify-between flex-shrink-0"
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white border border-[#E4EBDF] shadow-xs p-1.5 flex items-center justify-center flex-shrink-0">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
               <img
                 src="/pcc.png"
                 alt="PCC Logo"
@@ -98,7 +98,7 @@ export default function Home() {
                 Pentecost Convention Centre
               </h1>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#0B3D2E]" />
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#1a3a6e]" />
                 <p className="text-[12px] sm:text-[13px] text-[#556960] font-medium tracking-wide">
                   Visitor Check-in
                 </p>
@@ -106,7 +106,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#0B3D2E]/5 border border-[#0B3D2E]/10 text-[#0B3D2E] text-xs font-medium">
+          <div className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#1a3a6e]/5 border border-[#1a3a6e]/10 text-[#1a3a6e] text-xs font-medium">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Official Gate Pass</span>
           </div>
@@ -186,7 +186,7 @@ export default function Home() {
                   >
                     <span
                       className="font-bold text-[13px] leading-none"
-                      style={{ color: '#082C21' }}
+                      style={{ color: '#152d56' }}
                     >
                       {slide.badge}
                     </span>
@@ -220,14 +220,14 @@ export default function Home() {
                     aria-selected={isActive}
                     aria-label={`Jump to step ${index + 1}: ${slide.heading}`}
                     onClick={() => scrollToSlide(index)}
-                    className="p-1 -m-1 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0B3D2E] rounded-full"
+                    className="p-1 -m-1 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-[#1a3a6e] rounded-full"
                   >
                     <span
                       className="block transition-all duration-300 rounded-full"
                       style={{
                         width: isActive ? '22px' : '6px',
                         height: '6px',
-                        backgroundColor: isActive ? '#0B3D2E' : '#D1D5DB',
+                        backgroundColor: isActive ? '#1a3a6e' : '#D1D5DB',
                       }}
                     />
                   </button>
@@ -242,7 +242,7 @@ export default function Home() {
               }`}
             >
               <span>Swipe to see all steps</span>
-              <ChevronRight className="w-3.5 h-3.5 animate-pulse text-[#0B3D2E]" />
+              <ChevronRight className="w-3.5 h-3.5 animate-pulse text-[#1a3a6e]" />
             </div>
           </div>
         </section>
@@ -255,7 +255,7 @@ export default function Home() {
             href="/register"
             className="group flex items-center justify-center gap-2 w-full py-3.5 sm:py-4 rounded-2xl text-white font-semibold text-[16px] transition-all duration-200 active:scale-[0.98] shadow-md hover:shadow-xl hover:brightness-105"
             style={{
-              backgroundColor: '#0B3D2E',
+              backgroundColor: '#1a3a6e',
               boxShadow: '0 4px 14px rgba(11, 61, 46, 0.28)',
             }}
           >
@@ -266,8 +266,8 @@ export default function Home() {
           <p className="text-center text-[12.5px] sm:text-[13px] mt-2.5 text-[#556960]">
             Trouble with the form?{' '}
             <span
-              className="font-semibold cursor-pointer underline decoration-[#0B3D2E]/40 hover:decoration-[#0B3D2E] transition-colors"
-              style={{ color: '#0B3D2E' }}
+              className="font-semibold cursor-pointer underline decoration-[#1a3a6e]/40 hover:decoration-[#1a3a6e] transition-colors"
+              style={{ color: '#1a3a6e' }}
             >
               Ask the officer at the gate
             </span>
@@ -277,3 +277,4 @@ export default function Home() {
     </main>
   );
 }
+

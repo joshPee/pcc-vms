@@ -50,7 +50,7 @@ function RegistrationSuccessContent() {
         width: 320,
         margin: 1,
         color: {
-          dark: '#082C21',
+          dark: '#152d56',
           light: '#FFFFFF',
         },
       })
@@ -89,8 +89,8 @@ function RegistrationSuccessContent() {
       <div className="max-w-md mx-auto w-full">
         {/* Success Alert Header */}
         <div className="text-center mb-6 print:hidden">
-          <div className="w-12 h-12 rounded-full bg-[#0B3D2E]/10 border border-[#0B3D2E]/20 text-[#0B3D2E] mx-auto flex items-center justify-center mb-2.5 shadow-xs">
-            <CheckCircle2 className="w-6 h-6 text-[#0B3D2E]" />
+          <div className="w-12 h-12 rounded-full bg-[#1a3a6e]/10 border border-[#1a3a6e]/20 text-[#1a3a6e] mx-auto flex items-center justify-center mb-2.5 shadow-xs">
+            <CheckCircle2 className="w-6 h-6 text-[#1a3a6e]" />
           </div>
           <h1 className="font-fraunces font-semibold text-2xl text-[#152420] tracking-tight">
             Check-in Confirmed
@@ -103,7 +103,7 @@ function RegistrationSuccessContent() {
         {/* Digital Visitor Credential Badge Card */}
         <div
           ref={cardRef}
-          className="rounded-3xl bg-[#0B3D2E] text-white p-6 sm:p-7 shadow-xl shadow-black/15 relative overflow-hidden border border-[#C89B3C]/40 mb-6 print:shadow-none print:border-black print:text-black print:bg-white"
+          className="rounded-3xl bg-[#1a3a6e] text-white p-6 sm:p-7 shadow-xl shadow-black/15 relative overflow-hidden border border-[#C89B3C]/40 mb-6 print:shadow-none print:border-black print:text-black print:bg-white"
         >
           {/* Subtle watermark background emblem */}
           <div className="absolute -right-12 -bottom-12 w-48 h-48 opacity-10 pointer-events-none rounded-full border-8 border-white" />
@@ -206,7 +206,7 @@ function RegistrationSuccessContent() {
               onClick={handlePrint}
               className="py-3.5 px-4 rounded-xl bg-white border border-stone-200 text-[#152420] font-semibold text-xs sm:text-sm hover:bg-stone-50 transition-all flex items-center justify-center gap-2 shadow-xs"
             >
-              <Printer className="w-4 h-4 text-[#0B3D2E]" />
+              <Printer className="w-4 h-4 text-[#1a3a6e]" />
               <span>Print Pass</span>
             </button>
             <button
@@ -214,14 +214,14 @@ function RegistrationSuccessContent() {
               onClick={handleDownload}
               className="py-3.5 px-4 rounded-xl bg-white border border-stone-200 text-[#152420] font-semibold text-xs sm:text-sm hover:bg-stone-50 transition-all flex items-center justify-center gap-2 shadow-xs"
             >
-              <Download className="w-4 h-4 text-[#0B3D2E]" />
+              <Download className="w-4 h-4 text-[#1a3a6e]" />
               <span>Save QR Code</span>
             </button>
           </div>
 
           <Link
             href="/"
-            className="w-full py-3.5 px-4 rounded-xl bg-[#0B3D2E] text-white font-semibold text-xs sm:text-sm hover:bg-[#082C21] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+            className="w-full py-3.5 px-4 rounded-xl bg-[#1a3a6e] text-white font-semibold text-xs sm:text-sm hover:bg-[#152d56] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
           >
             <Home className="w-4 h-4" />
             <span>Done · Return to Home</span>
@@ -241,7 +241,7 @@ export default function RegistrationSuccess() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#FAF8F4] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0B3D2E]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a3a6e]"></div>
         </div>
       }
     >
@@ -249,3 +249,4 @@ export default function RegistrationSuccess() {
     </Suspense>
   );
 }
+
