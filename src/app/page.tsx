@@ -56,7 +56,7 @@ export default function Home() {
       <div className="flex-1 overflow-hidden">
         <div
           ref={carouselRef}
-          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-1"
+          className="flex overflow-x-auto snap-x snap-mandatory gap-3 px-4 pb-0"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {CAROUSEL_SLIDES.map((slide, index) => (
