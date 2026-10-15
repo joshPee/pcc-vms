@@ -1,4 +1,0 @@
-{
-  "buildCommand": "cd cocobod-app && npm run build",
-  "installCommand": "cd cocobod-app && npm install"
-}
