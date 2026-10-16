@@ -77,8 +77,8 @@ export default function Home() {
 
   return (
     <main
-      className="h-dvh min-h-dvh w-full overflow-hidden flex flex-col justify-between light-mode"
-      style={{ backgroundColor: '#FFFFFF' }}
+      className="h-dvh min-h-dvh w-full overflow-hidden flex flex-col justify-between"
+      style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
     >
       <div className="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-between h-full px-4 sm:px-6">
         {/* Header */}

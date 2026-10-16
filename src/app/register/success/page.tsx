@@ -85,7 +85,10 @@ function RegistrationSuccessContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4] py-8 px-4 sm:px-6 flex flex-col justify-between light-mode">
+    <div 
+      className="min-h-screen bg-[#FAF8F4] py-8 px-4 sm:px-6 flex flex-col justify-between"
+      style={{ backgroundColor: '#FAF8F4', color: '#152420' }}
+    >
       <div className="max-w-md mx-auto w-full">
         {/* Success Alert Header */}
         <div className="text-center mb-6 print:hidden">

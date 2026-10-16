@@ -28,8 +28,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       suppressHydrationWarning
       className={cn("h-full", "antialiased", fraunces.variable, ibmPlexSans.variable, ibmPlexMono.variable, "font-sans", geist.variable)}
+      style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
     >
-      <body className="min-h-full flex flex-col">
+      <body 
+        className="min-h-full flex flex-col"
+        style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
+      >
         <Providers>
           {children}
         </Providers>

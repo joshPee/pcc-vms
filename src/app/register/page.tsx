@@ -206,7 +206,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] flex flex-col justify-between py-6 px-4 sm:px-6 light-mode">
+    <div 
+      className="min-h-screen bg-[#FFFFFF] flex flex-col justify-between py-6 px-4 sm:px-6"
+      style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
+    >
       <div className="w-full max-w-lg mx-auto">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-4">
@@ -386,6 +389,7 @@ export default function Register() {
                     autoComplete="name"
                     className="w-full px-4 py-3.5 min-h-[44px] rounded-xl border border-stone-200 bg-stone-50/50 text-[#152420] text-sm focus:outline-hidden focus:bg-white focus:ring-2 focus:ring-[#1a3a6e] focus:border-transparent transition-all placeholder:text-stone-400"
                     placeholder="e.g. Samuel Kofi Mensah"
+                    style={{ backgroundColor: '#F9FAFB', color: '#152420' }}
                   />
                   {fieldErrors.fullName && (
                     <p id="fullName-error" className="text-red-600 text-xs mt-1.5 flex items-center gap-1.5" role="alert">
