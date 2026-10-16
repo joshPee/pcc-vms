@@ -33,7 +33,7 @@ import {
 const GuardQrScanner = dynamic(() => import('@/components/GuardQrScanner'), {
   ssr: false,
   loading: () => (
-    <div className="h-56 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 text-xs">
+    <div className="h-56 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 text-xs">
       Loading camera scanner...
     </div>
   ),
@@ -312,9 +312,9 @@ export default function VisitorCheckOutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-[#C89B3C] selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-[#C89B3C] selection:text-white">
       {/* Top Security Header */}
-      <header className="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 py-3">
+      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-3">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
           {/* Logo & Post Title */}
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
@@ -339,17 +339,17 @@ export default function VisitorCheckOutPage() {
             {/* Sound Toggle for Mobile */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="sm:hidden p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
+              className="sm:hidden p-2 rounded-lg bg-slate-200 text-slate-600 hover:text-slate-900"
               title={soundEnabled ? 'Mute sound' : 'Enable sound'}
             >
-              {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+              {soundEnabled ? <Volume2 className="w-4 h-4 text-emerald-600" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
             </button>
           </div>
 
           {/* Gate Selector & Guard Identification */}
           <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end text-xs">
             {/* Gate Station Dropdown */}
-            <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-xl px-2.5 py-1.5">
+            <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1.5">
               <MapPin className="w-3.5 h-3.5 text-[#C89B3C]" />
               <select
                 value={gateStation}
@@ -359,10 +359,10 @@ export default function VisitorCheckOutPage() {
                     localStorage.setItem('pcc_gate_station', e.target.value);
                   }
                 }}
-                className="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer text-xs"
+                className="bg-transparent text-slate-700 font-semibold focus:outline-none cursor-pointer text-xs"
               >
                 {GATE_STATIONS.map((station) => (
-                  <option key={station} value={station} className="bg-slate-900 text-slate-200">
+                  <option key={station} value={station} className="bg-white text-slate-700">
                     {station}
                   </option>
                 ))}
@@ -370,8 +370,8 @@ export default function VisitorCheckOutPage() {
             </div>
 
             {/* Guard Name */}
-            <div className="flex items-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-xl px-2.5 py-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <div className="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-xl px-2.5 py-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
               {isEditingGuard ? (
                 <input
                   type="text"
@@ -392,12 +392,12 @@ export default function VisitorCheckOutPage() {
                     }
                   }}
                   autoFocus
-                  className="bg-slate-950 text-white px-1.5 py-0.5 rounded border border-blue-500 text-xs w-28"
+                  className="bg-white text-slate-900 px-1.5 py-0.5 rounded border border-blue-500 text-xs w-28"
                 />
               ) : (
                 <span
                   onClick={() => setIsEditingGuard(true)}
-                  className="font-medium text-slate-300 hover:text-white cursor-pointer underline decoration-dotted"
+                  className="font-medium text-slate-600 hover:text-slate-900 cursor-pointer underline decoration-dotted"
                   title="Click to change guard name"
                 >
                   {guardName}
@@ -408,14 +408,14 @@ export default function VisitorCheckOutPage() {
             {/* Sound Toggle (Desktop) */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-300 hover:text-white transition"
+              className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition"
             >
-              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-400" /> : <VolumeX className="w-3.5 h-3.5 text-slate-500" />}
+              {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-emerald-600" /> : <VolumeX className="w-3.5 h-3.5 text-slate-400" />}
             </button>
 
             <Link
               href="/"
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition text-xs font-medium"
+              className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition text-xs font-medium"
             >
               Home
             </Link>
@@ -426,15 +426,15 @@ export default function VisitorCheckOutPage() {
       {/* Main Container */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Navigation Tabs Bar */}
-        <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-2xl border border-slate-800">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
               onClick={() => {
                 setActiveTab('checkout');
                 setTimeout(() => codeInputRef.current?.focus(), 100);
               }}
               className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeTab === 'checkout' ? 'bg-[#123B70] text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeTab === 'checkout' ? 'bg-[#123B70] text-white shadow-md' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Hash className="w-4 h-4" />
@@ -447,7 +447,7 @@ export default function VisitorCheckOutPage() {
                 fetchActiveVisitors();
               }}
               className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeTab === 'directory' ? 'bg-[#123B70] text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeTab === 'directory' ? 'bg-[#123B70] text-white shadow-md' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <Users className="w-4 h-4" />
@@ -457,7 +457,7 @@ export default function VisitorCheckOutPage() {
             <button
               onClick={() => setActiveTab('log')}
               className={`flex items-center gap-2 py-2 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
-                activeTab === 'log' ? 'bg-[#123B70] text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeTab === 'log' ? 'bg-[#123B70] text-white shadow-md' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               <FileCheck className="w-4 h-4" />
@@ -465,32 +465,32 @@ export default function VisitorCheckOutPage() {
             </button>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2 font-mono text-xs text-slate-400">
-            <Clock className="w-3.5 h-3.5 text-purple-400" />
+          <div className="hidden sm:flex items-center gap-2 font-mono text-xs text-slate-500">
+            <Clock className="w-3.5 h-3.5 text-purple-600" />
             <span>{currentTime || '--:--:--'}</span>
           </div>
         </div>
 
         {/* Check-Out Success Banner */}
         {lastCheckOut && (
-          <div className="bg-gradient-to-r from-emerald-950/80 via-emerald-900/60 to-slate-900 border border-emerald-500/40 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl animate-in fade-in duration-300">
+          <div className="bg-gradient-to-r from-emerald-50 via-emerald-100 to-slate-100 border border-emerald-300 rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg animate-in fade-in duration-300">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-emerald-400 shrink-0">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 border-2 border-emerald-500 flex items-center justify-center text-emerald-600 shrink-0">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-700 font-bold">
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold">
                     {lastCheckOut.registration_code}
                   </span>
-                  <span className="text-xs text-emerald-400 font-bold uppercase tracking-wider">
+                  <span className="text-xs text-emerald-600 font-bold uppercase tracking-wider">
                     Checked Out · Gate Cleared
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 mt-1">
                   {lastCheckOut.participant_name || lastCheckOut.full_name}
                 </h3>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="text-xs text-slate-600 mt-0.5">
                   {lastCheckOut.organisation ? `${lastCheckOut.organisation} • ` : ''}
                   Duration: {lastCheckOut.duration_minutes ? `${lastCheckOut.duration_minutes} mins` : 'Completed'} • Gate: {lastCheckOut.gate_station}
                 </p>
@@ -502,7 +502,7 @@ export default function VisitorCheckOutPage() {
                 setLastCheckOut(null);
                 codeInputRef.current?.focus();
               }}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition"
+              className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-xs font-bold text-slate-700 transition"
             >
               Process Next Visitor
             </button>
@@ -511,12 +511,12 @@ export default function VisitorCheckOutPage() {
 
         {/* Error Alert */}
         {error && (
-          <div className="bg-rose-950/80 border border-rose-500/40 rounded-2xl p-4 flex items-start justify-between gap-3 text-rose-200 text-xs sm:text-sm shadow-lg">
+          <div className="bg-rose-50 border border-rose-300 rounded-2xl p-4 flex items-start justify-between gap-3 text-rose-700 text-xs sm:text-sm shadow-lg">
             <div className="flex items-center gap-2.5">
-              <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0" />
+              <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
               <span>{error}</span>
             </div>
-            <button onClick={() => setError(null)} className="text-rose-400 hover:text-white font-bold">
+            <button onClick={() => setError(null)} className="text-rose-600 hover:text-rose-900 font-bold">
               ✕
             </button>
           </div>
@@ -528,20 +528,20 @@ export default function VisitorCheckOutPage() {
             {/* Left Box: Code Entry & Camera Option (7 cols) */}
             <div className="lg:col-span-7 space-y-5">
               {/* Main Code Input Card */}
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl">
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-base sm:text-lg font-extrabold text-white tracking-wide">
+                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-wide">
                       Enter Visitor Code
                     </h2>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       Enter the 4-digit or full code given by the visitor (e.g. <span className="text-[#C89B3C] font-mono font-bold">CTS-1234</span> or <span className="text-[#C89B3C] font-mono font-bold">1234</span>)
                     </p>
                   </div>
 
                   <button
                     onClick={() => setShowScanner(!showScanner)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 hover:text-white transition font-medium border border-slate-700"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs text-slate-600 hover:text-slate-900 transition font-medium border border-slate-200"
                   >
                     <Camera className="w-3.5 h-3.5 text-[#C89B3C]" />
                     <span>{showScanner ? 'Hide Camera' : 'Scan QR'}</span>
@@ -550,7 +550,7 @@ export default function VisitorCheckOutPage() {
 
                 {/* Camera Scanner Expandable */}
                 {showScanner && (
-                  <div className="mb-5 pb-5 border-b border-slate-800">
+                  <div className="mb-5 pb-5 border-b border-slate-200">
                     <GuardQrScanner
                       active={showScanner}
                       onScanSuccess={(decodedText) => {
@@ -580,7 +580,7 @@ export default function VisitorCheckOutPage() {
                         value={visitorCode}
                         onChange={(e) => setVisitorCode(e.target.value.toUpperCase())}
                         placeholder="e.g. CTS-4821 or 4821"
-                        className="w-full bg-slate-950 border-2 border-slate-700 focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/30 rounded-2xl pl-13 pr-12 py-4 text-xl sm:text-2xl font-mono font-bold text-white placeholder-slate-600 tracking-wider focus:outline-none transition"
+                        className="w-full bg-white border-2 border-slate-300 focus:border-[#C89B3C] focus:ring-2 focus:ring-[#C89B3C]/30 rounded-2xl pl-13 pr-12 py-4 text-xl sm:text-2xl font-mono font-bold text-slate-900 placeholder-slate-400 tracking-wider focus:outline-none transition"
                       />
                       {visitorCode && (
                         <button
@@ -590,7 +590,7 @@ export default function VisitorCheckOutPage() {
                             setSelectedVisitor(null);
                             codeInputRef.current?.focus();
                           }}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 p-1"
                         >
                           <X className="w-5 h-5" />
                         </button>
@@ -599,14 +599,14 @@ export default function VisitorCheckOutPage() {
 
                     {/* Quick Prefix buttons */}
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-400 font-medium">Quick input:</span>
+                      <span className="text-slate-500 font-medium">Quick input:</span>
                       <button
                         type="button"
                         onClick={() => {
                           setVisitorCode('CTS-');
                           codeInputRef.current?.focus();
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[#C89B3C] font-mono font-bold border border-slate-700 transition"
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-[#C89B3C] font-mono font-bold border border-slate-200 transition"
                       >
                         + CTS-
                       </button>
@@ -632,9 +632,9 @@ export default function VisitorCheckOutPage() {
                 </form>
 
                 {/* Helpful prompt */}
-                <div className="mt-5 pt-5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                <div className="mt-5 pt-5 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
                   <span>Visitors receive their code via digital pass upon check-in.</span>
-                  <span className="text-emerald-400 font-semibold">{activeCount} on site now</span>
+                  <span className="text-emerald-600 font-semibold">{activeCount} on site now</span>
                 </div>
               </div>
             </div>
@@ -642,14 +642,14 @@ export default function VisitorCheckOutPage() {
             {/* Right Box: Visitor Details & Checkout Action (5 cols) */}
             <div className="lg:col-span-5">
               {selectedVisitor ? (
-                <div className="bg-slate-900 border-2 border-[#123B70] rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in fade-in duration-200">
+                <div className="bg-white border-2 border-[#123B70] rounded-3xl p-6 shadow-lg relative overflow-hidden animate-in fade-in duration-200">
                   {/* Top Badge */}
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
                     <div>
                       <span className="text-[11px] font-bold uppercase tracking-wider text-[#C89B3C]">
                         Visitor Pass Found
                       </span>
-                      <h3 className="text-xl font-extrabold text-white mt-0.5">{selectedVisitor.full_name}</h3>
+                      <h3 className="text-xl font-extrabold text-slate-900 mt-0.5">{selectedVisitor.full_name}</h3>
                     </div>
                     <div className="px-3.5 py-1 rounded-xl bg-[#123B70] text-white font-mono font-bold text-base tracking-widest shadow-md">
                       {selectedVisitor.registration_code}
@@ -659,31 +659,31 @@ export default function VisitorCheckOutPage() {
                   {/* Visitor Meta Grid */}
                   <div className="space-y-3 text-xs mb-5">
                     {selectedVisitor.organisation && (
-                      <div className="flex justify-between py-1.5 border-b border-slate-800/60">
-                        <span className="text-slate-400">Organisation</span>
-                        <span className="font-semibold text-slate-200">{selectedVisitor.organisation}</span>
+                      <div className="flex justify-between py-1.5 border-b border-slate-200">
+                        <span className="text-slate-500">Organisation</span>
+                        <span className="font-semibold text-slate-700">{selectedVisitor.organisation}</span>
                       </div>
                     )}
 
-                    <div className="flex justify-between py-1.5 border-b border-slate-800/60">
-                      <span className="text-slate-400">Host Visited</span>
-                      <span className="font-semibold text-slate-200">
+                    <div className="flex justify-between py-1.5 border-b border-slate-200">
+                      <span className="text-slate-500">Host Visited</span>
+                      <span className="font-semibold text-slate-700">
                         {selectedVisitor.host_name || 'General Visit'}
                         {selectedVisitor.host_department ? ` (${selectedVisitor.host_department})` : ''}
                       </span>
                     </div>
 
-                    <div className="flex justify-between py-1.5 border-b border-slate-800/60">
-                      <span className="text-slate-400">Check-in Time</span>
-                      <span className="font-semibold text-emerald-400 flex items-center gap-1">
+                    <div className="flex justify-between py-1.5 border-b border-slate-200">
+                      <span className="text-slate-500">Check-in Time</span>
+                      <span className="font-semibold text-emerald-600 flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" />
                         {calculateMinutesOnSite(selectedVisitor.check_in_date) || 'Checked in today'}
                       </span>
                     </div>
 
                     {selectedVisitor.vehicle_registration && (
-                      <div className="flex justify-between items-center py-1.5 border-b border-slate-800/60">
-                        <span className="text-slate-400">Vehicle Number</span>
+                      <div className="flex justify-between items-center py-1.5 border-b border-slate-200">
+                        <span className="text-slate-500">Vehicle Number</span>
                         <span className="font-mono font-bold bg-amber-400 text-black px-2.5 py-0.5 rounded border border-amber-500 shadow-xs">
                           {selectedVisitor.vehicle_registration}
                         </span>
@@ -692,28 +692,28 @@ export default function VisitorCheckOutPage() {
                   </div>
 
                   {/* Security Clearance Checklist */}
-                  <div className="bg-slate-950/70 rounded-2xl p-3.5 border border-slate-800 mb-5 space-y-2.5">
-                    <p className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">
+                  <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-200 mb-5 space-y-2.5">
+                    <p className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                       Exit Clearance Checks
                     </p>
 
-                    <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-200">
+                    <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
                       <input
                         type="checkbox"
                         checked={badgeReturned}
                         onChange={(e) => setBadgeReturned(e.target.checked)}
-                        className="w-4 h-4 rounded text-blue-600 border-slate-700 bg-slate-900 focus:ring-0"
+                        className="w-4 h-4 rounded text-blue-600 border-slate-300 bg-white focus:ring-0"
                       />
                       <span>Physical Visitor Tag / Badge Returned</span>
                     </label>
 
                     {selectedVisitor.vehicle_registration && (
-                      <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-200">
+                      <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
                         <input
                           type="checkbox"
                           checked={vehicleInspected}
                           onChange={(e) => setVehicleInspected(e.target.checked)}
-                          className="w-4 h-4 rounded text-blue-600 border-slate-700 bg-slate-900 focus:ring-0"
+                          className="w-4 h-4 rounded text-blue-600 border-slate-300 bg-white focus:ring-0"
                         />
                         <span>Vehicle Boot / Inspection Cleared</span>
                       </label>
@@ -725,7 +725,7 @@ export default function VisitorCheckOutPage() {
                     <button
                       onClick={handleExecuteCheckOut}
                       disabled={loading}
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-extrabold text-sm tracking-wide transition shadow-xl shadow-emerald-900/40 flex items-center justify-center gap-2 disabled:opacity-50"
+                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-extrabold text-sm tracking-wide transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {loading ? (
                         <span>Checking Out...</span>
@@ -743,19 +743,19 @@ export default function VisitorCheckOutPage() {
                         setVisitorCode('');
                         codeInputRef.current?.focus();
                       }}
-                      className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-400 hover:text-white text-xs font-semibold transition"
+                      className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 text-xs font-semibold transition"
                     >
                       Cancel / Enter Different Code
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="bg-slate-900/60 border border-slate-800 border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center min-h-[320px]">
-                  <div className="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-500 mb-3">
+                <div className="bg-slate-50 border border-slate-200 border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center min-h-[320px]">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-3">
                     <LogOut className="w-8 h-8" />
                   </div>
-                  <h3 className="text-base font-bold text-slate-200">Awaiting Visitor Code</h3>
-                  <p className="text-xs text-slate-400 max-w-xs mt-1">
+                  <h3 className="text-base font-bold text-slate-700">Awaiting Visitor Code</h3>
+                  <p className="text-xs text-slate-500 max-w-xs mt-1">
                     Enter the code given to you by the visitor above to verify their details and clear them for exit.
                   </p>
                 </div>
@@ -767,10 +767,10 @@ export default function VisitorCheckOutPage() {
         {/* TAB 2: Active Visitors Directory */}
         {activeTab === 'directory' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200">
               <div>
-                <h2 className="text-base font-bold text-white">Currently Checked-In Visitors</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className="text-base font-bold text-slate-900">Currently Checked-In Visitors</h2>
+                <p className="text-xs text-slate-500">
                   Click on any visitor code to quickly load and check them out
                 </p>
               </div>
@@ -778,7 +778,7 @@ export default function VisitorCheckOutPage() {
               <button
                 onClick={fetchActiveVisitors}
                 disabled={activeLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-700 transition"
               >
                 <RotateCcw className={`w-3.5 h-3.5 ${activeLoading ? 'animate-spin' : ''}`} />
                 <span>Refresh Directory</span>
@@ -786,9 +786,9 @@ export default function VisitorCheckOutPage() {
             </div>
 
             {activeVisitors.length === 0 ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center">
-                <Users className="w-12 h-12 mx-auto text-slate-600 mb-2" />
-                <h3 className="text-base font-bold text-slate-300">No Visitors On Site</h3>
+              <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center">
+                <Users className="w-12 h-12 mx-auto text-slate-400 mb-2" />
+                <h3 className="text-base font-bold text-slate-600">No Visitors On Site</h3>
                 <p className="text-xs text-slate-500 mt-1">All checked-in visitors have departed.</p>
               </div>
             ) : (
@@ -796,7 +796,7 @@ export default function VisitorCheckOutPage() {
                 {activeVisitors.map((visitor) => (
                   <div
                     key={visitor.id}
-                    className="bg-slate-900 border border-slate-800 rounded-2xl p-4.5 hover:border-slate-700 transition flex flex-col justify-between shadow-md"
+                    className="bg-white border border-slate-200 rounded-2xl p-4.5 hover:border-slate-300 transition flex flex-col justify-between shadow-md"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
@@ -806,28 +806,28 @@ export default function VisitorCheckOutPage() {
                             setSelectedVisitor(visitor);
                             setActiveTab('checkout');
                           }}
-                          className="font-mono text-xs px-2.5 py-1 rounded-lg bg-blue-950 text-blue-300 border border-blue-800 font-bold hover:bg-blue-900 transition flex items-center gap-1"
+                          className="font-mono text-xs px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-bold hover:bg-blue-100 transition flex items-center gap-1"
                         >
                           <Hash className="w-3 h-3 text-[#C89B3C]" />
                           <span>{visitor.registration_code}</span>
                         </button>
-                        <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                           {calculateMinutesOnSite(visitor.check_in_date) || 'Active'}
                         </span>
                       </div>
 
-                      <h4 className="text-base font-bold text-white">{visitor.full_name}</h4>
-                      <p className="text-xs text-slate-400 mt-0.5">{visitor.organisation || 'Personal Visit'}</p>
+                      <h4 className="text-base font-bold text-slate-900">{visitor.full_name}</h4>
+                      <p className="text-xs text-slate-500 mt-0.5">{visitor.organisation || 'Personal Visit'}</p>
 
-                      <div className="mt-3 pt-3 border-t border-slate-800/80 text-xs space-y-1 text-slate-300">
+                      <div className="mt-3 pt-3 border-t border-slate-200 text-xs space-y-1 text-slate-600">
                         <div className="flex items-center gap-1.5">
-                          <Building className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className="truncate">Host: {visitor.host_name || 'N/A'}</span>
                         </div>
                         {visitor.vehicle_registration && (
                           <div className="flex items-center gap-1.5">
-                            <Car className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                            <span className="font-mono text-amber-300 font-semibold">{visitor.vehicle_registration}</span>
+                            <Car className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="font-mono text-amber-600 font-semibold">{visitor.vehicle_registration}</span>
                           </div>
                         )}
                       </div>
@@ -855,44 +855,44 @@ export default function VisitorCheckOutPage() {
         {/* TAB 3: Shift Departures Log */}
         {activeTab === 'log' && (
           <div className="space-y-4">
-            <div className="bg-slate-900 p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-white">Shift Exit Log</h2>
-                <p className="text-xs text-slate-400">Visitors checked out during this duty period</p>
+                <h2 className="text-base font-bold text-slate-900">Shift Exit Log</h2>
+                <p className="text-xs text-slate-500">Visitors checked out during this duty period</p>
               </div>
-              <span className="text-xs font-mono px-3 py-1 rounded-xl bg-slate-800 text-[#C89B3C] font-bold">
+              <span className="text-xs font-mono px-3 py-1 rounded-xl bg-slate-100 text-[#C89B3C] font-bold">
                 {recentDepartures.length} Checked Out
               </span>
             </div>
 
             {recentDepartures.length === 0 ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-12 text-center text-slate-400">
-                <FileCheck className="w-12 h-12 mx-auto text-slate-600 mb-2" />
-                <h3 className="text-base font-bold text-slate-300">No Check-outs Recorded Yet</h3>
+              <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500">
+                <FileCheck className="w-12 h-12 mx-auto text-slate-400 mb-2" />
+                <h3 className="text-base font-bold text-slate-600">No Check-outs Recorded Yet</h3>
                 <p className="text-xs text-slate-500 mt-1">Visitors checked out via code entry will appear here.</p>
               </div>
             ) : (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800 shadow-xl">
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden divide-y divide-slate-200 shadow-lg">
                 {recentDepartures.map((dep, idx) => (
                   <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-blue-400 bg-blue-950 px-2 py-0.5 rounded border border-blue-900">
+                        <span className="font-mono text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                           {dep.registration_code}
                         </span>
-                        <h4 className="text-sm font-bold text-white">{dep.participant_name || dep.full_name}</h4>
+                        <h4 className="text-sm font-bold text-slate-900">{dep.participant_name || dep.full_name}</h4>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {dep.organisation ? `${dep.organisation} • ` : ''}
                         Gate: {dep.gate_station} • Officer: {dep.guard_name}
                       </p>
                     </div>
 
                     <div className="text-left sm:text-right shrink-0">
-                      <p className="text-xs font-mono text-slate-200">
+                      <p className="text-xs font-mono text-slate-700">
                         {new Date(dep.check_out_time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <span className="text-[11px] text-emerald-400 font-medium">
+                      <span className="text-[11px] text-emerald-600 font-medium">
                         Duration: {dep.duration_minutes || '0'}m
                       </span>
                     </div>
@@ -905,16 +905,16 @@ export default function VisitorCheckOutPage() {
       </main>
 
       {/* Security Terminal Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-900/60 py-3 px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 max-w-6xl mx-auto w-full">
+      <footer className="border-t border-slate-200 bg-slate-50 py-3 px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 max-w-6xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
           <span>Pentecost Convention Centre Security Operations • Station: {gateStation}</span>
         </div>
-        <div className="flex items-center gap-4 text-slate-400">
-          <Link href="/register" className="hover:text-white transition">
+        <div className="flex items-center gap-4 text-slate-600">
+          <Link href="/register" className="hover:text-slate-900 transition">
             Visitor Check-in
           </Link>
-          <Link href="/admin/dashboard" className="hover:text-white transition">
+          <Link href="/admin/dashboard" className="hover:text-slate-900 transition">
             Admin Portal
           </Link>
         </div>

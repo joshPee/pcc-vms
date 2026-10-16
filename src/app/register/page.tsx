@@ -206,10 +206,7 @@ export default function Register() {
   };
 
   return (
-    <div 
-      className="min-h-screen bg-[#FFFFFF] flex flex-col justify-between py-6 px-4 sm:px-6"
-      style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
-    >
+    <div className="min-h-screen bg-[#FFFFFF] flex flex-col justify-between py-6 px-4 sm:px-6">
       <div className="w-full max-w-lg mx-auto">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-4">
