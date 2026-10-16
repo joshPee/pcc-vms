@@ -1,0 +1,21 @@
+{
+  "name": "PCC Visitor Check-in",
+  "short_name": "PCC Check-in",
+  "description": "Visitor management system for Pentecost Convention Center",
+  "start_url": "/register",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#1a3a6e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/pcc.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "scope": "/",
+  "prefer_related_applications": false
+}
