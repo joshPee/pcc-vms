@@ -148,6 +148,8 @@
   color: #152420 !important;
 }
 
+/* Trigger redeploy */
+
 .light-mode .bg-white,
 .light-mode .bg-stone-50,
 .light-mode .bg-slate-50 {
