@@ -157,34 +157,34 @@ export default async function Dashboard() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Modern Dashboard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
-        <div>
+      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-white to-emerald-50/40 p-5 sm:p-6 rounded-3xl border border-[#D8CFB8]/80 shadow-xs">
+        <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
-              Operations Center
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C89B3C]">
+              Operations Command Center
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             Security & Visitor Overview
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Pentecost Convention Centre • Live gate activity for today
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Pentecost Convention Centre • Live gate activity & premises analytics
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
-            <Calendar className="w-3.5 h-3.5 text-[#123B70]" />
+        <div className="flex flex-wrap items-center gap-2.5 text-xs relative z-10">
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-[#D8CFB8]/70">
+            <Calendar className="w-3.5 h-3.5 text-[#0B3D2E]" />
             <span>{todayFormatted}</span>
           </div>
 
           <Link
             href="/check-out"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#123B70] hover:bg-[#0d2d52] text-white font-semibold shadow-sm transition"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B3D2E] hover:bg-[#082C21] active:bg-[#061e16] text-white font-bold shadow-md shadow-[#0B3D2E]/20 transition hover:-translate-y-0.5"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#C89B3C]" />
-            <span>Visitor Checkout Terminal</span>
+            <ShieldCheck className="w-4 h-4 text-[#C89B3C]" />
+            <span>Gate Terminal View →</span>
           </Link>
         </div>
       </div>
@@ -192,45 +192,56 @@ export default async function Dashboard() {
       {/* Enhanced Summary Cards Section */}
       <div>
         <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            Key Real-Time Indicators
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#C89B3C]" />
+            <span>Key Real-Time Indicators</span>
           </h2>
-          <span className="text-[11px] text-slate-400">Auto-refreshed</span>
+          <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Live Sync</span>
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           <StatCard
             label="Visitors Inside"
             value={stats.visitorsInside}
-            subtext="Currently inside facility"
-            icon={Users}
-            variant="blue"
+            subtext="Currently on premises"
+            iconName="users"
+            variant="forest"
             href="/check-out"
-            trend={`${stats.visitorsInside} Active`}
+            trend={stats.visitorsInside > 0 ? `${stats.visitorsInside} On Site` : 'All Departed'}
+            chartData={[35, 50, 45, 60, 55, 80, 75, stats.visitorsInside > 0 ? 100 : 25]}
           />
           <StatCard
             label="Today's Check-ins"
             value={stats.todayCheckIns}
-            subtext="Verified arrivals today"
-            icon={CheckCircle2}
-            variant="emerald"
+            subtext="Verified gate arrivals"
+            iconName="check-circle"
+            variant="blue"
             href="/admin/check-in"
+            trend={stats.todayCheckIns > 0 ? `${stats.todayCheckIns} Arrived` : 'None yet'}
+            chartData={[25, 40, 55, 60, 75, 85, 90, stats.todayCheckIns > 0 ? 100 : 20]}
           />
           <StatCard
             label="Today's Check-outs"
             value={stats.todayCheckOuts}
             subtext="Departures cleared"
-            icon={LogOut}
+            iconName="log-out"
             variant="amber"
             href="/admin/check-out"
+            trend={stats.todayCheckOuts > 0 ? `${stats.todayCheckOuts} Cleared` : 'None yet'}
+            chartData={[15, 30, 40, 50, 65, 80, 70, stats.todayCheckOuts > 0 ? 95 : 15]}
           />
           <StatCard
             label="Expected Visitors"
             value={stats.expectedVisitors}
             subtext="Awaiting gate arrival"
-            icon={Clock}
+            iconName="clock"
             variant="purple"
             href="/admin/expected-attendees"
+            trend={stats.expectedVisitors > 0 ? `${stats.expectedVisitors} Scheduled` : 'None pending'}
+            chartData={[70, 80, 65, 55, 45, 35, 25, stats.expectedVisitors > 0 ? 90 : 15]}
           />
         </div>
       </div>
@@ -361,15 +372,15 @@ export default async function Dashboard() {
                       <span className="font-semibold text-slate-700 dark:text-slate-300">
                         {peak.timeLabel}
                       </span>
-                      <span className="font-mono font-bold text-[#123B70] dark:text-blue-400">
+                      <span className="font-mono font-bold text-[#0B3D2E]">
                         {peak.count} check-ins
                       </span>
                     </div>
 
                     {/* Visual Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#123B70] to-[#C89B3C]"
+                        className="h-full rounded-full bg-gradient-to-r from-[#0B3D2E] to-[#C89B3C]"
                         style={{ width: `${peak.percentage}%` }}
                       />
                     </div>
@@ -380,21 +391,24 @@ export default async function Dashboard() {
           </div>
 
           {/* Quick Direct Actions Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-              Frequent Actions
-            </h3>
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Frequent Actions
+              </h3>
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <Link
                 href="/admin/check-in"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition group"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
                   <LogIn className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#123B70] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
                     Check In Visitor
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Process arrival</p>
@@ -403,13 +417,13 @@ export default async function Dashboard() {
 
               <Link
                 href="/check-out"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition group"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
                   <LogOut className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#123B70] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
                     Gate Checkout
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Enter code / scan</p>
@@ -418,13 +432,13 @@ export default async function Dashboard() {
 
               <Link
                 href="/admin/visitors"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition group"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
                   <Users className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#123B70] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
                     Visitors List
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Search directory</p>
@@ -433,13 +447,13 @@ export default async function Dashboard() {
 
               <Link
                 href="/admin/reports"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 dark:bg-slate-800/60 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 transition group"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
                   <TrendingUp className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-[#123B70] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
                     Reports & Export
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Analytics data</p>

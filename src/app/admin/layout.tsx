@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import AdminTopBar from '@/components/AdminTopBar';
+import AdminSidebar from '@/components/AdminSidebar';
 import AdminBottomBar from '@/components/AdminBottomBar';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
 import { useSession } from 'next-auth/react';
@@ -16,6 +17,7 @@ export default function AdminLayout({
   const isLoginPage = pathname === '/admin/login';
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoginPage && status === 'unauthenticated') {
@@ -29,7 +31,7 @@ export default function AdminLayout({
 
   if (status === 'loading') {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#123B70]"></div>
       </div>
     );
@@ -40,19 +42,26 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50/70 flex-col">
+    <div className="flex min-h-screen bg-slate-50/80 dark:bg-slate-950 flex-col">
       {/* Top Header */}
-      <AdminTopBar />
+      <AdminTopBar onMobileMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
-      {/* Main Full-Width Content Container with Bottom Clearance for the Floating Bar */}
-      <main className="flex-1 w-full pt-20 pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="mb-4">
-          <Breadcrumb />
-        </div>
-        {children}
-      </main>
+      <div className="flex flex-1 pt-16">
+        {/* Desktop Sidebar (visible on lg:block, hidden on mobile) */}
+        <AdminSidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
-      {/* Modern Bottom Floating Navigation Bar & More... Modal */}
+        {/* Main Content Area */}
+        {/* On desktop: full width of remaining screen with comfortable padding */}
+        {/* On mobile: full width with bottom clearance for floating bottom bar */}
+        <main className="flex-1 w-full min-w-0 pt-4 sm:pt-6 pb-28 lg:pb-12 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <div className="mb-4">
+            <Breadcrumb />
+          </div>
+          {children}
+        </main>
+      </div>
+
+      {/* Modern Bottom Floating Navigation Bar (Mobile / Tablet Only) */}
       <AdminBottomBar />
     </div>
   );

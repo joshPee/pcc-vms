@@ -8,7 +8,6 @@ import {
   LogIn,
   LogOut,
   Users,
-  MoreHorizontal,
   LayoutGrid,
   CalendarCheck,
   History,
@@ -24,7 +23,6 @@ import {
   ScrollText,
   Search,
   X,
-  ChevronRight,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
@@ -41,13 +39,13 @@ interface MenuModule {
 }
 
 const ALL_MODULES: MenuModule[] = [
-  // Primary (also on bar)
+  // Primary
   {
     href: '/admin/dashboard',
     label: 'Dashboard',
     description: 'Real-time overview of visitor volume & metrics',
     icon: LayoutDashboard,
-    color: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    color: 'bg-emerald-50 text-[#0B3D2E] border-emerald-200',
     category: 'Visitor Operations',
   },
   {
@@ -55,7 +53,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Check In',
     description: 'Process incoming expected and walk-in visitors',
     icon: LogIn,
-    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     category: 'Visitor Operations',
   },
   {
@@ -63,7 +61,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Check Out',
     description: 'Verify departures and clear visitor badges',
     icon: LogOut,
-    color: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    color: 'bg-amber-50 text-amber-800 border-amber-200',
     category: 'Visitor Operations',
   },
   {
@@ -71,17 +69,17 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Visitors Directory',
     description: 'Master list of registered participants and visitors',
     icon: Users,
-    color: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+    color: 'bg-blue-50 text-blue-700 border-blue-200',
     category: 'Visitor Operations',
   },
 
   // Visitor Operations
   {
     href: '/check-out',
-    label: 'Gate Check-out Station',
+    label: 'Gate Terminal View',
     description: 'Fast barcode scanner & code checkout for gate guards',
     icon: ShieldCheck,
-    color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    color: 'bg-emerald-50 text-[#0B3D2E] border-emerald-200',
     category: 'Visitor Operations',
   },
   {
@@ -89,7 +87,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Pre-Registration',
     description: 'Schedule upcoming delegations and individual guests',
     icon: CalendarCheck,
-    color: 'bg-sky-500/10 text-sky-600 border-sky-500/20',
+    color: 'bg-sky-50 text-sky-700 border-sky-200',
     category: 'Visitor Operations',
   },
   {
@@ -97,7 +95,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Visitor Audit Log',
     description: 'Chronological timeline of all visitor entries and exits',
     icon: History,
-    color: 'bg-slate-500/10 text-slate-600 border-slate-500/20',
+    color: 'bg-slate-50 text-slate-700 border-slate-200',
     category: 'Visitor Operations',
   },
   {
@@ -105,7 +103,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'QR Code Generator',
     description: 'Generate and print scannable QR passes for events',
     icon: QrCode,
-    color: 'bg-violet-500/10 text-violet-600 border-violet-500/20',
+    color: 'bg-purple-50 text-purple-700 border-purple-200',
     category: 'Visitor Operations',
   },
   {
@@ -113,7 +111,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Expected Attendees',
     description: 'Review upcoming RSVPs and invitations',
     icon: Users,
-    color: 'bg-teal-500/10 text-teal-600 border-teal-500/20',
+    color: 'bg-teal-50 text-teal-700 border-teal-200',
     category: 'Visitor Operations',
   },
 
@@ -123,7 +121,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Security Watchlist',
     description: 'Flagged persons, VIPs, and restriction alerts',
     icon: ShieldAlert,
-    color: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
+    color: 'bg-rose-50 text-rose-700 border-rose-200',
     category: 'Security & Patrol',
   },
   {
@@ -131,7 +129,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Vehicles & Parking',
     description: 'Log and track visitor & contractor vehicles on site',
     icon: Car,
-    color: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    color: 'bg-amber-50 text-[#C89B3C] border-amber-200',
     category: 'Security & Patrol',
   },
   {
@@ -139,7 +137,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Incident Reports',
     description: 'Security occurrences, logs, and supervisor reviews',
     icon: AlertTriangle,
-    color: 'bg-red-500/10 text-red-600 border-red-500/20',
+    color: 'bg-red-50 text-red-700 border-red-200',
     category: 'Security & Patrol',
     requiredRole: 'supervisor',
   },
@@ -148,7 +146,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Shift Handover',
     description: 'Guard duty shift notes, equipment, and sign-offs',
     icon: ClipboardList,
-    color: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+    color: 'bg-orange-50 text-orange-700 border-orange-200',
     category: 'Security & Patrol',
     requiredRole: 'supervisor',
   },
@@ -159,7 +157,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Hosts & Staff Directory',
     description: 'Internal departments, officers, and host contacts',
     icon: UserCog,
-    color: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+    color: 'bg-emerald-50 text-[#0B3D2E] border-emerald-200',
     category: 'Management & Settings',
   },
   {
@@ -167,7 +165,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Reports & Analytics',
     description: 'Export traffic trends, visitor counts, and dwell times',
     icon: BarChart3,
-    color: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+    color: 'bg-purple-50 text-purple-700 border-purple-200',
     category: 'Management & Settings',
     requiredRole: 'supervisor',
   },
@@ -176,7 +174,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Users & Permissions',
     description: 'Manage staff roles, access levels, and credentials',
     icon: Settings,
-    color: 'bg-zinc-500/10 text-zinc-600 border-zinc-500/20',
+    color: 'bg-zinc-100 text-zinc-700 border-zinc-200',
     category: 'Management & Settings',
   },
   {
@@ -184,7 +182,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Visitor Categories',
     description: 'Define badges, VIP designations, and access tags',
     icon: Tag,
-    color: 'bg-cyan-500/10 text-cyan-600 border-cyan-500/20',
+    color: 'bg-cyan-50 text-cyan-700 border-cyan-200',
     category: 'Management & Settings',
   },
   {
@@ -192,7 +190,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'System Audit Trail',
     description: 'Immutable record of staff actions and system modifications',
     icon: ScrollText,
-    color: 'bg-slate-500/10 text-slate-600 border-slate-500/20',
+    color: 'bg-slate-100 text-slate-700 border-slate-200',
     category: 'Management & Settings',
   },
 ];
@@ -263,12 +261,12 @@ export default function AdminBottomBar() {
 
   return (
     <>
-      {/* Floating Bottom Navigation Bar */}
+      {/* Floating Bottom Navigation Bar (Mobile & Tablet Only) */}
       <nav
         aria-label="Admin Navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] py-1.5 px-3 sm:px-6"
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-[#D8CFB8]/70 shadow-[0_-8px_30px_rgba(11,61,46,0.08)] py-1.5 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
       >
-        <div className="max-w-md sm:max-w-xl mx-auto flex items-center justify-around">
+        <div className="max-w-md mx-auto flex items-center justify-around">
           {PRIMARY_BAR_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -276,29 +274,27 @@ export default function AdminBottomBar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-3 sm:px-4 rounded-2xl transition-all duration-200 group ${
-                  isActive
-                    ? 'text-[#123B70] dark:text-blue-400 font-bold'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-200 group ${
+                  isActive ? 'text-[#0B3D2E] font-black' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {/* Active Indicator Capsule */}
                 <div
-                  className={`w-10 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  className={`w-11 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                     isActive
-                      ? 'bg-[#123B70]/10 dark:bg-blue-500/20 text-[#123B70] dark:text-blue-400 scale-105'
-                      : 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800'
+                      ? 'bg-[#0B3D2E] text-white shadow-md shadow-[#0B3D2E]/25 scale-105'
+                      : 'group-hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                  <Icon className={`w-4 h-4 transition-transform ${isActive ? 'text-[#C89B3C]' : ''}`} />
                 </div>
-                <span className="text-[10.5px] sm:text-[11px] font-medium tracking-tight mt-0.5">
+                <span className="text-[10px] font-bold tracking-tight mt-1">
                   {item.label}
                 </span>
 
                 {/* Subtle active pip */}
                 {isActive && (
-                  <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#123B70] dark:bg-blue-400" />
+                  <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
                 )}
               </Link>
             );
@@ -308,27 +304,25 @@ export default function AdminBottomBar() {
           <button
             type="button"
             onClick={() => setMoreModalOpen(true)}
-            className={`relative flex flex-col items-center justify-center py-1.5 px-3 sm:px-4 rounded-2xl transition-all duration-200 group cursor-pointer ${
-              isMoreActive || moreModalOpen
-                ? 'text-[#123B70] dark:text-blue-400 font-bold'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-200 group cursor-pointer ${
+              isMoreActive || moreModalOpen ? 'text-[#0B3D2E] font-black' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <div
-              className={`w-10 h-7 rounded-full flex items-center justify-center transition-all duration-200 ${
+              className={`w-11 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                 isMoreActive || moreModalOpen
-                  ? 'bg-[#123B70]/10 dark:bg-blue-500/20 text-[#123B70] dark:text-blue-400 scale-105'
-                  : 'group-hover:bg-slate-100 dark:group-hover:bg-slate-800'
+                  ? 'bg-[#0B3D2E] text-white shadow-md shadow-[#0B3D2E]/25 scale-105'
+                  : 'group-hover:bg-slate-100'
               }`}
             >
-              <LayoutGrid className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <LayoutGrid className={`w-4 h-4 ${isMoreActive || moreModalOpen ? 'text-[#C89B3C]' : ''}`} />
             </div>
-            <span className="text-[10.5px] sm:text-[11px] font-medium tracking-tight mt-0.5">
+            <span className="text-[10px] font-bold tracking-tight mt-1">
               More...
             </span>
 
             {isMoreActive && (
-              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#123B70] dark:bg-blue-400" />
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
             )}
           </button>
         </div>
@@ -339,43 +333,43 @@ export default function AdminBottomBar() {
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity"
             onClick={() => setMoreModalOpen(false)}
           />
 
           {/* Modal Panel */}
-          <div className="relative w-full sm:max-w-2xl bg-white dark:bg-slate-900 rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-h-[85vh] sm:max-h-[80vh] flex flex-col z-10 overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
+          <div className="relative w-full sm:max-w-2xl bg-white rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-[#D8CFB8]/80 max-h-[85vh] sm:max-h-[80vh] flex flex-col z-10 overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+            <div className="p-4 sm:p-5 border-b border-[#D8CFB8]/50 flex items-center justify-between shrink-0 bg-[#FBFAF6]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#123B70]/10 dark:bg-blue-500/20 text-[#123B70] dark:text-blue-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#0B3D2E]/10 text-[#0B3D2E] flex items-center justify-center">
                   <LayoutGrid className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">All Modules & Tools</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">PCC Visitor Management System</p>
+                  <h3 className="text-base font-bold text-slate-900">All Modules & Tools</h3>
+                  <p className="text-xs text-slate-500">PCC Visitor Management System</p>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setMoreModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition"
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Quick Search inside Modal */}
-            <div className="px-4 sm:px-5 pt-3 pb-2 shrink-0">
+            <div className="px-4 sm:px-5 pt-3 pb-2 shrink-0 bg-white">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                 <input
                   type="text"
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  placeholder="Quick jump to any module..."
-                  className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#123B70]"
+                  placeholder="Quick search across all modules..."
+                  className="w-full bg-[#FBFAF6] border border-[#D8CFB8]/80 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/30"
                   autoFocus
                 />
                 {searchFilter && (
@@ -390,16 +384,19 @@ export default function AdminBottomBar() {
             </div>
 
             {/* Scrollable Categories List */}
-            <div className="p-4 sm:p-5 overflow-y-auto space-y-6 flex-1">
+            <div className="p-4 sm:p-5 overflow-y-auto space-y-6 flex-1 bg-white">
               {categories.map((category) => {
                 const categoryItems = visibleModules.filter((m) => m.category === category);
                 if (categoryItems.length === 0) return null;
 
                 return (
                   <div key={category} className="space-y-2.5">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-1">
-                      {category}
-                    </h4>
+                    <div className="flex items-center justify-between px-1">
+                      <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                        {category}
+                      </h4>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {categoryItems.map((mod) => {
                         const Icon = mod.icon;
@@ -412,8 +409,8 @@ export default function AdminBottomBar() {
                             onClick={() => setMoreModalOpen(false)}
                             className={`flex items-start gap-3 p-3 rounded-2xl border transition-all duration-150 group ${
                               isCurrent
-                                ? 'bg-[#123B70]/10 border-[#123B70]/30 dark:bg-blue-950/40 dark:border-blue-700/40'
-                                : 'bg-slate-50/70 hover:bg-slate-100/90 dark:bg-slate-800/40 dark:hover:bg-slate-800 border-slate-200/60 dark:border-slate-800'
+                                ? 'bg-[#0B3D2E]/10 border-[#0B3D2E]/40'
+                                : 'bg-slate-50/70 hover:bg-[#FBFAF6] border-slate-200/80 hover:border-[#D8CFB8]'
                             }`}
                           >
                             <div
@@ -425,18 +422,18 @@ export default function AdminBottomBar() {
                               <div className="flex items-center justify-between">
                                 <p
                                   className={`text-xs font-bold truncate ${
-                                    isCurrent ? 'text-[#123B70] dark:text-blue-400' : 'text-slate-900 dark:text-white'
+                                    isCurrent ? 'text-[#0B3D2E]' : 'text-slate-900'
                                   }`}
                                 >
                                   {mod.label}
                                 </p>
                                 {isCurrent && (
-                                  <span className="text-[10px] font-semibold text-[#123B70] dark:text-blue-400 px-1.5 py-0.2 rounded bg-[#123B70]/10">
+                                  <span className="text-[10px] font-semibold text-[#0B3D2E] px-1.5 py-0.2 rounded bg-[#0B3D2E]/10">
                                     Active
                                   </span>
                                 )}
                               </div>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5">
+                              <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
                                 {mod.description}
                               </p>
                             </div>

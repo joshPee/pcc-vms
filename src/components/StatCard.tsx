@@ -1,83 +1,158 @@
-'use client';
-
-import { LucideIcon, ArrowUpRight } from 'lucide-react';
+import React from 'react';
 import Link from 'next/link';
+import {
+  Users,
+  CheckCircle2,
+  Clock,
+  LogOut,
+  ArrowUpRight,
+  Sparkles,
+  ShieldCheck,
+  Building2,
+  Calendar,
+  Car,
+  ShieldAlert,
+  type LucideIcon,
+} from 'lucide-react';
 
-export type StatVariant = 'blue' | 'emerald' | 'amber' | 'purple' | 'slate';
+export type StatVariant = 'forest' | 'blue' | 'emerald' | 'amber' | 'gold' | 'purple' | 'slate';
 
-interface StatCardProps {
+const ICON_MAP: Record<string, LucideIcon> = {
+  users: Users,
+  'check-circle': CheckCircle2,
+  'check-circle-2': CheckCircle2,
+  check: CheckCircle2,
+  clock: Clock,
+  'log-out': LogOut,
+  logout: LogOut,
+  shield: ShieldCheck,
+  'shield-check': ShieldCheck,
+  building: Building2,
+  calendar: Calendar,
+  car: Car,
+  alert: ShieldAlert,
+};
+
+export interface StatCardProps {
   label: string;
   value: string | number;
   subtext?: string;
-  icon: LucideIcon;
+  icon?: LucideIcon | string;
+  iconName?: string;
   variant?: StatVariant;
   trend?: string;
+  trendPositive?: boolean;
   href?: string;
   size?: 'default' | 'compact';
+  chartData?: number[];
 }
 
-const VARIANT_STYLES: Record<
+const VARIANT_CONFIG: Record<
   StatVariant,
   {
-    bgGradient: string;
+    bgCard: string;
     border: string;
-    iconBg: string;
-    iconColor: string;
-    valueColor: string;
+    glowBorder: string;
+    iconGradient: string;
+    iconShadow: string;
     accentDot: string;
-    badgeBg: string;
-    badgeText: string;
+    pulseDot: string;
+    pillBg: string;
+    pillText: string;
+    watermarkColor: string;
+    barColor: string;
   }
 > = {
+  forest: {
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-[#0B3D2E]/40 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-[#0B3D2E] to-[#14533e] text-white',
+    iconShadow: 'shadow-md shadow-[#0B3D2E]/20',
+    accentDot: 'bg-[#0B3D2E]',
+    pulseDot: 'bg-emerald-400',
+    pillBg: 'bg-emerald-50 border border-emerald-200/80',
+    pillText: 'text-emerald-800',
+    watermarkColor: 'text-[#0B3D2E]/[0.04]',
+    barColor: 'bg-[#0B3D2E]',
+  },
   blue: {
-    bgGradient: 'from-blue-50/50 via-white to-white dark:from-blue-950/20 dark:via-slate-900 dark:to-slate-900',
-    border: 'border-blue-100 hover:border-blue-300 dark:border-blue-900/40 dark:hover:border-blue-700/60',
-    iconBg: 'bg-blue-500/10 dark:bg-blue-500/20',
-    iconColor: 'text-[#123B70] dark:text-blue-400',
-    valueColor: 'text-[#123B70] dark:text-white',
-    accentDot: 'bg-[#123B70] dark:bg-blue-400',
-    badgeBg: 'bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300',
-    badgeText: 'Active',
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-blue-400/50 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-[#123B70] to-[#1e5aa0] text-white',
+    iconShadow: 'shadow-md shadow-[#123B70]/20',
+    accentDot: 'bg-[#123B70]',
+    pulseDot: 'bg-blue-400',
+    pillBg: 'bg-blue-50 border border-blue-200/80',
+    pillText: 'text-blue-800',
+    watermarkColor: 'text-blue-900/[0.04]',
+    barColor: 'bg-[#123B70]',
   },
   emerald: {
-    bgGradient: 'from-emerald-50/50 via-white to-white dark:from-emerald-950/20 dark:via-slate-900 dark:to-slate-900',
-    border: 'border-emerald-100 hover:border-emerald-300 dark:border-emerald-900/40 dark:hover:border-emerald-700/60',
-    iconBg: 'bg-emerald-500/10 dark:bg-emerald-500/20',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-    valueColor: 'text-emerald-950 dark:text-white',
-    accentDot: 'bg-emerald-500',
-    badgeBg: 'bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-    badgeText: 'Arrived',
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-emerald-400/50 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-emerald-600 to-teal-700 text-white',
+    iconShadow: 'shadow-md shadow-emerald-600/20',
+    accentDot: 'bg-emerald-600',
+    pulseDot: 'bg-emerald-400',
+    pillBg: 'bg-emerald-50 border border-emerald-200/80',
+    pillText: 'text-emerald-800',
+    watermarkColor: 'text-emerald-900/[0.04]',
+    barColor: 'bg-emerald-600',
   },
   amber: {
-    bgGradient: 'from-amber-50/50 via-white to-white dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900',
-    border: 'border-amber-100 hover:border-amber-300 dark:border-amber-900/40 dark:hover:border-amber-700/60',
-    iconBg: 'bg-amber-500/10 dark:bg-amber-500/20',
-    iconColor: 'text-[#C89B3C] dark:text-amber-400',
-    valueColor: 'text-amber-950 dark:text-white',
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-[#C89B3C]/50 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-[#C89B3C] to-[#b3862b] text-white',
+    iconShadow: 'shadow-md shadow-[#C89B3C]/20',
     accentDot: 'bg-[#C89B3C]',
-    badgeBg: 'bg-amber-500/10 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300',
-    badgeText: 'Departed',
+    pulseDot: 'bg-amber-400',
+    pillBg: 'bg-amber-50 border border-amber-200/80',
+    pillText: 'text-amber-900',
+    watermarkColor: 'text-amber-900/[0.04]',
+    barColor: 'bg-[#C89B3C]',
+  },
+  gold: {
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-[#C89B3C]/50 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-[#C89B3C] to-[#997320] text-white',
+    iconShadow: 'shadow-md shadow-[#C89B3C]/20',
+    accentDot: 'bg-[#C89B3C]',
+    pulseDot: 'bg-amber-400',
+    pillBg: 'bg-amber-50 border border-amber-200/80',
+    pillText: 'text-[#8C6B1C]',
+    watermarkColor: 'text-[#C89B3C]/[0.04]',
+    barColor: 'bg-[#C89B3C]',
   },
   purple: {
-    bgGradient: 'from-purple-50/50 via-white to-white dark:from-purple-950/20 dark:via-slate-900 dark:to-slate-900',
-    border: 'border-purple-100 hover:border-purple-300 dark:border-purple-900/40 dark:hover:border-purple-700/60',
-    iconBg: 'bg-purple-500/10 dark:bg-purple-500/20',
-    iconColor: 'text-purple-600 dark:text-purple-400',
-    valueColor: 'text-purple-950 dark:text-white',
-    accentDot: 'bg-purple-500',
-    badgeBg: 'bg-purple-500/10 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-    badgeText: 'Expected',
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-purple-400/50 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-purple-600 to-indigo-700 text-white',
+    iconShadow: 'shadow-md shadow-purple-600/20',
+    accentDot: 'bg-purple-600',
+    pulseDot: 'bg-purple-400',
+    pillBg: 'bg-purple-50 border border-purple-200/80',
+    pillText: 'text-purple-800',
+    watermarkColor: 'text-purple-900/[0.04]',
+    barColor: 'bg-purple-600',
   },
   slate: {
-    bgGradient: 'from-slate-50/50 via-white to-white dark:from-slate-800/20 dark:via-slate-900 dark:to-slate-900',
-    border: 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700',
-    iconBg: 'bg-slate-100 dark:bg-slate-800',
-    iconColor: 'text-slate-600 dark:text-slate-400',
-    valueColor: 'text-slate-900 dark:text-white',
-    accentDot: 'bg-slate-400',
-    badgeBg: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-    badgeText: 'Total',
+    bgCard: 'bg-white',
+    border: 'border-slate-200/90',
+    glowBorder: 'hover:border-slate-400 hover:shadow-lg hover:shadow-slate-900/5',
+    iconGradient: 'from-slate-700 to-slate-900 text-white',
+    iconShadow: 'shadow-md shadow-slate-700/20',
+    accentDot: 'bg-slate-600',
+    pulseDot: 'bg-slate-400',
+    pillBg: 'bg-slate-100 border border-slate-200/80',
+    pillText: 'text-slate-700',
+    watermarkColor: 'text-slate-900/[0.04]',
+    barColor: 'bg-slate-600',
   },
 };
 
@@ -85,63 +160,123 @@ export default function StatCard({
   label,
   value,
   subtext,
-  icon: Icon,
+  icon,
+  iconName,
   variant = 'blue',
   trend,
   href,
   size = 'default',
+  chartData,
 }: StatCardProps) {
   const isCompact = size === 'compact';
-  const styles = VARIANT_STYLES[variant];
+  const cfg = VARIANT_CONFIG[variant] || VARIANT_CONFIG.blue;
+
+  // Resolve Icon safely regardless of whether string or component is passed
+  let ResolvedIcon: LucideIcon = Users;
+  if (typeof icon === 'string') {
+    ResolvedIcon = ICON_MAP[icon.toLowerCase()] || Users;
+  } else if (icon) {
+    ResolvedIcon = icon;
+  } else if (iconName) {
+    ResolvedIcon = ICON_MAP[iconName.toLowerCase()] || Users;
+  }
 
   const content = (
     <div
-      className={`relative overflow-hidden rounded-2xl sm:rounded-3xl border bg-gradient-to-br ${styles.bgGradient} ${styles.border} shadow-xs hover:shadow-md transition-all duration-200 group p-4 sm:p-5 flex flex-col justify-between`}
+      className={`relative overflow-hidden rounded-2xl sm:rounded-3xl border ${cfg.bgCard} ${cfg.border} ${cfg.glowBorder} transition-all duration-200 group p-4 sm:p-5 flex flex-col justify-between min-h-[160px] sm:min-h-[172px] hover:-translate-y-1 shadow-xs`}
     >
-      {/* Top Row: Label and Icon Badge */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className={`w-1.5 h-1.5 rounded-full ${styles.accentDot}`} />
-          <p className="text-xs sm:text-[13px] font-semibold text-slate-600 dark:text-slate-300 tracking-tight">
-            {label}
+      {/* Background Watermark Icon for Rich Depth without Color Pollution */}
+      <div
+        className={`absolute -right-3 -bottom-3 w-28 h-28 pointer-events-none transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6 ${cfg.watermarkColor}`}
+      >
+        <ResolvedIcon className="w-full h-full stroke-[1.2]" />
+      </div>
+
+      {/* Top Row: Label with Status Pulse + Elevated Clean Icon Badge */}
+      <div className="flex items-start justify-between gap-3 relative z-10">
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${cfg.pulseDot}`} />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${cfg.accentDot}`} />
+            </span>
+            <p className="text-xs sm:text-[13px] font-bold text-slate-700 tracking-tight">
+              {label}
+            </p>
+          </div>
+          <p className="text-[11px] text-slate-400 font-medium">
+            {subtext || 'Live Metric'}
           </p>
         </div>
 
+        {/* Floating Gradient Icon Badge */}
         <div
-          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${styles.iconBg} ${styles.iconColor}`}
+          className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${cfg.iconGradient} ${cfg.iconShadow} transition-all duration-200 group-hover:scale-105 shrink-0 ring-4 ring-slate-50`}
         >
-          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <ResolvedIcon className="w-5 h-5 sm:w-6 sm:h-6" />
         </div>
       </div>
 
-      {/* Middle Figure */}
-      <div className="mt-3 sm:mt-4">
-        <p className={`font-extrabold font-mono tracking-tight ${styles.valueColor} ${isCompact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}`}>
-          {value}
-        </p>
+      {/* Metric Figure Section with Crisp Slate-900 Contrast + Sparkline Bar Chart */}
+      <div className="mt-2.5 sm:mt-3 flex items-end justify-between gap-2 relative z-10">
+        <div className="flex items-baseline gap-2">
+          <span
+            className={`font-black font-mono tracking-tight text-slate-900 ${
+              isCompact ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl lg:text-5xl'
+            }`}
+          >
+            {value}
+          </span>
+        </div>
+
+        {/* Refined Sparkline Bar Chart */}
+        {chartData && chartData.length > 0 && (
+          <div className="flex items-end gap-1 h-8 px-1 pb-0.5" aria-hidden="true">
+            {chartData.map((val, idx) => {
+              const heightPercent = Math.max(15, Math.min(100, val));
+              return (
+                <div
+                  key={idx}
+                  className={`w-1.5 rounded-full ${cfg.barColor} transition-all duration-300 opacity-70 group-hover:opacity-100`}
+                  style={{ height: `${heightPercent}%` }}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Bottom Subtext / Status Tag */}
-      <div className="mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
-        <span className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">
-          {subtext || 'Today'}
-        </span>
-
+      {/* Bottom Footer / Micro-Metrics & Link */}
+      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs relative z-10">
         {trend ? (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-            {trend}
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${cfg.pillBg} ${cfg.pillText}`}
+          >
+            <Sparkles className="w-3 h-3 shrink-0" />
+            <span>{trend}</span>
           </span>
-        ) : href ? (
-          <span className="text-[11px] font-semibold text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 flex items-center gap-0.5 transition">
-            View <ArrowUpRight className="w-3 h-3" />
+        ) : (
+          <span className="text-[11px] font-medium text-slate-400">
+            Real-time sync
           </span>
-        ) : null}
+        )}
+
+        {href && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-slate-950 group-hover:translate-x-0.5 transition-transform">
+            <span>Explore</span>
+            <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
+        )}
       </div>
     </div>
   );
 
   if (href) {
-    return <Link href={href} className="block">{content}</Link>;
+    return (
+      <Link href={href} className="block focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-2xl sm:rounded-3xl">
+        {content}
+      </Link>
+    );
   }
 
   return content;
