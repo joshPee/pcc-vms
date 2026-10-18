@@ -165,6 +165,7 @@ export async function POST(request: NextRequest) {
     // Clear cache to reflect updated stats
     try {
       clearCache('attendance');
+      clearCache('active-visitors');
     } catch {
       // ignore
     }

@@ -183,7 +183,7 @@ export default function VisitorCheckOutPage() {
     fetchActiveVisitors();
     const interval = setInterval(fetchActiveVisitors, 15000);
     return () => clearInterval(interval);
-  }, [fetchActiveVisitors]);
+  }, []); // Run only on mount
 
   // Handle searching / verifying a code entered by the guard
   const handleVerifyCode = async (codeToVerify?: string) => {
@@ -281,6 +281,9 @@ export default function VisitorCheckOutPage() {
         // Remove from active list
         setActiveVisitors((prev) => prev.filter((v) => v.id !== selectedVisitor.id));
         setActiveCount((prev) => Math.max(0, prev - 1));
+
+        // Refresh active visitors from server to ensure sync
+        fetchActiveVisitors();
 
         // Reset state & focus back to code input for next visitor
         setSelectedVisitor(null);
