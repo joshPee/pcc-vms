@@ -5,7 +5,12 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/providers";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+  fallback: ['system-ui', 'arial'],
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -30,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn("h-full", "antialiased", fraunces.variable, ibmPlexSans.variable, ibmPlexMono.variable, "font-sans", geist.variable)}
       style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
     >
-      <body 
+      <body
         className="min-h-full flex flex-col"
         style={{ backgroundColor: '#FFFFFF', color: '#152420' }}
       >

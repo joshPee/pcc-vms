@@ -5,6 +5,7 @@ export const fraunces = Fraunces({
   weight: ['400', '500', '600'],
   variable: '--font-fraunces',
   display: 'swap',
+  fallback: ['system-ui', 'arial'],
 });
 
 export const ibmPlexSans = IBM_Plex_Sans({
@@ -12,6 +13,7 @@ export const ibmPlexSans = IBM_Plex_Sans({
   weight: ['400', '500', '600', '700'],
   variable: '--font-ibm-plex-sans',
   display: 'swap',
+  fallback: ['system-ui', 'arial'],
 });
 
 export const ibmPlexMono = IBM_Plex_Mono({
@@ -19,4 +21,5 @@ export const ibmPlexMono = IBM_Plex_Mono({
   weight: ['500', '600'],
   variable: '--font-ibm-plex-mono',
   display: 'swap',
+  fallback: ['monospace', 'courier'],
 });
