@@ -5,14 +5,28 @@ import { useEffect } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('Service Worker registered with scope:', registration.scope);
-        })
-        .catch((error) => {
-          console.log('Service Worker registration failed:', error);
-        });
+    // Actively unregister all existing service workers on user devices
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then(() => {
+            console.log('Stale service worker unregistered');
+          });
+        }
+      }).catch((err) => {
+        console.warn('Error unregistering service workers:', err);
+      });
+    }
+
+    // Actively purge all browser CacheStorage entries
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      caches.keys().then((names) => {
+        for (const name of names) {
+          caches.delete(name);
+        }
+      }).catch((err) => {
+        console.warn('Error purging cache storage:', err);
+      });
     }
   }, []);
 
