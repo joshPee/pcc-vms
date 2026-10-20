@@ -210,16 +210,24 @@ export default function Register() {
       <div className="w-full max-w-lg mx-auto">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#556960] hover:text-[#1a3a6e] transition-colors py-1.5 px-3 rounded-full bg-white/80 border border-stone-200/70 shadow-xs"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Home</span>
-          </Link>
-          <div className="inline-flex items-center gap-1.5 text-xs text-[#1a3a6e] font-medium bg-[#1a3a6e]/8 px-2.5 py-1 rounded-full border border-[#1a3a6e]/15">
-            <Shield className="w-3 h-3 text-[#1a3a6e]" />
-            <span>Gate Registration</span>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/guard"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B1E36] hover:bg-slate-100 transition-colors py-1.5 px-3 rounded-full bg-white border border-slate-300 shadow-2xs"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Guard Dashboard</span>
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition py-1.5 px-2.5 rounded-full hover:bg-slate-100"
+            >
+              Home
+            </Link>
+          </div>
+          <div className="inline-flex items-center gap-1.5 text-xs text-[#0B1E36] font-semibold bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/80">
+            <Shield className="w-3 h-3 text-[#0B1E36]" />
+            <span>Gate Check-In</span>
           </div>
         </div>
 

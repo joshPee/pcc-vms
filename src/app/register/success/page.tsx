@@ -226,13 +226,30 @@ function RegistrationSuccessContent() {
           </div>
 
           <Link
-            href="/"
-            aria-label="Return to home page"
-            className="w-full py-4 px-4 min-h-[48px] rounded-xl bg-[#1a3a6e] text-white font-semibold text-xs sm:text-sm hover:bg-[#152d56] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+            href="/guard"
+            aria-label="Return to Guard Dashboard"
+            className="w-full py-4 px-4 min-h-[48px] rounded-xl bg-[#0B1E36] text-white font-bold text-xs sm:text-sm hover:bg-[#071526] transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
           >
-            <Home className="w-4 h-4" aria-hidden="true" />
-            <span>Done · Return to Home</span>
+            <ShieldCheck className="w-4 h-4 text-amber-300" aria-hidden="true" />
+            <span>Return to Guard Dashboard</span>
           </Link>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <Link
+              href="/register"
+              aria-label="Check in another visitor"
+              className="py-3 px-3 min-h-[44px] rounded-xl bg-white border border-stone-200 text-slate-800 font-semibold text-xs hover:bg-stone-50 transition-all flex items-center justify-center text-center shadow-xs"
+            >
+              <span>+ Check In Next Visitor</span>
+            </Link>
+            <Link
+              href="/"
+              aria-label="Return to home page"
+              className="py-3 px-3 min-h-[44px] rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-all flex items-center justify-center text-center"
+            >
+              <span>Done · Home</span>
+            </Link>
+          </div>
         </div>
       </div>
 

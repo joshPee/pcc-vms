@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import {
   PlusCircle,
   X,
   ArrowRight,
+  ArrowLeft,
   ShieldCheck,
   Clock,
   Sparkles,
@@ -273,13 +275,22 @@ export default function CheckInPage() {
               </p>
             </div>
 
-            <Button
-              onClick={() => setShowWalkInModal(true)}
-              className="inline-flex items-center justify-center gap-2 bg-[#123B70] hover:bg-[#0d2d52] text-white text-xs sm:text-sm font-bold h-10 px-4 rounded-xl transition shadow-xs shrink-0"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Add Walk-In Visitor</span>
-            </Button>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                href="/guard"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#0B1E36] text-xs font-bold transition border border-slate-200"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Guard Dashboard</span>
+              </Link>
+              <Button
+                onClick={() => setShowWalkInModal(true)}
+                className="inline-flex items-center justify-center gap-2 bg-[#123B70] hover:bg-[#0d2d52] text-white text-xs sm:text-sm font-bold h-10 px-4 rounded-xl transition shadow-xs"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Add Walk-In Visitor</span>
+              </Button>
+            </div>
           </div>
 
           {/* Search Form */}

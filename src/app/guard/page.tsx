@@ -273,7 +273,7 @@ export default function GuardPortalPage() {
           <div className="grid grid-cols-2 gap-3.5">
             {/* Action 1: Check In */}
             <Link
-              href="/"
+              href="/register"
               className="bg-[#007A4D] hover:bg-[#006C44] active:scale-[0.98] transition-all duration-150 rounded-3xl p-4 sm:p-5 text-white flex flex-col justify-between aspect-[3/4] min-h-[200px] shadow-lg shadow-[#007A4D]/25 relative overflow-hidden group"
             >
               {/* Subtle decorative glow */}
