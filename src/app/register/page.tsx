@@ -210,21 +210,13 @@ export default function Register() {
       <div className="w-full max-w-lg mx-auto">
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Link
-              href="/guard"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B1E36] hover:bg-slate-100 transition-colors py-1.5 px-3 rounded-full bg-white border border-slate-300 shadow-2xs"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Guard Dashboard</span>
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-800 transition py-1.5 px-2.5 rounded-full hover:bg-slate-100"
-            >
-              Home
-            </Link>
-          </div>
+          <Link
+            href="/guard"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B1E36] hover:bg-slate-100 transition-colors py-1.5 px-3 rounded-full bg-white border border-slate-300 shadow-2xs"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Guard Dashboard</span>
+          </Link>
           <div className="inline-flex items-center gap-1.5 text-xs text-[#0B1E36] font-semibold bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/80">
             <Shield className="w-3 h-3 text-[#0B1E36]" />
             <span>Gate Check-In</span>

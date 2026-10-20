@@ -512,7 +512,7 @@ export default function VisitorCheckOutPage() {
               <span className="hidden xs:inline">Guard</span> Dashboard
             </Link>
 
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
+            <Link href="/guard" className="flex items-center gap-2 group shrink-0" title="Return to Guard Dashboard">
               <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center shadow-xs border border-slate-200/80 transition group-hover:scale-105">
                 <img src="/pcc.png" alt="PCC" className="w-full h-full object-contain" />
               </div>

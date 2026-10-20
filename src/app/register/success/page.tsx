@@ -234,22 +234,13 @@ function RegistrationSuccessContent() {
             <span>Return to Guard Dashboard</span>
           </Link>
 
-          <div className="grid grid-cols-2 gap-2.5">
-            <Link
-              href="/register"
-              aria-label="Check in another visitor"
-              className="py-3 px-3 min-h-[44px] rounded-xl bg-white border border-stone-200 text-slate-800 font-semibold text-xs hover:bg-stone-50 transition-all flex items-center justify-center text-center shadow-xs"
-            >
-              <span>+ Check In Next Visitor</span>
-            </Link>
-            <Link
-              href="/"
-              aria-label="Return to home page"
-              className="py-3 px-3 min-h-[44px] rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs hover:bg-slate-200 transition-all flex items-center justify-center text-center"
-            >
-              <span>Done · Home</span>
-            </Link>
-          </div>
+          <Link
+            href="/register"
+            aria-label="Check in next visitor"
+            className="w-full py-3.5 px-4 min-h-[44px] rounded-xl bg-white border border-stone-300 text-slate-800 font-bold text-xs sm:text-sm hover:bg-stone-50 transition-all flex items-center justify-center gap-2 shadow-xs"
+          >
+            <span>+ Check In Next Visitor</span>
+          </Link>
         </div>
       </div>
 
