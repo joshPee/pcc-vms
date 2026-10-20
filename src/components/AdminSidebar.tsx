@@ -53,13 +53,6 @@ const NAV_SECTIONS: NavSection[] = [
       { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/admin/check-in', label: 'Check In', icon: LogIn },
       { href: '/admin/check-out', label: 'Check Out', icon: LogOut },
-      {
-        href: '/check-out',
-        label: 'Gate Terminal',
-        icon: ShieldCheck,
-        badge: 'Exit Gate',
-        badgeColor: 'bg-emerald-50 text-emerald-800 border border-emerald-300',
-      },
       { href: '/admin/visitors', label: 'Visitors Directory', icon: Users },
       { href: '/admin/expected-attendees', label: 'Expected Attendees', icon: CalendarCheck },
     ],
@@ -75,7 +68,6 @@ const NAV_SECTIONS: NavSection[] = [
         badgeColor: 'bg-rose-50 text-rose-700 border border-rose-300',
       },
       { href: '/admin/vehicles', label: 'Vehicles & Parking', icon: Car },
-      { href: '/admin/visitor-history', label: 'Visitor Audit Log', icon: History },
       { href: '/admin/incidents', label: 'Incident Reports', icon: AlertTriangle, requiredRole: 'supervisor' },
       { href: '/admin/shift-handover', label: 'Shift Handover', icon: ClipboardList, requiredRole: 'supervisor' },
     ],
@@ -83,17 +75,16 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'ADMINISTRATION',
     items: [
-      { href: '/admin/pre-registration', label: 'Pre-Registration', icon: CalendarCheck },
       { href: '/admin/reports', label: 'Reports & Analytics', icon: BarChart3, requiredRole: 'supervisor' },
-      { href: '/admin/qr-code', label: 'QR Pass Generator', icon: QrCode },
       { href: '/admin/hosts-staff', label: 'Hosts & Staff', icon: UserCog },
       {
-        label: 'Settings',
+        label: 'Settings & Tools',
         icon: Settings,
         collapsible: true,
         children: [
           { href: '/admin/settings', label: 'Users & Roles', icon: Users },
           { href: '/admin/visitor-categories', label: 'Categories', icon: Tag },
+          { href: '/admin/qr-code', label: 'QR Pass Generator', icon: QrCode },
           { href: '/admin/audit-log', label: 'System Audit Log', icon: ScrollText },
         ],
       },

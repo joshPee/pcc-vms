@@ -142,26 +142,8 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            {/* Quick Fill Preset Pill */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-600 flex items-center justify-between">
-              <div className="min-w-0 pr-2">
-                <span className="font-bold block text-slate-800 text-[11px]">Default Admin Demo:</span>
-                <span className="font-mono text-[11px] text-slate-500 truncate block">admin@pcc.gov.gh / admin123</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@pcc.gov.gh');
-                  setPassword('admin123');
-                }}
-                className="px-2.5 py-1 text-[11px] font-bold text-[#123B70] hover:text-[#0C284E] bg-white hover:bg-blue-50/70 border border-slate-200 rounded-lg transition shadow-2xs shrink-0"
-              >
-                Auto Fill
-              </button>
-            </div>
-
             {/* Submit Button */}
-            <div>
+            <div className="pt-1">
               <button
                 type="submit"
                 disabled={loading}

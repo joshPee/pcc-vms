@@ -105,17 +105,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="/check-out"
-              aria-label="Go to visitor checkout page"
-              className="flex items-center gap-1.5 px-3 py-1.5 min-h-[40px] rounded-full bg-[#1a3a6e]/10 hover:bg-[#1a3a6e]/20 border border-[#1a3a6e]/20 text-[#1a3a6e] text-xs font-semibold transition"
-            >
-              <LogOut className="w-3.5 h-3.5 text-[#1a3a6e]" aria-hidden="true" />
-              <span>Visitor Checkout</span>
-            </Link>
-          </div>
         </header>
 
         {/* Carousel Area */}

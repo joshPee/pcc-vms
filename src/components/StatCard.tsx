@@ -180,36 +180,36 @@ export default function StatCard({
   const bars = chartData && chartData.length > 0 ? chartData : DEFAULT_BAR_DATA;
 
   const content = (
-    <div className="bg-white rounded-[26px] border border-slate-200/80 p-5 sm:p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between min-h-[175px] sm:min-h-[185px]">
+    <div className="bg-white rounded-2xl sm:rounded-[26px] border border-slate-200/80 p-3 sm:p-5 lg:p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between min-h-[148px] sm:min-h-[185px]">
       <div>
         {/* Top Row: Large Metric Number (+ optional green live dot) & Circular Icon Badge */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-3xl sm:text-[34px] font-black text-slate-900 leading-none tracking-tight">
+        <div className="flex items-start justify-between gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className="text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 leading-none tracking-tight">
               {value}
             </span>
             {live && (
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 inline-block" />
+              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 shrink-0 inline-block" />
             )}
           </div>
 
           <div
-            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${cfg.iconBg} ${cfg.iconColor}`}
+            className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${cfg.iconBg} ${cfg.iconColor}`}
           >
-            <ResolvedIcon className="w-5 h-5" />
+            <ResolvedIcon className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         </div>
 
         {/* Second Row: Label / Metric Title */}
-        <p className="text-sm font-semibold text-slate-600 mt-2 truncate">
+        <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1 sm:mt-2 truncate">
           {label}
         </p>
 
         {/* Third Row: Status Pill Badge */}
         {badgeText && (
-          <div className="mt-2.5">
+          <div className="mt-1.5 sm:mt-2.5">
             <span
-              className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-md border ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder}`}
+              className={`inline-flex items-center text-[10px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 rounded-md border truncate max-w-full ${cfg.badgeBg} ${cfg.badgeText} ${cfg.badgeBorder}`}
             >
               {badgeText}
             </span>
@@ -219,13 +219,13 @@ export default function StatCard({
 
       <div>
         {/* Fourth Row: Vertical Mini Bar Chart */}
-        <div className="flex items-end gap-1 h-7 mt-3.5 mb-1" aria-hidden="true">
+        <div className="flex items-end gap-0.5 sm:gap-1 h-5 sm:h-7 mt-2 sm:mt-3.5 mb-1 overflow-hidden" aria-hidden="true">
           {bars.map((val, idx) => {
             const heightPercent = Math.max(18, Math.min(100, val));
             return (
               <div
                 key={idx}
-                className={`w-1.5 rounded-t-sm ${cfg.barColor} transition-all duration-300`}
+                className={`w-1 sm:w-1.5 rounded-t-sm ${cfg.barColor} transition-all duration-300`}
                 style={{ height: `${heightPercent}%` }}
               />
             );
@@ -233,13 +233,13 @@ export default function StatCard({
         </div>
 
         {/* Fifth Row: Footer with Avatars or Description Text */}
-        <div className="flex items-center gap-2 pt-2 text-xs text-slate-500 font-medium">
+        <div className="flex items-center gap-1.5 sm:gap-2 pt-1 sm:pt-2 text-[10px] sm:text-xs text-slate-500 font-medium">
           {footerAvatars && footerAvatars.length > 0 && (
             <div className="flex -space-x-1.5 overflow-hidden shrink-0">
               {footerAvatars.slice(0, 3).map((initials, i) => (
                 <div
                   key={i}
-                  className={`inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-white ${
+                  className={`inline-flex h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 items-center justify-center rounded-full text-[9px] sm:text-[10px] font-bold text-white ring-1 sm:ring-2 ring-white ${
                     AVATAR_COLORS[i % AVATAR_COLORS.length]
                   }`}
                 >
