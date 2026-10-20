@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, CheckCircle, Users, Lock, Settings as SettingsIcon } from 'lucide-react';
+import { AlertCircle, CheckCircle, Users, Lock, Settings as SettingsIcon, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('users');
@@ -70,6 +70,40 @@ export default function SettingsPage() {
       }
     } catch (error) {
       setMessage('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: number, name: string, email: string) => {
+    if ((email || '').toLowerCase() === 'admin@pcc.gov.gh') {
+      alert('The root system administrator account cannot be deleted.');
+      return;
+    }
+
+    if (!confirm(`Are you sure you want to delete the user account for "${name || email}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || 'Failed to delete user');
+      } else {
+        setUsers((prev) => prev.filter((u) => u.id !== userId));
+        setMessage(data.message || 'User deleted successfully');
+        setTimeout(() => setMessage(''), 3500);
+      }
+    } catch {
+      setMessage('An error occurred while deleting user. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -175,18 +209,48 @@ export default function SettingsPage() {
               {/* Existing Users */}
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Existing Users</h3>
-                <div className="space-y-2">
-                  {users.map((user) => (
-                    <div key={user.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                <div className="space-y-2.5">
+                  {users.map((user) => {
+                    const isRootAdmin = (user.email || '').toLowerCase() === 'admin@pcc.gov.gh';
+                    return (
+                      <div
+                        key={user.id}
+                        className="flex items-center justify-between p-3.5 border border-slate-200 rounded-xl bg-slate-50/50 hover:bg-white transition shadow-2xs"
+                      >
+                        <div className="min-w-0 pr-3">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-slate-900 text-sm truncate">{user.name}</p>
+                            {isRootAdmin && (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                Root Admin
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 font-mono truncate">{user.email}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs font-semibold text-[#123B70] bg-blue-50 border border-blue-200/80 px-2.5 py-1 rounded-lg">
+                            {user.role}
+                          </span>
+                          {!isRootAdmin && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={loading}
+                              onClick={() => handleDeleteUser(user.id, user.name, user.email)}
+                              className="h-8 w-8 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                              title={`Delete ${user.name}`}
+                              aria-label={`Delete ${user.name}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-xs font-medium text-blue-700 bg-blue-50 px-2 py-1 rounded">
-                        {user.role}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

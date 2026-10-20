@@ -3,9 +3,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight, ChevronLeft, ShieldCheck, LogOut } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { CAROUSEL_SLIDES } from '@/lib/carousel-slides';
 
 export default function Home() {
+  const { data: session } = useSession();
   const [activeSlide, setActiveSlide] = useState(0);
   const [hasScrolled, setHasScrolled] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -105,6 +107,16 @@ export default function Home() {
               </div>
             </div>
           </div>
+
+          {session?.user && (
+            <Link
+              href={session.user.role === 'security_officer' ? '/guard' : '/admin/dashboard'}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#123B70]/10 hover:bg-[#123B70]/20 border border-[#123B70]/20 text-[#123B70] text-xs font-bold transition shrink-0"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{session.user.role === 'security_officer' ? 'Guard Station →' : 'Admin Portal →'}</span>
+            </Link>
+          )}
         </header>
 
         {/* Carousel Area */}

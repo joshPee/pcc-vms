@@ -33,9 +33,18 @@ export default function AdminLogin() {
         setError('Invalid credentials. Please verify your email/username and password.');
       } else {
         setShowToast(true);
-        setTimeout(() => {
-          window.location.replace('/admin/dashboard');
-        }, 350);
+        try {
+          const sessionRes = await fetch('/api/auth/session');
+          const sessionData = await sessionRes.json();
+          const targetUrl = sessionData?.user?.role === 'security_officer' ? '/guard' : '/admin/dashboard';
+          setTimeout(() => {
+            window.location.replace(targetUrl);
+          }, 350);
+        } catch {
+          setTimeout(() => {
+            window.location.replace('/admin/dashboard');
+          }, 350);
+        }
       }
     } catch {
       setError('An error occurred during authentication. Please try again.');
