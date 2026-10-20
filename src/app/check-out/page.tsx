@@ -182,11 +182,16 @@ export default function VisitorCheckOutPage() {
   const fetchActiveVisitors = useCallback(async () => {
     setActiveLoading(true);
     try {
-      const res = await fetch('/api/active-visitors');
+      const res = await fetch(`/api/active-visitors?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
       if (res.ok) {
         const data = await res.json();
-        setActiveVisitors(Array.isArray(data) ? data : []);
-        setActiveCount(Array.isArray(data) ? data.length : 0);
+        const activeOnly = Array.isArray(data)
+          ? data.filter((v: any) => v.check_in_status === 'CHECKED_IN')
+          : [];
+        setActiveVisitors(activeOnly);
+        setActiveCount(activeOnly.length);
       }
     } catch (err) {
       console.error('Failed to fetch active visitors:', err);
@@ -298,15 +303,24 @@ export default function VisitorCheckOutPage() {
         return;
       }
 
-      // 2. Fetch from participants search endpoint
-      const res = await fetch(`/api/participants/search?q=${encodeURIComponent(clean)}&checkInStatus=CHECKED_IN`);
+      // 2. Fetch from participants search endpoint with fresh query
+      const res = await fetch(
+        `/api/participants/search?q=${encodeURIComponent(clean)}&checkInStatus=CHECKED_IN&t=${Date.now()}`,
+        { cache: 'no-store' }
+      );
       const data = await res.json();
 
       if (Array.isArray(data) && data.length > 0) {
-        setSelectedVisitor(data[0]);
-        setVehicleInspected(false);
-        setBadgeReturned(true);
-        playSound('success');
+        const checkedInVisitor = data.find((v: any) => v.check_in_status === 'CHECKED_IN');
+        if (checkedInVisitor) {
+          setSelectedVisitor(checkedInVisitor);
+          setVehicleInspected(false);
+          setBadgeReturned(true);
+          playSound('success');
+        } else {
+          setError(`Visitor "${clean}" has already been checked out.`);
+          playSound('warning');
+        }
       } else {
         setError(`No checked-in visitor found matching "${clean}". Please verify the code or check On-Site directory.`);
         playSound('warning');
@@ -363,8 +377,12 @@ export default function VisitorCheckOutPage() {
         setLastCheckOut(completed);
         setRecentDepartures((prev) => [completed, ...prev.slice(0, 19)]);
 
-        // Remove from active list
-        setActiveVisitors((prev) => prev.filter((v) => v.id !== selectedVisitor.id));
+        // Remove from active list immediately (safe string id and code comparison)
+        const vId = String(selectedVisitor.id);
+        const vCode = selectedVisitor.registration_code;
+        setActiveVisitors((prev) =>
+          prev.filter((v) => String(v.id) !== vId && v.registration_code !== vCode)
+        );
         setActiveCount((prev) => Math.max(0, prev - 1));
 
         // Refresh active visitors from server to ensure sync
@@ -441,8 +459,12 @@ export default function VisitorCheckOutPage() {
         setLastCheckOut(completed);
         setRecentDepartures((prev) => [completed, ...prev.slice(0, 19)]);
 
-        // Optimistically remove from on-site list
-        setActiveVisitors((prev) => prev.filter((v) => v.id !== onSiteModalVisitor.id));
+        // Optimistically remove from on-site list (safe string id and code comparison)
+        const modalVisitorId = String(onSiteModalVisitor.id);
+        const modalVisitorCode = onSiteModalVisitor.registration_code;
+        setActiveVisitors((prev) =>
+          prev.filter((v) => String(v.id) !== modalVisitorId && v.registration_code !== modalVisitorCode)
+        );
         setActiveCount((prev) => Math.max(0, prev - 1));
 
         // Close modal
@@ -487,7 +509,7 @@ export default function VisitorCheckOutPage() {
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Officer Name Pill (Compact, click to edit) */}
             <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/70 border border-slate-200/80 rounded-lg px-2 py-1 text-xs transition">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#0B3D2E] shrink-0" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#123B70] shrink-0" />
               {isEditingGuard ? (
                 <input
                   type="text"
@@ -508,7 +530,7 @@ export default function VisitorCheckOutPage() {
                     }
                   }}
                   autoFocus
-                  className="bg-white text-slate-900 px-1 py-0.5 rounded border border-[#0B3D2E] text-xs w-28"
+                  className="bg-white text-slate-900 px-1 py-0.5 rounded border border-[#123B70] text-xs w-28"
                 />
               ) : (
                 <span
@@ -844,7 +866,7 @@ export default function VisitorCheckOutPage() {
                   {/* Top Badge */}
                   <div className="flex items-start justify-between gap-2 border-b border-slate-200 pb-3 mb-3">
                     <div className="flex-1 min-w-0">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#C89B3C]">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#D4951B]">
                         Verified Active Visitor
                       </span>
                       <h3 className="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5 truncate">
@@ -937,7 +959,7 @@ export default function VisitorCheckOutPage() {
                     <button
                       onClick={handleExecuteCheckOut}
                       disabled={loading}
-                      className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-extrabold text-xs sm:text-sm tracking-wide transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px]"
+                      className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#C5222E] to-[#9B1A24] hover:from-[#B01D28] hover:to-[#82151D] text-white font-extrabold text-xs sm:text-sm tracking-wide transition shadow-md shadow-red-900/20 flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px]"
                     >
                       {loading ? (
                         <span>Processing Check-Out...</span>
@@ -1379,7 +1401,7 @@ export default function VisitorCheckOutPage() {
                 value={onSiteNotes}
                 onChange={(e) => setOnSiteNotes(e.target.value)}
                 placeholder="e.g. Standard exit, badge collected"
-                className="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#0B3D2E]"
+                className="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#123B70]"
               />
             </div>
 
@@ -1388,7 +1410,7 @@ export default function VisitorCheckOutPage() {
               <button
                 onClick={handleDirectOnSiteCheckOut}
                 disabled={onSiteSubmitting}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-extrabold text-xs sm:text-sm tracking-wide transition shadow-md flex items-center justify-center gap-2 disabled:opacity-50 min-h-[46px]"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#C5222E] to-[#9B1A24] hover:from-[#B01D28] hover:to-[#82151D] text-white font-extrabold text-xs sm:text-sm tracking-wide transition shadow-md shadow-red-900/20 flex items-center justify-center gap-2 disabled:opacity-50 min-h-[46px]"
               >
                 {onSiteSubmitting ? (
                   <span>Checking Out...</span>

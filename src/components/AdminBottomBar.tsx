@@ -45,7 +45,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Dashboard',
     description: 'Real-time overview of visitor volume & metrics',
     icon: LayoutDashboard,
-    color: 'bg-emerald-50 text-[#0B3D2E] border-emerald-200',
+    color: 'bg-blue-50 text-[#123B70] border-blue-200',
     category: 'Visitor Operations',
   },
   {
@@ -79,7 +79,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Gate Terminal View',
     description: 'Fast barcode scanner & code checkout for gate guards',
     icon: ShieldCheck,
-    color: 'bg-emerald-50 text-[#0B3D2E] border-emerald-200',
+    color: 'bg-blue-50 text-[#123B70] border-blue-200',
     category: 'Visitor Operations',
   },
   {
@@ -157,7 +157,7 @@ const ALL_MODULES: MenuModule[] = [
     label: 'Hosts & Staff Directory',
     description: 'Internal departments, officers, and host contacts',
     icon: UserCog,
-    color: 'bg-emerald-50 text-[#0B3D2E] border-emerald-200',
+    color: 'bg-blue-50 text-[#123B70] border-blue-200',
     category: 'Management & Settings',
   },
   {
@@ -264,7 +264,7 @@ export default function AdminBottomBar() {
       {/* Floating Bottom Navigation Bar (Mobile & Tablet Only) */}
       <nav
         aria-label="Admin Navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-[#D8CFB8]/70 shadow-[0_-8px_30px_rgba(11,61,46,0.08)] py-1.5 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-8px_30px_rgba(18,59,112,0.08)] py-1.5 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
       >
         <div className="max-w-md mx-auto flex items-center justify-around">
           {PRIMARY_BAR_ITEMS.map((item) => {
@@ -275,18 +275,18 @@ export default function AdminBottomBar() {
                 key={item.href}
                 href={item.href}
                 className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-200 group ${
-                  isActive ? 'text-[#0B3D2E] font-black' : 'text-slate-500 hover:text-slate-900'
+                  isActive ? 'text-[#123B70] font-black' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {/* Active Indicator Capsule */}
                 <div
                   className={`w-11 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                     isActive
-                      ? 'bg-[#0B3D2E] text-white shadow-md shadow-[#0B3D2E]/25 scale-105'
+                      ? 'bg-[#123B70] text-white shadow-md shadow-[#123B70]/25 scale-105'
                       : 'group-hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-transform ${isActive ? 'text-[#C89B3C]' : ''}`} />
+                  <Icon className={`w-4 h-4 transition-transform ${isActive ? 'text-[#E5A823]' : ''}`} />
                 </div>
                 <span className="text-[10px] font-bold tracking-tight mt-1">
                   {item.label}
@@ -294,7 +294,7 @@ export default function AdminBottomBar() {
 
                 {/* Subtle active pip */}
                 {isActive && (
-                  <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
+                  <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
                 )}
               </Link>
             );
@@ -305,24 +305,24 @@ export default function AdminBottomBar() {
             type="button"
             onClick={() => setMoreModalOpen(true)}
             className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-200 group cursor-pointer ${
-              isMoreActive || moreModalOpen ? 'text-[#0B3D2E] font-black' : 'text-slate-500 hover:text-slate-900'
+              isMoreActive || moreModalOpen ? 'text-[#123B70] font-black' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <div
               className={`w-11 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                 isMoreActive || moreModalOpen
-                  ? 'bg-[#0B3D2E] text-white shadow-md shadow-[#0B3D2E]/25 scale-105'
+                  ? 'bg-[#123B70] text-white shadow-md shadow-[#123B70]/25 scale-105'
                   : 'group-hover:bg-slate-100'
               }`}
             >
-              <LayoutGrid className={`w-4 h-4 ${isMoreActive || moreModalOpen ? 'text-[#C89B3C]' : ''}`} />
+              <LayoutGrid className={`w-4 h-4 ${isMoreActive || moreModalOpen ? 'text-[#E5A823]' : ''}`} />
             </div>
             <span className="text-[10px] font-bold tracking-tight mt-1">
               More...
             </span>
 
             {isMoreActive && (
-              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
+              <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
             )}
           </button>
         </div>
@@ -338,11 +338,11 @@ export default function AdminBottomBar() {
           />
 
           {/* Modal Panel */}
-          <div className="relative w-full sm:max-w-2xl bg-white rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-[#D8CFB8]/80 max-h-[85vh] sm:max-h-[80vh] flex flex-col z-10 overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
+          <div className="relative w-full sm:max-w-2xl bg-white rounded-t-[28px] sm:rounded-3xl shadow-2xl border border-slate-200 max-h-[85vh] sm:max-h-[80vh] flex flex-col z-10 overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
             {/* Header */}
-            <div className="p-4 sm:p-5 border-b border-[#D8CFB8]/50 flex items-center justify-between shrink-0 bg-[#FBFAF6]">
+            <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between shrink-0 bg-slate-50">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#0B3D2E]/10 text-[#0B3D2E] flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-[#123B70]/10 text-[#123B70] flex items-center justify-center">
                   <LayoutGrid className="w-4 h-4" />
                 </div>
                 <div>
@@ -369,7 +369,7 @@ export default function AdminBottomBar() {
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
                   placeholder="Quick search across all modules..."
-                  className="w-full bg-[#FBFAF6] border border-[#D8CFB8]/80 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B3D2E]/30"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#123B70]/30"
                   autoFocus
                 />
                 {searchFilter && (
@@ -395,7 +395,7 @@ export default function AdminBottomBar() {
                       <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
                         {category}
                       </h4>
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {categoryItems.map((mod) => {
@@ -409,8 +409,8 @@ export default function AdminBottomBar() {
                             onClick={() => setMoreModalOpen(false)}
                             className={`flex items-start gap-3 p-3 rounded-2xl border transition-all duration-150 group ${
                               isCurrent
-                                ? 'bg-[#0B3D2E]/10 border-[#0B3D2E]/40'
-                                : 'bg-slate-50/70 hover:bg-[#FBFAF6] border-slate-200/80 hover:border-[#D8CFB8]'
+                                ? 'bg-[#123B70]/10 border-[#123B70]/40'
+                                : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/80 hover:border-slate-300'
                             }`}
                           >
                             <div
@@ -422,13 +422,13 @@ export default function AdminBottomBar() {
                               <div className="flex items-center justify-between">
                                 <p
                                   className={`text-xs font-bold truncate ${
-                                    isCurrent ? 'text-[#0B3D2E]' : 'text-slate-900'
+                                    isCurrent ? 'text-[#123B70]' : 'text-slate-900'
                                   }`}
                                 >
                                   {mod.label}
                                 </p>
                                 {isCurrent && (
-                                  <span className="text-[10px] font-semibold text-[#0B3D2E] px-1.5 py-0.2 rounded bg-[#0B3D2E]/10">
+                                  <span className="text-[10px] font-semibold text-[#123B70] px-1.5 py-0.2 rounded bg-[#123B70]/10">
                                     Active
                                   </span>
                                 )}

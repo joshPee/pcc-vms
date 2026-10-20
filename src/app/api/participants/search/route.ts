@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { pool, sql } from '@/lib/db';
 import { findWatchlistMatches } from '@/lib/watchlist-match';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -76,10 +78,21 @@ export async function GET(request: NextRequest) {
 
     sqlQuery += ` ORDER BY full_name LIMIT 20`;
 
-    const result = await pool.query(sqlQuery, params);
+    let rows: any[] = [];
+    if (pool) {
+      const result = await pool.query(sqlQuery, params);
+      rows = result.rows;
+    } else if (sql) {
+      rows = await sql.query(sqlQuery, params);
+    }
 
-    console.log('Search results:', result.rows);
-    return NextResponse.json(result.rows);
+    return NextResponse.json(rows, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error('Search error:', error);
     return NextResponse.json(

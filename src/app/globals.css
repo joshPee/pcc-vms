@@ -6,16 +6,25 @@
 @custom-variant dark (&:is(.never *));
 
 @theme {
-  --color-forest: #0B3D2E;
-  --color-forest-deep: #082C21;
-  --color-gold: #C89B3C;
-  --color-gold-soft: #E4C77E;
-  --color-cream: #F6F1E4;
-  --color-ink: #1F2420;
-  --color-brick: #A9333A;
-  --color-sage: #E4EBDF;
-  --color-line: #D8CFB8;
-  --color-admin-bg: #FBFAF6;
+  --color-pcc-blue: #123B70;
+  --color-pcc-blue-deep: #0C284E;
+  --color-pcc-blue-light: #1E4E8C;
+  --color-pcc-yellow: #E5A823;
+  --color-pcc-gold: #D4951B;
+  --color-pcc-yellow-light: #FDE68A;
+  --color-pcc-red: #C5222E;
+  --color-pcc-red-deep: #9B1A24;
+  --color-pcc-red-light: #FEE2E2;
+  --color-forest: #123B70;
+  --color-forest-deep: #0C284E;
+  --color-gold: #D4951B;
+  --color-gold-soft: #FDE68A;
+  --color-cream: #F8FAFC;
+  --color-ink: #0F172A;
+  --color-brick: #C5222E;
+  --color-sage: #E2E8F0;
+  --color-line: #E2E8F0;
+  --color-admin-bg: #F8FAFC;
 }
 
 @theme inline {

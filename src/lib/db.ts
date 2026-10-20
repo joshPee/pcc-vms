@@ -19,7 +19,7 @@ export const pool = databaseUrl
       connectionString: databaseUrl,
       max: 10,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      connectionTimeoutMillis: 15000,
     })
   : null as any;
 

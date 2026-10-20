@@ -199,7 +199,7 @@ export default function AdminSidebar({
             onClick={() => toggleMenu(label)}
             className={`flex items-center justify-between w-full px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 group cursor-pointer ${
               isChildActive
-                ? 'bg-[#0B3D2E]/10 text-[#0B3D2E] font-bold'
+                ? 'bg-[#123B70]/10 text-[#123B70] font-bold'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
@@ -214,7 +214,7 @@ export default function AdminSidebar({
             />
           </button>
           {isMenuOpen && (
-            <div className="pl-6 pr-1 space-y-1 border-l-2 border-[#D8CFB8]/40 ml-4">
+            <div className="pl-6 pr-1 space-y-1 border-l-2 border-slate-200 ml-4">
               {children.map((child) => (
                 <NavLink key={child.href} {...child} />
               ))}
@@ -229,7 +229,7 @@ export default function AdminSidebar({
         href={href!}
         className={`relative flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 group ${
           isActive
-            ? 'bg-[#0B3D2E] text-white shadow-md shadow-[#0B3D2E]/20 font-bold'
+            ? 'bg-[#123B70] text-white shadow-md shadow-[#123B70]/25 font-bold'
             : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
         }`}
         onClick={() => setMobileMenuOpen?.(false)}
@@ -237,7 +237,7 @@ export default function AdminSidebar({
         <div className="flex items-center gap-2.5 min-w-0">
           <Icon
             className={`w-4 h-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${
-              isActive ? 'text-[#C89B3C]' : 'text-slate-400 group-hover:text-slate-700'
+              isActive ? 'text-[#E5A823]' : 'text-slate-400 group-hover:text-slate-700'
             }`}
           />
           <span className="truncate">{label}</span>
@@ -255,7 +255,7 @@ export default function AdminSidebar({
         ) : label === 'Check Out' && activeVisitorsCount !== null && activeVisitorsCount > 0 ? (
           <span
             className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-              isActive ? 'bg-[#C89B3C] text-[#082C21]' : 'bg-emerald-100 text-emerald-800'
+              isActive ? 'bg-[#E5A823] text-[#0C284E]' : 'bg-amber-100 text-amber-800 border border-amber-200'
             }`}
           >
             {activeVisitorsCount}
@@ -277,7 +277,7 @@ export default function AdminSidebar({
 
       {/* Modern Desktop & Tablet Sidebar */}
       <aside
-        className={`fixed top-16 left-0 bottom-0 z-40 w-64 bg-white border-r border-[#D8CFB8]/60 flex flex-col justify-between transform transition-transform duration-300 ease-in-out lg:sticky lg:top-16 lg:w-64 lg:transform-none lg:h-[calc(100vh-4rem)] lg:shrink-0 ${
+        className={`fixed top-16 left-0 bottom-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col justify-between transform transition-transform duration-300 ease-in-out lg:sticky lg:top-16 lg:w-64 lg:transform-none lg:h-[calc(100vh-4rem)] lg:shrink-0 ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
@@ -289,7 +289,7 @@ export default function AdminSidebar({
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
                   {section.title}
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C89B3C]/50" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
               </div>
               <nav className="space-y-0.5">
                 {section.items.map((item, itemIdx) => (
@@ -301,24 +301,24 @@ export default function AdminSidebar({
         </div>
 
         {/* Quick Gate Terminal Shortcut Card at Bottom */}
-        <div className="p-3 border-t border-[#D8CFB8]/50 bg-[#FBFAF6]">
+        <div className="p-3 border-t border-slate-200 bg-slate-50">
           <Link
             href="/check-out"
-            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-[#0B3D2E] to-[#125c46] text-white shadow-md hover:shadow-lg transition-all group hover:-translate-y-0.5"
+            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-[#123B70] via-[#164585] to-[#1A54A4] text-white shadow-md hover:shadow-lg transition-all group hover:-translate-y-0.5"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4 text-[#C89B3C]" />
+                <ShieldCheck className="w-4 h-4 text-[#E5A823]" />
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold leading-tight truncate">Gate Terminal</p>
-                <p className="text-[10px] text-emerald-200 flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <p className="text-[10px] text-blue-100 flex items-center gap-1 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823] animate-pulse" />
                   <span>Exit Clearance</span>
                 </p>
               </div>
             </div>
-            <ExternalLink className="w-3.5 h-3.5 text-emerald-300 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            <ExternalLink className="w-3.5 h-3.5 text-blue-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </Link>
         </div>
       </aside>

@@ -157,11 +157,11 @@ export default async function Dashboard() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Modern Dashboard Header */}
-      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-white to-emerald-50/40 p-5 sm:p-6 rounded-3xl border border-[#D8CFB8]/80 shadow-xs">
+      <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-50/20 to-amber-50/30 p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C89B3C]">
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#E5A823]">
               Operations Command Center
             </span>
           </div>
@@ -174,16 +174,16 @@ export default async function Dashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs relative z-10">
-          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-[#D8CFB8]/70">
-            <Calendar className="w-3.5 h-3.5 text-[#0B3D2E]" />
+          <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+            <Calendar className="w-3.5 h-3.5 text-[#123B70]" />
             <span>{todayFormatted}</span>
           </div>
 
           <Link
             href="/check-out"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0B3D2E] hover:bg-[#082C21] active:bg-[#061e16] text-white font-bold shadow-md shadow-[#0B3D2E]/20 transition hover:-translate-y-0.5"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#123B70] hover:bg-[#0C284E] active:bg-[#081e3d] text-white font-bold shadow-md shadow-[#123B70]/20 transition hover:-translate-y-0.5"
           >
-            <ShieldCheck className="w-4 h-4 text-[#C89B3C]" />
+            <ShieldCheck className="w-4 h-4 text-[#E5A823]" />
             <span>Gate Terminal View →</span>
           </Link>
         </div>
@@ -204,44 +204,48 @@ export default async function Dashboard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           <StatCard
-            label="Visitors Inside"
+            label="Total Visitors"
             value={stats.visitorsInside}
-            subtext="Currently on premises"
-            iconName="users"
-            variant="forest"
-            href="/check-out"
-            trend={stats.visitorsInside > 0 ? `${stats.visitorsInside} On Site` : 'All Departed'}
-            chartData={[35, 50, 45, 60, 55, 80, 75, stats.visitorsInside > 0 ? 100 : 25]}
-          />
-          <StatCard
-            label="Today's Check-ins"
-            value={stats.todayCheckIns}
-            subtext="Verified gate arrivals"
-            iconName="check-circle"
+            iconName="package"
             variant="blue"
+            href="/check-out"
+            trend={stats.visitorsInside > 0 ? `${stats.visitorsInside} On Site` : 'All Cleared'}
+            footerAvatars={['I', 'S', 'A']}
+            footerText={`${stats.visitorsInside} on premises`}
+            chartData={[30, 45, 25, 60, 50, 75, 40, 65, 35, 55, 40, 70, 25, 45, 60, 40]}
+          />
+          <StatCard
+            label="Currently Checked In"
+            value={stats.todayCheckIns}
+            live={true}
+            iconName="arrow"
+            variant="indigo"
             href="/admin/check-in"
-            trend={stats.todayCheckIns > 0 ? `${stats.todayCheckIns} Arrived` : 'None yet'}
-            chartData={[25, 40, 55, 60, 75, 85, 90, stats.todayCheckIns > 0 ? 100 : 20]}
+            trend="On Schedule"
+            footerText={`${stats.todayCheckIns} gate arrivals`}
+            chartData={[20, 35, 55, 40, 70, 60, 50, 40, 65, 75, 60, 50, 20, 30, 60, 55]}
           />
           <StatCard
-            label="Today's Check-outs"
+            label="Departures Cleared"
             value={stats.todayCheckOuts}
-            subtext="Departures cleared"
-            iconName="log-out"
-            variant="amber"
+            iconName="users"
+            variant="teal"
             href="/admin/check-out"
-            trend={stats.todayCheckOuts > 0 ? `${stats.todayCheckOuts} Cleared` : 'None yet'}
-            chartData={[15, 30, 40, 50, 65, 80, 70, stats.todayCheckOuts > 0 ? 95 : 15]}
+            trend={stats.todayCheckOuts > 0 ? `${stats.todayCheckOuts} Cleared` : '0% Processed'}
+            footerAvatars={['G', 'E', 'Q']}
+            footerText={`${stats.todayCheckOuts} exited today`}
+            chartData={[25, 40, 60, 75, 65, 50, 45, 30, 55, 60, 45, 35, 20, 40, 60, 50]}
           />
           <StatCard
-            label="Expected Visitors"
+            label="Today's Activity"
             value={stats.expectedVisitors}
-            subtext="Awaiting gate arrival"
-            iconName="clock"
+            live={true}
+            iconName="history"
             variant="purple"
             href="/admin/expected-attendees"
-            trend={stats.expectedVisitors > 0 ? `${stats.expectedVisitors} Scheduled` : 'None pending'}
-            chartData={[70, 80, 65, 55, 45, 35, 25, stats.expectedVisitors > 0 ? 90 : 15]}
+            trend="Live Today"
+            footerText={`${stats.todayCheckIns} arrived · ${stats.todayCheckOuts} cleared`}
+            chartData={[20, 45, 25, 25, 50, 65, 40, 55, 45, 60, 40, 65, 35, 70, 50, 40]}
           />
         </div>
       </div>
@@ -372,7 +376,7 @@ export default async function Dashboard() {
                       <span className="font-semibold text-slate-700 dark:text-slate-300">
                         {peak.timeLabel}
                       </span>
-                      <span className="font-mono font-bold text-[#0B3D2E]">
+                      <span className="font-mono font-bold text-[#123B70]">
                         {peak.count} check-ins
                       </span>
                     </div>
@@ -380,7 +384,7 @@ export default async function Dashboard() {
                     {/* Visual Progress Bar */}
                     <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#0B3D2E] to-[#C89B3C]"
+                        className="h-full rounded-full bg-gradient-to-r from-[#123B70] to-[#E5A823]"
                         style={{ width: `${peak.percentage}%` }}
                       />
                     </div>
@@ -396,19 +400,19 @@ export default async function Dashboard() {
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Frequent Actions
               </h3>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C89B3C]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <Link
                 href="/admin/check-in"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-[#123B70] flex items-center justify-center shrink-0">
                   <LogIn className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
                     Check In Visitor
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Process arrival</p>
@@ -417,13 +421,13 @@ export default async function Dashboard() {
 
               <Link
                 href="/check-out"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
                   <LogOut className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
                     Gate Checkout
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Enter code / scan</p>
@@ -432,13 +436,13 @@ export default async function Dashboard() {
 
               <Link
                 href="/admin/visitors"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
                 <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
                   <Users className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
                     Visitors List
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Search directory</p>
@@ -447,13 +451,13 @@ export default async function Dashboard() {
 
               <Link
                 href="/admin/reports"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#0B3D2E]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
               >
-                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-red-500/10 text-[#C5222E] flex items-center justify-center shrink-0">
                   <TrendingUp className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#0B3D2E] transition">
+                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
                     Reports & Export
                   </p>
                   <p className="text-[10.5px] text-slate-400 truncate">Analytics data</p>

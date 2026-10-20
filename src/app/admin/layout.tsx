@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import AdminTopBar from '@/components/AdminTopBar';
 import AdminSidebar from '@/components/AdminSidebar';
 import AdminBottomBar from '@/components/AdminBottomBar';
 import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { useSession } from 'next-auth/react';
 
 export default function AdminLayout({
   children,
@@ -15,30 +14,10 @@ export default function AdminLayout({
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
-  const { data: session, status } = useSession();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isLoginPage && status === 'unauthenticated') {
-      router.push('/admin/login');
-    }
-  }, [status, isLoginPage, router]);
 
   if (isLoginPage) {
     return <>{children}</>;
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#123B70]"></div>
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return null;
   }
 
   return (

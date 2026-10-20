@@ -175,12 +175,12 @@ export default function Home() {
                   className="w-full h-full object-cover"
                 />
 
-                {/* Multi-layered gradient for optimal legibility */}
+                {/* Multi-layered gradient for optimal legibility using PCC Deep Blue */}
                 <div
                   className="absolute inset-0 pointer-events-none"
                   style={{
                     background:
-                      'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(8,44,33,0.35) 45%, rgba(8,44,33,0.92) 85%, rgba(8,44,33,0.98) 100%)',
+                      'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(18,59,112,0.35) 45%, rgba(14,42,84,0.92) 85%, rgba(12,38,76,0.98) 100%)',
                   }}
                 />
 
@@ -188,11 +188,11 @@ export default function Home() {
                 <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 flex flex-col justify-end">
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center mb-2.5 shadow-xs"
-                    style={{ backgroundColor: '#C89B3C' }}
+                    style={{ backgroundColor: '#E5A823' }}
                   >
                     <span
                       className="font-bold text-[13px] leading-none"
-                      style={{ color: '#152d56' }}
+                      style={{ color: '#0C284E' }}
                     >
                       {slide.badge}
                     </span>

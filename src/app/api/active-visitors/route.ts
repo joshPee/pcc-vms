@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const activeVisitors = await sql`
-      SELECT 
+      SELECT DISTINCT ON (p.id)
         p.id,
         p.full_name,
         p.organisation,
@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
         p.host_department,
         p.visit_purpose,
         p.registration_code,
+        p.check_in_status,
         p.check_in_date,
         p.expected_departure,
         p.phone,
@@ -28,10 +29,16 @@ export async function GET(request: NextRequest) {
       LEFT JOIN users u ON ci.user_id = u.id
       LEFT JOIN events e ON p.event_id = e.id
       WHERE p.check_in_status = 'CHECKED_IN'
-      ORDER BY p.check_in_date DESC
+      ORDER BY p.id, p.check_in_date DESC
     `;
 
-    return NextResponse.json(activeVisitors);
+    return NextResponse.json(activeVisitors, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error('Error fetching active visitors:', error);
     return NextResponse.json(

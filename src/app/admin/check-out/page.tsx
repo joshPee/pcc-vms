@@ -41,10 +41,15 @@ export default function CheckOutPage() {
   const fetchActiveVisitors = useCallback(async () => {
     setActiveLoading(true);
     try {
-      const res = await fetch('/api/active-visitors');
+      const res = await fetch(`/api/active-visitors?t=${Date.now()}`, {
+        cache: 'no-store',
+      });
       if (res.ok) {
         const data = await res.json();
-        setActiveVisitors(Array.isArray(data) ? data : []);
+        const activeOnly = Array.isArray(data)
+          ? data.filter((p: any) => p.check_in_status === 'CHECKED_IN')
+          : [];
+        setActiveVisitors(activeOnly);
       }
     } catch (err) {
       console.error('Failed to fetch active visitors in admin:', err);
@@ -88,16 +93,20 @@ export default function CheckOutPage() {
 
     try {
       const response = await fetch(
-        `/api/participants/search?q=${encodeURIComponent(searchQuery)}&checkInStatus=CHECKED_IN`
+        `/api/participants/search?q=${encodeURIComponent(searchQuery)}&checkInStatus=CHECKED_IN&t=${Date.now()}`,
+        { cache: 'no-store' }
       );
       const data = await response.json();
 
       if (!response.ok) {
         setError(data.error || 'Search failed');
       } else {
-        setSearchResults(data);
-        if (data.length === 1) {
-          setSelectedVisitor(data[0]);
+        const activeResults = Array.isArray(data)
+          ? data.filter((p: any) => p.check_in_status === 'CHECKED_IN')
+          : [];
+        setSearchResults(activeResults);
+        if (activeResults.length === 1) {
+          setSelectedVisitor(activeResults[0]);
         }
       }
     } catch (err) {
@@ -139,6 +148,17 @@ export default function CheckOutPage() {
         if (data.alreadyCheckedOut) {
           setAlreadyCheckedOut(true);
           setSelectedVisitor({ ...visitor, checkOutData: data });
+          // Remove from local lists since already checked out
+          setActiveVisitors((prev) =>
+            prev.filter(
+              (p) => String(p.id) !== String(visitor.id) && p.registration_code !== visitor.registration_code
+            )
+          );
+          setSearchResults((prev) =>
+            prev.filter(
+              (p) => String(p.id) !== String(visitor.id) && p.registration_code !== visitor.registration_code
+            )
+          );
         } else {
           setError(data.error || 'Check-out failed');
         }
@@ -146,10 +166,14 @@ export default function CheckOutPage() {
         setSuccess(true);
         setSelectedVisitor({ ...visitor, checkOutData: data });
 
-        // Update local active visitors and search results
-        setActiveVisitors((prev) => prev.filter((p) => p.id !== visitor.id));
+        // Immediately purge from active visitors and search results so visitor does NOT remain
+        const vId = String(visitor.id);
+        const vCode = visitor.registration_code;
+        setActiveVisitors((prev) =>
+          prev.filter((p) => String(p.id) !== vId && p.registration_code !== vCode)
+        );
         setSearchResults((prev) =>
-          prev.map((p) => (p.id === visitor.id ? { ...p, check_in_status: 'CHECKED_OUT' } : p))
+          prev.filter((p) => String(p.id) !== vId && p.registration_code !== vCode)
         );
 
         fetchActiveVisitors();
@@ -183,9 +207,10 @@ export default function CheckOutPage() {
     return `${hours}h ${mins}m on site`;
   };
 
-  // Determine what list to display
+  // Determine what list to display - strictly filter to only CHECKED_IN visitors
   const isSearching = searchQuery.trim().length > 0;
-  const displayList = isSearching ? searchResults : activeVisitors;
+  const rawList = isSearching ? searchResults : activeVisitors;
+  const displayList = rawList.filter((p) => p.check_in_status === 'CHECKED_IN');
 
   // Pagination
   const totalPages = Math.ceil(displayList.length / itemsPerPage);

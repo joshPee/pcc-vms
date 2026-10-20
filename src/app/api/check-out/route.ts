@@ -164,8 +164,7 @@ export async function POST(request: NextRequest) {
 
     // Clear cache to reflect updated stats
     try {
-      clearCache('attendance');
-      clearCache('active-visitors');
+      clearCache();
     } catch {
       // ignore
     }
@@ -185,6 +184,12 @@ export async function POST(request: NextRequest) {
       gate_station: gateStation || 'Main Gate',
       duration_minutes: durationMinutes,
       notes: fullNotes
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
     });
 
   } catch (error) {
