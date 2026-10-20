@@ -195,6 +195,15 @@ export async function POST(request: NextRequest) {
       results.push({ table: 'vehicles', status: 'error', error: String(error) });
     }
 
+    // Add shift column to users table if upgrading from old schema
+    try {
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS shift VARCHAR(20) DEFAULT 'day'`;
+      await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'security_officer'`;
+      results.push({ table: 'users', status: 'shift_column_added' });
+    } catch (error) {
+      results.push({ table: 'users', status: 'error', error: String(error) });
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Migration completed',

@@ -9,7 +9,7 @@ export async function GET() {
     }
     
     const users = await sql`
-      SELECT id, name, email, role, created_at
+      SELECT id, name, email, role, shift, created_at
       FROM users
       ORDER BY created_at DESC
     `;
@@ -23,7 +23,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, email, password, role } = body;
+    const { name, email, password, role, shift } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -47,12 +47,13 @@ export async function POST(request: NextRequest) {
     // Hash password with bcrypt before saving
     const hashedPassword = await bcrypt.hash(password, 10);
     const normalizedRole = (role || 'security_officer').toLowerCase();
+    const normalizedShift = (shift || 'day').toLowerCase();
 
     // Create new user
     const result = await sql`
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES (${name}, ${email.toLowerCase().trim()}, ${hashedPassword}, ${normalizedRole})
-      RETURNING id, name, email, role, created_at
+      INSERT INTO users (name, email, password_hash, role, shift)
+      VALUES (${name}, ${email.toLowerCase().trim()}, ${hashedPassword}, ${normalizedRole}, ${normalizedShift})
+      RETURNING id, name, email, role, shift, created_at
     `;
 
     return NextResponse.json(result[0], { status: 201 });

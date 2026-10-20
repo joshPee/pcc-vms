@@ -15,7 +15,7 @@ export default function SettingsPage() {
 
   // User accounts state
   const [users, setUsers] = useState<any[]>([]);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'security_officer' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'security_officer', shift: 'day' });
 
   // Password settings state
   const [passwordSettings, setPasswordSettings] = useState({
@@ -64,7 +64,7 @@ export default function SettingsPage() {
         setMessage(data.error || 'Failed to add user');
       } else {
         setUsers([...users, data]);
-        setNewUser({ name: '', email: '', password: '', role: 'security_officer' });
+        setNewUser({ name: '', email: '', password: '', role: 'security_officer', shift: 'day' });
         setMessage('User added successfully');
         setTimeout(() => setMessage(''), 3000);
       }
@@ -230,6 +230,15 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
+                          {user.shift && (
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md border ${
+                              user.shift === 'night'
+                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                            }`}>
+                              {user.shift === 'night' ? '🌙 Night' : '☀️ Day'}
+                            </span>
+                          )}
                           <span className="text-xs font-semibold text-[#123B70] bg-blue-50 border border-blue-200/80 px-2.5 py-1 rounded-lg">
                             {user.role}
                           </span>
@@ -299,6 +308,18 @@ export default function SettingsPage() {
                       <option value="supervisor">Security Supervisor</option>
                       <option value="sector_head">Sector Head</option>
                       <option value="admin">System Administrator</option>
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="userShift">Assigned Shift</Label>
+                    <select
+                      id="userShift"
+                      value={newUser.shift}
+                      onChange={(e) => setNewUser({ ...newUser, shift: e.target.value })}
+                      className="w-full h-10 px-3 py-2 border border-slate-300 bg-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#123B70]"
+                    >
+                      <option value="day">Day Shift (06:00 – 18:00)</option>
+                      <option value="night">Night Shift (18:00 – 06:00)</option>
                     </select>
                   </div>
                   <Button

@@ -17,9 +17,14 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   name VARCHAR(255),
+  role VARCHAR(50) DEFAULT 'security_officer',
+  shift VARCHAR(20) DEFAULT 'day',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add shift column if upgrading from old schema
+ALTER TABLE users ADD COLUMN IF NOT EXISTS shift VARCHAR(20) DEFAULT 'day';
 
 -- Create Participant table
 CREATE TABLE IF NOT EXISTS participants (

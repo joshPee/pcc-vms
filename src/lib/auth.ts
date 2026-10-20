@@ -12,6 +12,7 @@ declare module 'next-auth' {
       email: string;
       name?: string | null;
       role?: UserRole;
+      shift?: string;
     }
   }
 
@@ -20,6 +21,7 @@ declare module 'next-auth' {
     email: string;
     name?: string | null;
     role?: UserRole;
+    shift?: string;
   }
 }
 
@@ -27,6 +29,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     role?: UserRole;
+    shift?: string;
   }
 }
 
@@ -56,7 +59,7 @@ export const authOptions: NextAuthOptions = {
         if (sql) {
           try {
             const users = await sql`
-              SELECT id, email, password_hash, name, role 
+              SELECT id, email, password_hash, name, role, shift 
               FROM users 
               WHERE LOWER(TRIM(email)) = ${lowerIdentifier}
                  OR (${lowerIdentifier} = 'admin' AND role = 'admin')
@@ -74,7 +77,7 @@ export const authOptions: NextAuthOptions = {
         if (!user && pool) {
           try {
             const poolRes = await pool.query(
-              `SELECT id, email, password_hash, name, role 
+              `SELECT id, email, password_hash, name, role, shift 
                FROM users 
                WHERE LOWER(TRIM(email)) = $1 
                   OR ($1 = 'admin' AND role = 'admin') 
@@ -120,6 +123,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           role: user.role as UserRole,
+          shift: user.shift || 'day',
         };
       }
     })
@@ -135,6 +139,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.shift = user.shift;
       }
       return token;
     },
@@ -142,6 +147,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).role = token.role;
+        (session.user as any).shift = token.shift;
       }
       return session;
     }
