@@ -100,8 +100,8 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="h-8 px-2 gap-1.5"
           >
-            <User className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline text-xs truncate max-w-[100px]">
+            <User className="h-3.5 w-3.5 text-[#123B70]" />
+            <span className="text-xs font-semibold text-slate-800 truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[140px]">
               {userName || 'Account'}
             </span>
           </Button>

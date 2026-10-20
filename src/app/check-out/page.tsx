@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useSession } from 'next-auth/react';
 import {
   ShieldCheck,
   Search,
@@ -62,10 +63,22 @@ export default function VisitorCheckOutPage() {
   const [recentDepartures, setRecentDepartures] = useState<any[]>([]);
 
   // Guard Duty Settings
+  const { data: session } = useSession();
+  const currentShift = useMemo(() => {
+    const hour = new Date().getHours();
+    return hour >= 6 && hour < 18 ? 'Day Shift' : 'Night Shift';
+  }, []);
+
   const [gateStation, setGateStation] = useState<string>(DEFAULT_GATE);
   const [guardName, setGuardName] = useState<string>('Security Officer');
   const [isEditingGuard, setIsEditingGuard] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+
+  useEffect(() => {
+    if (session?.user?.name) {
+      setGuardName(session.user.name);
+    }
+  }, [session]);
 
   // Security Clearance Checklist for Selected Visitor in Code tab
   const [badgeReturned, setBadgeReturned] = useState(true);
@@ -507,8 +520,8 @@ export default function VisitorCheckOutPage() {
 
           {/* Right Controls: Officer + Clock + Sound Toggle */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            {/* Officer Name Pill (Compact, click to edit) */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200/70 border border-slate-200/80 rounded-lg px-2 py-1 text-xs transition">
+            {/* Officer Name Pill (Visible on mobile, shows logged-in name + shift) */}
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-100 hover:bg-slate-200/70 border border-slate-200/80 rounded-lg px-1.5 sm:px-2 py-1 text-xs transition max-w-[130px] sm:max-w-none">
               <ShieldCheck className="w-3.5 h-3.5 text-[#123B70] shrink-0" />
               {isEditingGuard ? (
                 <input
@@ -530,16 +543,21 @@ export default function VisitorCheckOutPage() {
                     }
                   }}
                   autoFocus
-                  className="bg-white text-slate-900 px-1 py-0.5 rounded border border-[#123B70] text-xs w-28"
+                  className="bg-white text-slate-900 px-1 py-0.5 rounded border border-[#123B70] text-xs w-24 sm:w-28"
                 />
               ) : (
-                <span
+                <div
                   onClick={() => setIsEditingGuard(true)}
-                  className="font-medium text-slate-700 hover:text-slate-900 cursor-pointer text-[11px]"
+                  className="flex items-center gap-1 min-w-0 cursor-pointer"
                   title="Click to edit officer name"
                 >
-                  {guardName}
-                </span>
+                  <span className="font-semibold text-slate-800 text-[11px] truncate">
+                    {guardName}
+                  </span>
+                  <span className="hidden sm:inline-block text-[10px] text-slate-500 font-medium">
+                    ({currentShift})
+                  </span>
+                </div>
               )}
             </div>
 

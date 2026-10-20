@@ -15,7 +15,7 @@ export default function SettingsPage() {
 
   // User accounts state
   const [users, setUsers] = useState<any[]>([]);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'Admin' });
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'security_officer' });
 
   // Password settings state
   const [passwordSettings, setPasswordSettings] = useState({
@@ -64,7 +64,7 @@ export default function SettingsPage() {
         setMessage(data.error || 'Failed to add user');
       } else {
         setUsers([...users, data]);
-        setNewUser({ name: '', email: '', password: '', role: 'Admin' });
+        setNewUser({ name: '', email: '', password: '', role: 'security_officer' });
         setMessage('User added successfully');
         setTimeout(() => setMessage(''), 3000);
       }
@@ -224,23 +224,25 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="userRole">Role</Label>
+                    <Label htmlFor="userRole">Role / Clearance</Label>
                     <select
                       id="userRole"
                       value={newUser.role}
                       onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
-                      className="w-full h-10 px-3 py-2 border border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-700"
+                      className="w-full h-10 px-3 py-2 border border-slate-300 bg-white rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#123B70]"
                     >
-                      <option value="Admin">Admin</option>
-                      <option value="Staff">Staff</option>
+                      <option value="security_officer">Security Officer (Gate Guard)</option>
+                      <option value="supervisor">Security Supervisor</option>
+                      <option value="sector_head">Sector Head</option>
+                      <option value="admin">System Administrator</option>
                     </select>
                   </div>
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-700 hover:bg-blue-800"
+                    className="w-full bg-[#123B70] hover:bg-[#0d2d52]"
                   >
-                    {loading ? 'Adding...' : 'Add User'}
+                    {loading ? 'Adding...' : 'Add User Account'}
                   </Button>
                 </form>
               </div>

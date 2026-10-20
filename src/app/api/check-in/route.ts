@@ -112,6 +112,18 @@ export async function POST(request: NextRequest) {
         SELECT name FROM users WHERE id = ${hrUserId}
       `;
 
+      // Log the check-in action to visitor_logs
+      const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+      const officerName = hrUser[0]?.name || 'Security Officer';
+      try {
+        await sql`
+          INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+          VALUES (${participantId}, 'CHECK_IN', ${hrUserId}, ${`Checked in by ${officerName}`}, ${clientIp})
+        `;
+      } catch (logErr) {
+        console.warn('Failed to insert into visitor_logs:', logErr);
+      }
+
       // Clear cache to reflect updated stats
       clearCache('attendance');
 

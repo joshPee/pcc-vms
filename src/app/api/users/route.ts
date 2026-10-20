@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import bcrypt from 'bcryptjs';
 
 export async function GET() {
   try {
@@ -43,10 +44,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Hash password with bcrypt before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const normalizedRole = (role || 'security_officer').toLowerCase();
+
     // Create new user
     const result = await sql`
-      INSERT INTO users (name, email, password, role)
-      VALUES (${name}, ${email}, ${password}, ${role || 'Admin'})
+      INSERT INTO users (name, email, password_hash, role)
+      VALUES (${name}, ${email.toLowerCase().trim()}, ${hashedPassword}, ${normalizedRole})
       RETURNING id, name, email, role, created_at
     `;
 
