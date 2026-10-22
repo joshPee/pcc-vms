@@ -86,55 +86,29 @@ export default function ReportsPage() {
     });
   }, [reportData.visitorLogs, searchQuery, statusFilter]);
 
-  const handleExportCSV = () => {
-    const logs = filteredLogs;
-    if (logs.length === 0) {
-      alert('No visitor logs available to export.');
-      return;
+  const handleExportCSV = async () => {
+    try {
+      let url = `/api/export?range=${range}`;
+      if (range === 'custom' && startDate && endDate) {
+        url += `&startDate=${startDate}&endDate=${endDate}`;
+      }
+      const res = await fetch(url);
+      if (!res.ok) {
+        alert('Export failed. Please try again.');
+        return;
+      }
+      const blob = await res.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `pcc-visitor-log-${range}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Export failed. Please check your connection.');
     }
-
-    const headers = [
-      'Registration Code',
-      'Visitor Name',
-      'Phone Number',
-      'Organization',
-      'Origin / Location',
-      'Host Name',
-      'Department',
-      'Purpose of Visit',
-      'Vehicle Plate',
-      'Date',
-      'Check-in Time',
-      'Check-out Time',
-      'Duration (Mins)',
-      'Status',
-    ];
-
-    const rows = logs.map((log: any) => [
-      `"${log.code}"`,
-      `"${log.name}"`,
-      `"${log.phone}"`,
-      `"${log.organisation}"`,
-      `"${log.location}"`,
-      `"${log.host}"`,
-      `"${log.department}"`,
-      `"${log.purpose}"`,
-      `"${log.vehicle}"`,
-      `"${log.date}"`,
-      `"${log.checkInTime}"`,
-      `"${log.checkOutTime || 'Still on site'}"`,
-      `"${log.durationMinutes}"`,
-      `"${log.status}"`,
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map((r: string[]) => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `pcc-visitor-report-${range}-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const handlePrint = () => {

@@ -23,6 +23,8 @@ function RegistrationSuccessContent() {
   const [participantName, setParticipantName] = useState('');
   const [hostName, setHostName] = useState('');
   const [department, setDepartment] = useState('');
+  const [organisation, setOrganisation] = useState('');
+  const [visitPurpose, setVisitPurpose] = useState('');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -39,11 +41,15 @@ function RegistrationSuccessContent() {
     const name = searchParams.get('name') || '';
     const host = searchParams.get('host') || '';
     const dept = searchParams.get('dept') || '';
+    const org = searchParams.get('org') || '';
+    const purpose = searchParams.get('purpose') || '';
 
     if (code) setRegistrationCode(code);
     if (name) setParticipantName(decodeURIComponent(name));
     if (host) setHostName(decodeURIComponent(host));
     if (dept) setDepartment(decodeURIComponent(dept));
+    if (org) setOrganisation(decodeURIComponent(org));
+    if (purpose) setVisitPurpose(decodeURIComponent(purpose));
 
     if (code) {
       QRCode.toDataURL(code, {
@@ -177,6 +183,14 @@ function RegistrationSuccessContent() {
               </span>
               <span className="font-semibold text-white">{participantName || 'Guest'}</span>
             </div>
+            {organisation && (
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 flex items-center gap-1.5">
+                  <Building className="w-3.5 h-3.5 text-[#C89B3C]" /> Organisation
+                </span>
+                <span className="font-semibold text-white truncate max-w-[55%] text-right">{organisation}</span>
+              </div>
+            )}
             {hostName && (
               <div className="flex items-center justify-between">
                 <span className="text-white/60 flex items-center gap-1.5">
@@ -191,6 +205,14 @@ function RegistrationSuccessContent() {
                   <Building className="w-3.5 h-3.5 text-[#C89B3C]" /> Department
                 </span>
                 <span className="font-semibold text-white">{department}</span>
+              </div>
+            )}
+            {visitPurpose && (
+              <div className="flex items-center justify-between">
+                <span className="text-white/60 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#C89B3C]" /> Purpose
+                </span>
+                <span className="font-semibold text-white truncate max-w-[55%] text-right">{visitPurpose}</span>
               </div>
             )}
             <div className="flex items-center justify-between pt-1 border-t border-white/10">

@@ -53,6 +53,10 @@ export default function Register() {
   const [pendingSubmission, setPendingSubmission] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // Feature 1: Watchlist alert
+  const [watchlistAlert, setWatchlistAlert] = useState<{ reason?: string; description?: string } | null>(null);
+  // Feature 5: Returning visitor
+  const [returningVisitor, setReturningVisitor] = useState<{ visitCount: number; lastVisit?: string; lastHost?: string } | null>(null);
 
   const validateField = (field: string, value: string) => {
     const errors: Record<string, string> = {};
@@ -167,7 +171,11 @@ export default function Register() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.duplicate) {
+        if (data.watchlistAlert) {
+          // Feature 1: Block check-in, show security alert
+          setWatchlistAlert({ reason: data.watchlistReason, description: data.watchlistDescription });
+          setError('');
+        } else if (data.duplicate) {
           setDuplicateWarning(true);
           setPendingSubmission(data);
           setError('A similar active registration was found for today. Submit anyway?');
@@ -175,12 +183,19 @@ export default function Register() {
           setError(data.error || 'Registration failed. Please check your details.');
         }
       } else {
+        // Feature 5: Show returning visitor banner before redirecting
+        if (data.returning?.isReturning) {
+          setReturningVisitor(data.returning);
+          // Brief pause so guard sees the banner
+          await new Promise((r) => setTimeout(r, 2200));
+        }
+        // Feature 4: Pass org & purpose to success page for richer visitor pass
         router.push(
           `/register/success?code=${data.registrationCode}&name=${encodeURIComponent(
             data.fullName
           )}&host=${encodeURIComponent(personToVisit)}&dept=${encodeURIComponent(
             department
-          )}`
+          )}&org=${encodeURIComponent(organisation.trim())}&purpose=${encodeURIComponent(visitPurpose.trim())}`
         );
       }
     } catch (err) {
@@ -208,6 +223,45 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-[#FFFFFF] flex flex-col justify-between py-6 px-4 sm:px-6">
       <div className="w-full max-w-lg mx-auto">
+
+        {/* Feature 1: Watchlist Security Alert — blocks entire screen */}
+        {watchlistAlert && (
+          <div className="fixed inset-0 z-50 bg-red-950/95 flex flex-col items-center justify-center p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center mb-4 animate-pulse">
+              <AlertCircle className="w-9 h-9 text-white" />
+            </div>
+            <h2 className="text-2xl font-black text-white mb-2">⚠ SECURITY ALERT</h2>
+            <p className="text-red-200 text-sm font-semibold mb-1">This visitor is on the Security Watchlist</p>
+            {watchlistAlert.reason && (
+              <p className="text-red-300 text-xs mb-1">Reason: <span className="font-bold text-white">{watchlistAlert.reason}</span></p>
+            )}
+            {watchlistAlert.description && (
+              <p className="text-red-300 text-xs mb-4">{watchlistAlert.description}</p>
+            )}
+            <p className="text-red-100 font-bold text-sm mb-6">Do NOT allow entry. Contact your supervisor immediately.</p>
+            <button
+              onClick={() => setWatchlistAlert(null)}
+              className="px-6 py-3 rounded-xl bg-white text-red-900 font-extrabold text-sm hover:bg-red-50 transition"
+            >
+              Dismiss & Return to Form
+            </button>
+          </div>
+        )}
+
+        {/* Feature 5: Returning Visitor Banner */}
+        {returningVisitor && (
+          <div className="mb-4 bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-extrabold text-amber-900 uppercase tracking-wide">Returning Visitor</p>
+              <p className="text-xs text-amber-800 mt-0.5">
+                {returningVisitor.visitCount} previous visit{returningVisitor.visitCount !== 1 ? 's' : ''} on record.
+                {returningVisitor.lastHost ? ` Last visited: ${returningVisitor.lastHost}.` : ''}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Top Navigation */}
         <div className="flex items-center justify-between mb-4">
           <Link

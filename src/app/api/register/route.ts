@@ -83,7 +83,6 @@ async function getUniqueCode(): Promise<string> {
 
   // Generate a unique 4-digit code
   const generateCode = () => {
-    // Generate 4 random digits
     let code = '';
     for (let i = 0; i < 4; i++) {
       code += Math.floor(Math.random() * 10);
@@ -91,7 +90,6 @@ async function getUniqueCode(): Promise<string> {
     return `CTS-${code}`;
   };
 
-  // Try to generate a unique code
   let attempts = 0;
   const maxAttempts = 50;
 
@@ -107,6 +105,77 @@ async function getUniqueCode(): Promise<string> {
   }
 
   throw new Error('Could not generate unique registration code');
+}
+
+// --- FEATURE 1: Watchlist check ---
+async function checkWatchlist(fullName: string): Promise<{ flagged: boolean; reason?: string; description?: string }> {
+  try {
+    const watchlistEntries = await sql`
+      SELECT full_name, reason, description FROM watchlist WHERE is_active = true
+    `;
+    for (const entry of watchlistEntries) {
+      const similarity = calculateSimilarity(fullName, entry.full_name);
+      if (similarity >= 0.75) {
+        return { flagged: true, reason: entry.reason, description: entry.description };
+      }
+    }
+  } catch {
+    // watchlist table may not exist yet — fail silently
+  }
+  return { flagged: false };
+}
+
+// --- FEATURE 5: Returning visitor detection ---
+async function checkReturningVisitor(fullName: string, phone: string): Promise<{
+  isReturning: boolean;
+  visitCount: number;
+  lastVisit?: string;
+  lastHost?: string;
+}> {
+  try {
+    const history = await sql`
+      SELECT full_name, phone, check_in_date, host_name, check_in_status
+      FROM participants
+      WHERE (
+        LOWER(TRIM(phone)) = LOWER(TRIM(${phone}))
+        OR similarity(LOWER(full_name), LOWER(${fullName})) > 0.6
+      )
+      AND check_in_date IS NOT NULL
+      ORDER BY check_in_date DESC
+      LIMIT 10
+    `;
+    if (history.length > 0) {
+      return {
+        isReturning: true,
+        visitCount: history.length,
+        lastVisit: history[0].check_in_date,
+        lastHost: history[0].host_name,
+      };
+    }
+  } catch {
+    // pg_trgm extension may not be available — fall back to phone-only check
+    try {
+      const byPhone = await sql`
+        SELECT check_in_date, host_name
+        FROM participants
+        WHERE LOWER(TRIM(phone)) = LOWER(TRIM(${phone}))
+          AND check_in_date IS NOT NULL
+        ORDER BY check_in_date DESC
+        LIMIT 5
+      `;
+      if (byPhone.length > 0) {
+        return {
+          isReturning: true,
+          visitCount: byPhone.length,
+          lastVisit: byPhone[0].check_in_date,
+          lastHost: byPhone[0].host_name,
+        };
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return { isReturning: false, visitCount: 0 };
 }
 
 export async function POST(request: NextRequest) {
@@ -138,6 +207,32 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // --- FEATURE 1: Watchlist check (always run, block on flag) ---
+    const watchlistResult = await checkWatchlist(trimmedName);
+    if (watchlistResult.flagged) {
+      // Log alert to visitor_logs
+      const clientIpWl = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+      try {
+        await sql`
+          INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+          VALUES (NULL, 'WATCHLIST_ALERT', NULL, ${`WATCHLIST ALERT: Attempted check-in by "${trimmedName}" matched watchlist. Reason: ${watchlistResult.reason || 'N/A'}`}, ${clientIpWl})
+        `;
+      } catch { /* ignore */ }
+
+      return NextResponse.json(
+        {
+          watchlistAlert: true,
+          error: `SECURITY ALERT: This visitor's name matches a watchlisted individual. Do not check in. Contact your supervisor immediately.`,
+          watchlistReason: watchlistResult.reason,
+          watchlistDescription: watchlistResult.description,
+        },
+        { status: 403 }
+      );
+    }
+
+    // --- FEATURE 5: Returning visitor check ---
+    const returningInfo = await checkReturningVisitor(trimmedName, trimmedPhone);
 
     // Check for similar expected participant using fuzzy matching
     const similarParticipant = await findSimilarParticipant(trimmedName, trimmedOrg);
@@ -209,7 +304,8 @@ export async function POST(request: NextRequest) {
           success: true,
           registrationCode: participant.registration_code,
           participantId: participant.id,
-          fullName: participant.full_name
+          fullName: participant.full_name,
+          returning: returningInfo,
         });
       }
     } else {
@@ -278,7 +374,8 @@ export async function POST(request: NextRequest) {
       success: true,
       registrationCode: registrationCode,
       participantId: participantId,
-      fullName: trimmedName
+      fullName: trimmedName,
+      returning: returningInfo,
     });
 
   } catch (error) {

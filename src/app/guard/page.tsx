@@ -20,6 +20,8 @@ import {
   LayoutDashboard,
   Building,
   CheckCircle2,
+  AlertTriangle,
+  Download,
 } from 'lucide-react';
 
 export default function GuardPortalPage() {
@@ -89,6 +91,23 @@ export default function GuardPortalPage() {
   useEffect(() => {
     fetchStats();
     const interval = setInterval(fetchStats, 12000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Feature 2: Overstay alerts
+  const [overstayVisitors, setOverstayVisitors] = useState<any[]>([]);
+  const fetchOverstay = async () => {
+    try {
+      const res = await fetch(`/api/overstay-alerts?t=${Date.now()}`, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setOverstayVisitors(data);
+      }
+    } catch { /* ignore */ }
+  };
+  useEffect(() => {
+    fetchOverstay();
+    const interval = setInterval(fetchOverstay, 120000); // every 2 min
     return () => clearInterval(interval);
   }, []);
 
@@ -320,6 +339,40 @@ export default function GuardPortalPage() {
             </Link>
           </div>
 
+          {/* Feature 2: Overstay Alert Card */}
+          {overstayVisitors.length > 0 && (
+            <div className="bg-amber-50 border-2 border-amber-400 rounded-3xl p-4 shadow-sm">
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-400 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-black text-amber-900 uppercase tracking-wider">Overstay Alert</p>
+                  <p className="text-[10px] text-amber-700">{overstayVisitors.length} visitor{overstayVisitors.length !== 1 ? 's' : ''} may need follow-up</p>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                {overstayVisitors.slice(0, 3).map((v) => (
+                  <div key={v.id} className="bg-white rounded-xl px-3 py-2 flex items-center justify-between border border-amber-200">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">{v.full_name}</p>
+                      <p className="text-[10px] text-slate-500">{Math.round(v.minutes_on_site)}m on site · {v.host_name || 'N/A'}</p>
+                    </div>
+                    <a
+                      href={`/check-out?code=${encodeURIComponent(v.registration_code || '')}`}
+                      className="ml-2 shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition"
+                    >
+                      Check Out
+                    </a>
+                  </div>
+                ))}
+                {overstayVisitors.length > 3 && (
+                  <p className="text-[10px] text-amber-700 text-center font-semibold pt-0.5">+{overstayVisitors.length - 3} more — see On-Site directory</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Supervisor / Admin quick switch (if applicable) */}
           {isAdminOrSupervisor && (
             <div className="pt-1">
@@ -333,6 +386,7 @@ export default function GuardPortalPage() {
             </div>
           )}
         </div>
+
 
         {/* Bottom Navigation Bar */}
         <nav className="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-6 py-2.5 z-20 flex items-center justify-around">
