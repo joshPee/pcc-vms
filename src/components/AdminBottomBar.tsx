@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  LogIn,
-  LogOut,
   Users,
   LayoutGrid,
   CalendarCheck,
@@ -39,7 +37,6 @@ interface MenuModule {
 }
 
 const ALL_MODULES: MenuModule[] = [
-  // Primary
   {
     href: '/admin/dashboard',
     label: 'Dashboard',
@@ -49,37 +46,11 @@ const ALL_MODULES: MenuModule[] = [
     category: 'Visitor Operations',
   },
   {
-    href: '/admin/check-in',
-    label: 'Check In',
-    description: 'Process incoming expected and walk-in visitors',
-    icon: LogIn,
-    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    category: 'Visitor Operations',
-  },
-  {
-    href: '/admin/check-out',
-    label: 'Check Out',
-    description: 'Verify departures and clear visitor badges',
-    icon: LogOut,
-    color: 'bg-amber-50 text-amber-800 border-amber-200',
-    category: 'Visitor Operations',
-  },
-  {
     href: '/admin/visitors',
     label: 'Visitors Directory',
     description: 'Master list of registered participants and visitors',
     icon: Users,
     color: 'bg-blue-50 text-blue-700 border-blue-200',
-    category: 'Visitor Operations',
-  },
-
-  // Visitor Operations
-  {
-    href: '/check-out',
-    label: 'Gate Terminal View',
-    description: 'Fast barcode scanner & code checkout for gate guards',
-    icon: ShieldCheck,
-    color: 'bg-blue-50 text-[#123B70] border-blue-200',
     category: 'Visitor Operations',
   },
   {
@@ -181,8 +152,6 @@ const ALL_MODULES: MenuModule[] = [
 
 const PRIMARY_BAR_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/check-in', label: 'Check In', icon: LogIn },
-  { href: '/admin/check-out', label: 'Check Out', icon: LogOut },
   { href: '/admin/visitors', label: 'Visitors', icon: Users },
 ];
 

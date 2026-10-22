@@ -6,8 +6,6 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
-  LogIn,
-  LogOut,
   BarChart3,
   Settings,
   History,
@@ -51,8 +49,6 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'OPERATIONS',
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      { href: '/admin/check-in', label: 'Check In', icon: LogIn },
-      { href: '/admin/check-out', label: 'Check Out', icon: LogOut },
       { href: '/admin/visitors', label: 'Visitors Directory', icon: Users },
       { href: '/admin/expected-attendees', label: 'Expected Attendees', icon: CalendarCheck },
     ],
@@ -243,14 +239,6 @@ export default function AdminSidebar({
           >
             {badge}
           </span>
-        ) : label === 'Check Out' && activeVisitorsCount !== null && activeVisitorsCount > 0 ? (
-          <span
-            className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
-              isActive ? 'bg-[#E5A823] text-[#0C284E]' : 'bg-amber-100 text-amber-800 border border-amber-200'
-            }`}
-          >
-            {activeVisitorsCount}
-          </span>
         ) : null}
       </Link>
     );
@@ -289,28 +277,6 @@ export default function AdminSidebar({
               </nav>
             </div>
           ))}
-        </div>
-
-        {/* Quick Gate Terminal Shortcut Card at Bottom */}
-        <div className="p-3 border-t border-slate-200 bg-slate-50">
-          <Link
-            href="/check-out"
-            className="flex items-center justify-between p-3 rounded-2xl bg-gradient-to-r from-[#123B70] via-[#164585] to-[#1A54A4] text-white shadow-md hover:shadow-lg transition-all group hover:-translate-y-0.5"
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4 text-[#E5A823]" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold leading-tight truncate">Gate Terminal</p>
-                <p className="text-[10px] text-blue-100 flex items-center gap-1 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823] animate-pulse" />
-                  <span>Exit Clearance</span>
-                </p>
-              </div>
-            </div>
-            <ExternalLink className="w-3.5 h-3.5 text-blue-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
-          </Link>
         </div>
       </aside>
     </>
