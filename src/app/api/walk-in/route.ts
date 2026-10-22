@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Pool } from 'pg';
+import { sql, pool } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
 
 function generateRegistrationCode(): string {
   const randomNum = Math.floor(Math.random() * 9000) + 1000;
@@ -18,8 +14,10 @@ async function getUniqueCode(): Promise<string> {
   const maxAttempts = 10;
 
   while (attempts < maxAttempts) {
-    const result = await pool.query('SELECT registration_code FROM participants WHERE registration_code = $1', [code]);
-    if (result.rows.length === 0) {
+    const existing = await sql`
+      SELECT registration_code FROM participants WHERE registration_code = ${code}
+    `;
+    if (existing.length === 0) {
       return code;
     }
     code = generateRegistrationCode();
@@ -32,7 +30,7 @@ async function getUniqueCode(): Promise<string> {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -41,12 +39,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { fullName, organisation, position, phone, isRecurring = false, checkInImmediately = false } = body;
+    const {
+      fullName,
+      organisation,
+      position,
+      phone,
+      hostName,
+      department,
+      visitPurpose,
+      vehicleRegistration,
+      isRecurring = false,
+      checkInImmediately = false,
+    } = body;
 
     // Validate input
     if (!fullName || !organisation || !position) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Full name, organisation, and position are required' },
         { status: 400 }
       );
     }
@@ -54,6 +63,10 @@ export async function POST(request: NextRequest) {
     const trimmedName = fullName.trim();
     const trimmedOrg = organisation.trim();
     const trimmedPos = position.trim();
+    const trimmedHost = hostName?.trim() || '';
+    const trimmedDept = department?.trim() || '';
+    const trimmedPurpose = visitPurpose?.trim() || '';
+    const trimmedVehicle = vehicleRegistration?.trim() || '';
 
     // Basic validation
     if (trimmedName.length < 2 || trimmedOrg.length < 2 || trimmedPos.length < 2) {
@@ -70,87 +83,109 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get event (default to first event or create one)
-    let event = await pool.query('SELECT id FROM events LIMIT 1');
-    let eventId;
-    
-    if (event.rows.length === 0) {
-      const newEvent = await pool.query(
-        `INSERT INTO events (name, date, venue, registration_open)
-         VALUES ('COCOBOD Training School Meeting', '2026-08-19', 'COCOBOD Training School', true)
-         RETURNING id`
-      );
-      eventId = newEvent.rows[0].id;
-    } else {
-      eventId = event.rows[0].id;
+    // Get first event or use NULL (no event required for walk-ins at PCC gate)
+    let eventId: number | null = null;
+    try {
+      const eventRes = await sql`SELECT id FROM events LIMIT 1`;
+      if (eventRes.length > 0) {
+        eventId = eventRes[0].id;
+      }
+    } catch {
+      // No events table entry — proceed without event association
     }
 
     // Generate unique registration code
     const registrationCode = await getUniqueCode();
 
-    // Insert participant
-    const result = await pool.query(
-      `INSERT INTO participants (
-        registration_code, 
-        full_name, 
-        organisation, 
-        position, 
-        phone,
-        is_recurring,
-        event_id,
-        registration_source
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'WALK_IN')
-      RETURNING id, registration_code`,
-      [registrationCode, trimmedName, trimmedOrg, trimmedPos, phone || null, isRecurring, eventId]
-    );
+    const hrUserId = parseInt((session.user as any).id);
 
-    const participantId = result.rows[0].id;
-
-    // Check in immediately if requested
-    let checkInData = null;
+    // Insert participant with all gate-relevant fields
+    let result;
     if (checkInImmediately) {
-      const hrUserId = parseInt((session.user as any).id);
-      
+      result = await sql`
+        INSERT INTO participants (
+          registration_code, full_name, organisation, position, phone,
+          host_name, host_department, visit_purpose, vehicle_registration,
+          is_recurring, event_id, registration_source,
+          participant_status, registration_status, check_in_status, check_in_date, checked_in_by
+        )
+        VALUES (
+          ${registrationCode}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${phone || null},
+          ${trimmedHost || null}, ${trimmedDept || null}, ${trimmedPurpose || null}, ${trimmedVehicle || null},
+          ${isRecurring}, ${eventId}, 'WALK_IN',
+          'REGISTERED', 'REGISTERED', 'CHECKED_IN', CURRENT_TIMESTAMP, ${hrUserId}
+        )
+        RETURNING id, registration_code
+      `;
+    } else {
+      result = await sql`
+        INSERT INTO participants (
+          registration_code, full_name, organisation, position, phone,
+          host_name, host_department, visit_purpose, vehicle_registration,
+          is_recurring, event_id, registration_source,
+          participant_status, registration_status, check_in_status
+        )
+        VALUES (
+          ${registrationCode}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${phone || null},
+          ${trimmedHost || null}, ${trimmedDept || null}, ${trimmedPurpose || null}, ${trimmedVehicle || null},
+          ${isRecurring}, ${eventId}, 'WALK_IN',
+          'REGISTERED', 'REGISTERED', 'NOT_CHECKED_IN'
+        )
+        RETURNING id, registration_code
+      `;
+    }
+
+    const participantId = result[0].id;
+    let checkInData = null;
+
+    if (checkInImmediately) {
+      // Insert check_ins record
       try {
-        const checkInResult = await pool.query(
-          `INSERT INTO check_ins (participant_id, user_id, check_in_time)
-           VALUES ($1, $2, NOW())
-           ON CONFLICT (participant_id) DO NOTHING
-           RETURNING id, check_in_time`,
-          [participantId, hrUserId]
-        );
+        const checkInResult = await sql`
+          INSERT INTO check_ins (participant_id, user_id, check_in_time)
+          VALUES (${participantId}, ${hrUserId}, NOW())
+          ON CONFLICT (participant_id) DO NOTHING
+          RETURNING id, check_in_time
+        `;
 
-        if (checkInResult.rows.length > 0) {
-          await pool.query(
-            `UPDATE participants
-             SET check_in_status = 'CHECKED_IN',
-                 check_in_date = NOW(),
-                 checked_in_by = $1
-             WHERE id = $2`,
-            [hrUserId, participantId]
-          );
+        if (checkInResult.length > 0) {
+          // Log audit entry
+          const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+          const guardUser = await sql`SELECT name FROM users WHERE id = ${hrUserId}`;
+          const guardDisplayName = guardUser[0]?.name || 'Security Officer';
 
-          const hrUser = await pool.query('SELECT name FROM users WHERE id = $1', [hrUserId]);
-          
+          try {
+            await sql`
+              INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+              VALUES (
+                ${participantId},
+                'CHECK_IN',
+                ${hrUserId},
+                ${`Walk-in admin check-in by ${guardDisplayName}. Host: ${trimmedHost || 'N/A'} (${trimmedDept || 'N/A'}). Purpose: ${trimmedPurpose || 'N/A'}. Vehicle: ${trimmedVehicle || 'None'}.`},
+                ${clientIp}
+              )
+            `;
+          } catch (logErr) {
+            console.warn('Failed to write visitor_log for walk-in admin check-in:', logErr);
+          }
+
           checkInData = {
-            check_in_time: checkInResult.rows[0].check_in_time,
-            checked_in_by: hrUser.rows[0]?.name || 'HR Admin'
+            check_in_time: checkInResult[0].check_in_time,
+            checked_in_by: guardDisplayName,
           };
         }
       } catch (checkInError) {
-        console.error('Error during immediate check-in:', checkInError);
-        // Continue even if check-in fails
+        console.error('Error during immediate walk-in check-in:', checkInError);
+        // Continue even if check-in fails — participant is registered
       }
     }
 
     return NextResponse.json({
       success: true,
-      registrationCode: result.rows[0].registration_code,
+      registrationCode: result[0].registration_code,
       participantId,
-      checkInData
+      checkInData,
     });
-
   } catch (error) {
     console.error('Walk-in registration error:', error);
     return NextResponse.json(

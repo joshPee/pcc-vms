@@ -93,12 +93,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (!user) {
-          // If database is unreachable/cold and default admin credentials are supplied, allow login
+          // In development mode ONLY, allow local fallback admin credentials if database is offline/unseeded
           if (
+            process.env.NODE_ENV === 'development' &&
             (lowerIdentifier === 'admin' || lowerIdentifier === 'admin@pcc.gov.gh') &&
             credentials.password === 'admin123'
           ) {
-            console.warn('Database unreachable; authenticated with default admin credentials.');
+            console.warn('Development mode: Authenticated with emergency default admin credentials.');
             return {
               id: '1',
               email: 'admin@pcc.gov.gh',

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import {
@@ -50,8 +51,10 @@ const GuardQrScanner = dynamic(() => import('@/components/GuardQrScanner'), {
 
 const DEFAULT_GATE = 'Main Gate';
 
-export default function VisitorCheckOutPage() {
-  const [visitorCode, setVisitorCode] = useState('');
+function VisitorCheckOutContent() {
+  const searchParams = useSearchParams();
+  const urlCode = searchParams.get('code');
+  const [visitorCode, setVisitorCode] = useState(urlCode || '');
   const [activeTab, setActiveTab] = useState<'checkout' | 'directory' | 'log'>('checkout');
   const [showScanner, setShowScanner] = useState(false);
   const [activeVisitors, setActiveVisitors] = useState<any[]>([]);
@@ -347,6 +350,15 @@ export default function VisitorCheckOutPage() {
       setLoading(false);
     }
   };
+
+  // Auto-verify code if passed via URL (e.g. from Guard Portal or deep link)
+  const initialUrlCheckedRef = useRef(false);
+  useEffect(() => {
+    if (urlCode && !initialUrlCheckedRef.current) {
+      initialUrlCheckedRef.current = true;
+      handleVerifyCode(urlCode);
+    }
+  }, [urlCode]);
 
   // Perform checkout from Code tab
   const handleExecuteCheckOut = async () => {
@@ -1439,5 +1451,19 @@ export default function VisitorCheckOutPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function VisitorCheckOutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#123B70] border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <VisitorCheckOutContent />
+    </Suspense>
   );
 }

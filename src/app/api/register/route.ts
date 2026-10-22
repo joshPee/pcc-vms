@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       // If participant is expected, update them to registered and check them in
       if (participant.participant_status === 'EXPECTED') {
         console.log('Expected participant registering with code:', participant.registration_code);
-        const result = await sql`
+        await sql`
           UPDATE participants
           SET
             participant_status = 'REGISTERED',
@@ -187,6 +187,23 @@ export async function POST(request: NextRequest) {
           WHERE id = ${participant.id}
           RETURNING id
         `;
+
+        // Log check-in to visitor_logs for archival
+        const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              ${participant.id},
+              'CHECK_IN',
+              NULL,
+              ${`Gate self-service check-in. Host: ${trimmedPersonToVisit} (${trimmedDepartment}). Purpose: ${trimmedVisitPurpose}. Vehicle: ${trimmedVehicleRegistration || 'None'}.`},
+              ${clientIp}
+            )
+          `;
+        } catch (logErr) {
+          console.warn('Failed to write visitor_log for expected-participant gate check-in:', logErr);
+        }
 
         return NextResponse.json({
           success: true,
@@ -238,6 +255,23 @@ export async function POST(request: NextRequest) {
         RETURNING id
       `;
       participantId = result[0].id;
+
+      // Log check-in to visitor_logs for archival
+      const clientIpNew = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+      try {
+        await sql`
+          INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+          VALUES (
+            ${participantId},
+            'CHECK_IN',
+            NULL,
+            ${`Gate self-service check-in (new visitor). Host: ${trimmedPersonToVisit} (${trimmedDepartment}). Purpose: ${trimmedVisitPurpose}. Org: ${trimmedOrg || 'N/A'}. Vehicle: ${trimmedVehicleRegistration || 'None'}.`},
+            ${clientIpNew}
+          )
+        `;
+      } catch (logErr) {
+        console.warn('Failed to write visitor_log for new gate check-in:', logErr);
+      }
     }
 
     return NextResponse.json({

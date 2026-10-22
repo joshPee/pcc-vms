@@ -96,12 +96,12 @@ const VARIANT_CONFIG: Record<
     barColor: 'bg-teal-300',
   },
   forest: {
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-[#123B70]',
-    badgeBg: 'bg-blue-50',
-    badgeText: 'text-[#123B70]',
-    badgeBorder: 'border-blue-200',
-    barColor: 'bg-blue-400',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-[#007A4D]',
+    badgeBg: 'bg-emerald-50',
+    badgeText: 'text-[#007A4D]',
+    badgeBorder: 'border-emerald-200',
+    barColor: 'bg-emerald-400',
   },
   emerald: {
     iconBg: 'bg-emerald-100',
@@ -179,24 +179,42 @@ export default function StatCard({
   const badgeText = badge?.text || trend || subtext;
   const bars = chartData && chartData.length > 0 ? chartData : DEFAULT_BAR_DATA;
 
+  const isCompact = size === 'compact';
+
   const content = (
-    <div className="bg-white rounded-2xl sm:rounded-[26px] border border-slate-200/80 p-3 sm:p-5 lg:p-6 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between min-h-[148px] sm:min-h-[185px]">
+    <div
+      className={`bg-white rounded-2xl sm:rounded-[26px] border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between ${
+        isCompact
+          ? 'p-2.5 sm:p-3.5 min-h-[120px] sm:min-h-[145px]'
+          : 'p-3 sm:p-5 lg:p-6 min-h-[148px] sm:min-h-[185px]'
+      }`}
+    >
       <div>
         {/* Top Row: Large Metric Number (+ optional green live dot) & Circular Icon Badge */}
         <div className="flex items-start justify-between gap-1.5 sm:gap-3">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <span className="text-2xl sm:text-3xl lg:text-[34px] font-black text-slate-900 leading-none tracking-tight">
+            <span
+              className={`font-black text-slate-900 leading-none tracking-tight ${
+                isCompact
+                  ? 'text-xl sm:text-2xl lg:text-[26px]'
+                  : 'text-2xl sm:text-3xl lg:text-[34px]'
+              }`}
+            >
               {value}
             </span>
             {live && (
-              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 shrink-0 inline-block" />
+              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-emerald-500 shrink-0 inline-block animate-pulse" />
             )}
           </div>
 
           <div
-            className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${cfg.iconBg} ${cfg.iconColor}`}
+            className={`rounded-full flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+              isCompact
+                ? 'w-7 h-7 sm:w-8 sm:h-8'
+                : 'w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11'
+            } ${cfg.iconBg} ${cfg.iconColor}`}
           >
-            <ResolvedIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ResolvedIcon className={isCompact ? 'w-3.5 h-3.5 sm:w-4 sm:h-4' : 'w-4 h-4 sm:w-5 sm:h-5'} />
           </div>
         </div>
 
@@ -261,7 +279,7 @@ export default function StatCard({
 
   if (href) {
     return (
-      <Link href={href} className="block group focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-[26px]">
+      <Link href={href} className="block group focus:outline-none focus:ring-2 focus:ring-slate-300 rounded-2xl sm:rounded-[26px]">
         {content}
       </Link>
     );

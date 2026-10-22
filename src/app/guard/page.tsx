@@ -467,7 +467,7 @@ export default function GuardPortalPage() {
                     </div>
 
                     <Link
-                      href="/check-out"
+                      href={`/check-out?code=${encodeURIComponent(visitor.registration_code || '')}`}
                       className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 flex items-center gap-1 transition"
                     >
                       <LogOut className="w-3.5 h-3.5" />

@@ -113,3 +113,53 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 
 CREATE TRIGGER update_participants_updated_at BEFORE UPDATE ON participants
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- GATE GUARD / ARCHIVAL EXTENSIONS
+-- Add columns that the gate guard workflows require
+-- (safe to run multiple times with IF NOT EXISTS)
+-- ============================================================
+
+-- Gate check-in / check-out fields on participants
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS check_out_date TIMESTAMP;
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS check_out_by INTEGER;
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS host_name VARCHAR(255);
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS host_department VARCHAR(255);
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS visit_purpose TEXT;
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS vehicle_registration VARCHAR(50);
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS visitor_type VARCHAR(50) DEFAULT 'GENERAL';
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS location VARCHAR(255);
+ALTER TABLE participants ADD COLUMN IF NOT EXISTS is_recurring BOOLEAN DEFAULT false;
+
+-- Check-outs table (one row per check-out event; ON CONFLICT to allow re-checkout in edge cases)
+CREATE TABLE IF NOT EXISTS check_outs (
+  id SERIAL PRIMARY KEY,
+  participant_id INTEGER UNIQUE NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL,
+  check_out_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Visitor audit log (every check-in / check-out action is recorded here for security archival)
+CREATE TABLE IF NOT EXISTS visitor_logs (
+  id SERIAL PRIMARY KEY,
+  participant_id INTEGER REFERENCES participants(id) ON DELETE SET NULL,
+  action VARCHAR(50) NOT NULL,        -- 'CHECK_IN', 'CHECK_OUT', 'REGISTER', etc.
+  user_id INTEGER,                     -- NULL means gate self-service
+  details TEXT,
+  ip_address VARCHAR(45),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for efficient archive / reporting queries
+CREATE INDEX IF NOT EXISTS idx_participants_check_out_status ON participants(check_in_status, check_out_date);
+CREATE INDEX IF NOT EXISTS idx_participants_vehicle ON participants(vehicle_registration);
+CREATE INDEX IF NOT EXISTS idx_participants_host_name ON participants(host_name);
+CREATE INDEX IF NOT EXISTS idx_participants_created_at ON participants(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_check_outs_participant_id ON check_outs(participant_id);
+CREATE INDEX IF NOT EXISTS idx_check_outs_check_out_time ON check_outs(check_out_time DESC);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_participant_id ON visitor_logs(participant_id);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_action ON visitor_logs(action);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_created_at ON visitor_logs(created_at DESC);
+
