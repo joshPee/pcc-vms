@@ -44,7 +44,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Optional TOTP 2FA for `admin` and `sector_head` administrative accounts.
   - Password strength policy and forced initial password change on newly provisioned guard accounts.
 
-- [ ] **7. Make the audit log tamper-proof**
+- [x] **7. Make the audit log tamper-proof**
   - Revoke `UPDATE` and `DELETE` on the `audit_logs` table for the application's runtime DB role.
   - Ensure every gate action logs the authenticated officer (`guard:name (id)`), IP address, and timestamp.
   - Optional hash chain across audit entries so record alteration or deletion is cryptographically detectable.
