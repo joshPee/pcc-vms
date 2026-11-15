@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getUniquePassNumber } from '@/lib/pass-generator';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized. Guard or Admin login required.' },
         { status: 401 }
+      );
+    }
+
+    const clientIp = getClientIp(request);
+    const userId = (session.user as any).id || 'anon';
+    const rateLimit = checkRateLimit(`walkin:${clientIp}:${userId}`, 30, 60000);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many walk-in requests. Please wait a moment before trying again.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimit.reset.toString(),
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimit.reset.toString(),
+          },
+        }
       );
     }
 

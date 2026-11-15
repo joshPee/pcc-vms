@@ -2,6 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { sql, pool } from './db';
+import { isAccountLocked, recordFailedLogin, clearFailedLogin } from './rate-limit';
 
 export type UserRole = 'admin' | 'security_officer' | 'supervisor' | 'sector_head';
 
@@ -53,6 +54,12 @@ export const authOptions: NextAuthOptions = {
         const rawIdentifier = (credentials.email || '').trim();
         const lowerIdentifier = rawIdentifier.toLowerCase();
 
+        // Check account lockout status before DB query
+        const lockStatus = isAccountLocked(lowerIdentifier);
+        if (lockStatus.locked) {
+          throw new Error(`Account temporarily locked due to repeated failed logins. Please try again in ${lockStatus.remainingMinutes} minute(s).`);
+        }
+
         let user: any = null;
 
         // Try Neon HTTP sql first
@@ -100,6 +107,7 @@ export const authOptions: NextAuthOptions = {
             credentials.password === 'admin123'
           ) {
             console.warn('Development mode: Authenticated with emergency default admin credentials.');
+            clearFailedLogin(lowerIdentifier);
             return {
               id: '1',
               email: 'admin@pcc.gov.gh',
@@ -107,6 +115,7 @@ export const authOptions: NextAuthOptions = {
               role: 'admin' as UserRole,
             };
           }
+          recordFailedLogin(lowerIdentifier);
           throw new Error('Invalid credentials');
         }
 
@@ -116,8 +125,14 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isPasswordValid) {
+          const failRecord = recordFailedLogin(lowerIdentifier);
+          if (failRecord.isLocked) {
+            throw new Error('Account locked due to 5 consecutive failed login attempts. Please wait 15 minutes.');
+          }
           throw new Error('Invalid credentials');
         }
+
+        clearFailedLogin(lowerIdentifier);
 
         return {
           id: user.id.toString(),

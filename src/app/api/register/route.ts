@@ -3,6 +3,7 @@ import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getUniquePassNumber } from '@/lib/pass-generator';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 // Simple fuzzy name matching function
 function calculateSimilarity(str1: string, str2: string): number {
@@ -115,6 +116,24 @@ export async function POST(request: NextRequest) {
 
     const guardUserId = session.user.id ? parseInt((session.user as any).id) : null;
     const guardName = session.user.name || 'Security Officer';
+
+    // Rate Limiting: max 30 registrations per minute per IP / guard session
+    const clientIp = getClientIp(request);
+    const rateLimit = checkRateLimit(`register:${clientIp}:${guardUserId || 'anon'}`, 30, 60000);
+    if (!rateLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many registration requests. Please wait a moment before trying again.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': rateLimit.reset.toString(),
+            'X-RateLimit-Limit': rateLimit.limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimit.reset.toString(),
+          },
+        }
+      );
+    }
 
     const body = await request.json();
     const {
@@ -300,7 +319,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. Log check-in to audit trail with guard attribution
-    const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
     try {
       await sql`
         INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)

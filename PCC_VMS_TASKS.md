@@ -14,7 +14,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Every registration must record the guard's user ID and name into `ci.user_id` and audit logs (`checked_in_by`).
   - **Done when** unauthenticated requests to registration endpoints are rejected (401) and all gate check-ins carry the active officer's identity.
 
-- [ ] **2. Protect registration and authentication endpoints**
+- [x] **2. Protect registration and authentication endpoints**
   - Rate limit login attempts (`/api/auth`) and registration endpoints per IP and user session.
   - Implement brute-force protection and lockout thresholds for gate station accounts.
   - **Done when** rapid automated requests to auth and registration endpoints are blocked with 429 Too Many Requests.
