@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { requireRole } from '@/lib/require-role';
+import { validatePasswordStrength } from '@/lib/password-policy';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,14 @@ export async function POST(request: NextRequest) {
     if (!name || !email || !password) {
       return NextResponse.json(
         { error: 'Name, email, and password are required' },
+        { status: 400 }
+      );
+    }
+
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.errors.join(' ') },
         { status: 400 }
       );
     }

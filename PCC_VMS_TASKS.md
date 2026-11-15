@@ -38,7 +38,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Maintain the isolation rule: Guards cannot access admin pages; Admins cannot access `/guard`.
   - **Done when** the test matrix passes and no API route lacks server-side authorization.
 
-- [ ] **6. Auth hardening**
+- [x] **6. Auth hardening**
   - Login rate limiting and temporary account lockout after repeated failures.
   - Session idle timeout (shorter timeout for guard stations on shared gate tablets).
   - Optional TOTP 2FA for `admin` and `sector_head` administrative accounts.

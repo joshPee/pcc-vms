@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+import { validatePasswordStrength } from '@/lib/password-policy';
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,11 +26,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const passwordValidation = validatePasswordStrength(newPassword);
+    if (!passwordValidation.valid) {
+      return NextResponse.json(
+        { error: passwordValidation.errors.join(' ') },
+        { status: 400 }
+      );
+    }
+
     const userId = (session.user as any).id;
 
     // Verify current password
     const user = await sql`
-      SELECT password FROM users WHERE id = ${userId}
+      SELECT id, COALESCE(password_hash, password) as password_hash FROM users WHERE id = ${userId}
     `;
 
     if (user.length === 0) {
@@ -38,21 +48,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (user[0].password !== currentPassword) {
+    const storedHash = user[0].password_hash;
+    const isCurrentValid = storedHash.startsWith('$2')
+      ? await bcrypt.compare(currentPassword, storedHash)
+      : storedHash === currentPassword;
+
+    if (!isCurrentValid) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
         { status: 401 }
       );
     }
 
+    // Hash new password securely
+    const hashed = await bcrypt.hash(newPassword, 10);
+
     // Update password
     await sql`
       UPDATE users
-      SET password = ${newPassword}
+      SET password_hash = ${hashed}, password = ${hashed}
       WHERE id = ${userId}
     `;
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, message: 'Password updated successfully' });
   } catch (error) {
     console.error('Error changing password:', error);
     return NextResponse.json(
