@@ -15,3 +15,4 @@ export function isValidPassToken(token?: string | null): boolean {
   if (!token || typeof token !== 'string') return false;
   return /^[0-9a-f]{32}$/i.test(token.trim());
 }
+

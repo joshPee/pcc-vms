@@ -23,3 +23,4 @@ REVOKE UPDATE, DELETE ON visitor_logs FROM PUBLIC;
 ALTER TABLE visitor_logs ADD COLUMN IF NOT EXISTS record_hash VARCHAR(64);
 ALTER TABLE visitor_logs ADD COLUMN IF NOT EXISTS prev_hash VARCHAR(64);
 CREATE INDEX IF NOT EXISTS idx_visitor_logs_record_hash ON visitor_logs(record_hash);
+

@@ -64,3 +64,4 @@ export function getSessionMaxAgeForRole(role?: string | null): number {
   }
   return SESSION_MAX_AGE_SECONDS.ADMIN_PORTAL;
 }
+

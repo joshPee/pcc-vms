@@ -118,7 +118,7 @@ function RegistrationSuccessContent() {
   const isPending = status === 'PENDING';
 
   return (
-    <div 
+    <div
       className="min-h-screen bg-[#FAF8F4] py-8 px-4 sm:px-6 flex flex-col justify-between"
       style={{ backgroundColor: '#FAF8F4', color: '#152420' }}
     >

@@ -195,3 +195,4 @@ test('Phase 1 - Task 7: Tamper-Proof Audit Logging & Hash Chaining', async (t) =
     assert.ok(verification.reason?.includes('Hash chain disconnection'));
   });
 });
+

@@ -46,3 +46,4 @@ test('Phase 1 - Task 4: Unguessable QR Pass Tokens', async (t) => {
     assert.equal(passToken.startsWith('PCC-V'), false);
   });
 });
+

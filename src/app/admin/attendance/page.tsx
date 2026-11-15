@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, CheckCircle, Clock, Percent, Download, ArrowUpDown } from 'lucide-react';
+import { Users, CheckCircle, Clock, Percent, Download, ArrowUpDown, RotateCcw, Loader2 } from 'lucide-react';
 
 export default function AttendancePage() {
   const [stats, setStats] = useState({
@@ -91,6 +91,33 @@ export default function AttendancePage() {
     }
   };
 
+  const [reconciling, setReconciling] = useState(false);
+
+  const handleRunReconciliation = async () => {
+    if (!confirm('Run reconciliation now? Single-day visitors checked in prior to today will be transitioned to AUTO_CHECKED_OUT.')) {
+      return;
+    }
+    setReconciling(true);
+    try {
+      const res = await fetch('/api/reconciliation/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun: false }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || `Reconciliation completed: ${data.reconciledCount} visitor(s) reconciled.`);
+        fetchAttendanceData();
+      } else {
+        alert(data.error || 'Reconciliation failed.');
+      }
+    } catch {
+      alert('Network error while running reconciliation.');
+    } finally {
+      setReconciling(false);
+    }
+  };
+
   // Calculate pagination
   const totalPages = Math.ceil(registrations.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -103,7 +130,16 @@ export default function AttendancePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end items-center">
+      <div className="flex justify-end items-center gap-2">
+        <Button
+          onClick={handleRunReconciliation}
+          disabled={reconciling}
+          variant="outline"
+          className="border-amber-500 text-amber-700 hover:bg-amber-50 h-9 text-sm"
+        >
+          {reconciling ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RotateCcw className="h-4 w-4 mr-2 text-amber-600" />}
+          Run Reconciliation
+        </Button>
         <Button
           onClick={handleExportCSV}
           className="bg-[#123B70] hover:bg-[#0d2d52] h-9 text-sm"

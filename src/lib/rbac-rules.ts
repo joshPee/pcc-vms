@@ -67,3 +67,4 @@ export const ROUTE_POLICIES = {
   // Audit trails & incident reporting
   AUDIT_MANAGEMENT: ['admin', 'supervisor', 'sector_head'] as UserRole[],
 };
+

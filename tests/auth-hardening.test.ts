@@ -91,3 +91,4 @@ test('Phase 1 - Task 6: Authentication Hardening & Password Policy', async (t) =
     assert.equal(isAccountLocked(testEmail).locked, false);
   });
 });
+

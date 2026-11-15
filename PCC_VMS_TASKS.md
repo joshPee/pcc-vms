@@ -54,7 +54,7 @@ Instructions for the coding agent. Before starting any task, read the current co
 
 ## Phase 2. Reliability and data accuracy
 
-- [ ] **8. Nightly reconciliation of forgotten checkouts**
+- [x] **8. Nightly reconciliation of forgotten checkouts**
   - Scheduled automated job at a configurable time (e.g. 23:59) using the `Africa/Accra` timezone.
   - Visitors still marked `CHECKED_IN` are transitioned to `AUTO_CHECKED_OUT`, logged in the audit trail, and cleared from the live on-site headcount.
   - Skip visitors marked multi-day or guest house residents (see task 10).

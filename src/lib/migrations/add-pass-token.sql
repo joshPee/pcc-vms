@@ -8,3 +8,4 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_participants_pass_token ON participants(pa
 UPDATE participants
 SET pass_token = md5(random()::text || clock_timestamp()::text)
 WHERE pass_token IS NULL;
+
