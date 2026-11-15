@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import bcrypt from 'bcryptjs';
+import { requireRole } from '@/lib/require-role';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
+  const auth = await requireRole('admin');
+  if (!auth.authorized) return auth.response;
+
   try {
     if (!sql) {
       return NextResponse.json([]);
@@ -34,6 +38,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole('admin');
+  if (!auth.authorized) return auth.response;
+
   try {
     const body = await request.json();
     const { name, email, password, role, shift } = body;

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { requireRole } from '@/lib/require-role';
 
 export async function GET() {
+  const auth = await requireRole('admin', 'supervisor');
+  if (!auth.authorized) return auth.response;
+
   try {
     const watchlist = await sql`
       SELECT 
@@ -28,6 +32,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole('admin', 'supervisor');
+  if (!auth.authorized) return auth.response;
+
   try {
     const body = await request.json();
     const { full_name, reason, description, added_by } = body;

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { requireRole } from '@/lib/require-role';
 
 export async function GET() {
+  const auth = await requireRole('admin', 'supervisor', 'sector_head');
+  if (!auth.authorized) return auth.response;
+
   try {
     const settings = await sql`
       SELECT key, value FROM settings
@@ -23,6 +27,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole('admin');
+  if (!auth.authorized) return auth.response;
+
   try {
     const body = await request.json();
     const { siteName, registrationOpen, maxDailyVisitors, autoCheckOutHours } = body;

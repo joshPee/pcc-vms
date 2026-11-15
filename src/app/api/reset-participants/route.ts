@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { requireRole } from '@/lib/require-role';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole('admin');
+  if (!auth.authorized) return auth.response;
+
   try {
     // Read the reset SQL file
     const sqlPath = join(process.cwd(), 'src', 'lib', 'reset_participants.sql');

@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { requireRole } from '@/lib/require-role';
 
 export async function GET() {
+  const auth = await requireRole('security_officer', 'supervisor', 'admin');
+  if (!auth.authorized) return auth.response;
+
   try {
     if (!sql) {
       return NextResponse.json([]);
@@ -37,11 +41,11 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole('security_officer', 'supervisor', 'admin');
+  if (!auth.authorized) return auth.response;
+
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const session = auth.context.session;
 
     const body = await request.json();
     const { 

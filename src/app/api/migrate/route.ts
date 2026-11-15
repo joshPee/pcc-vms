@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { requireRole } from '@/lib/require-role';
 
 export async function POST(request: NextRequest) {
+  const auth = await requireRole('admin');
+  if (!auth.authorized) return auth.response;
+
   try {
     const results: any[] = [];
 

@@ -32,7 +32,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - The printed/digital pass QR encodes `pass_token`. Check-out validates via `pass_token` or pass number.
   - **Done when** knowing one visitor pass number cannot produce a valid checkout QR code.
 
-- [ ] **5. Server-side RBAC everywhere**
+- [x] **5. Server-side RBAC everywhere**
   - Add one reusable `requireRole()` helper and call it in every API route handler, not just middleware.
   - Write an automated test matrix validating every route against every role (`security_officer`, `supervisor`, `sector_head`, `admin`).
   - Maintain the isolation rule: Guards cannot access admin pages; Admins cannot access `/guard`.

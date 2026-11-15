@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { requireRole } from '@/lib/require-role';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,9 @@ function formatDate(dateStr: string | null): string {
 }
 
 export async function GET(request: NextRequest) {
+  const auth = await requireRole('admin', 'supervisor', 'sector_head');
+  if (!auth.authorized) return auth.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || 'today';
