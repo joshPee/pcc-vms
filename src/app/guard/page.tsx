@@ -78,6 +78,16 @@ export default function GuardPortalPage() {
 
   // Manual Walk-in Registration Modal (Section 17.B & 17.F)
   const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [guardWatchlistAlert, setGuardWatchlistAlert] = useState<{
+    reason?: string;
+    description?: string;
+    matchedName?: string;
+    matchType?: string;
+    confidence?: number;
+  } | null>(null);
+  const [guardOverrideJustification, setGuardOverrideJustification] = useState('');
+  const [guardShowOverrideInput, setGuardShowOverrideInput] = useState(false);
+  const [guardDecisionLoading, setGuardDecisionLoading] = useState(false);
   const [manualForm, setManualForm] = useState({
     fullName: '',
     phone: '',
@@ -199,6 +209,7 @@ export default function GuardPortalPage() {
           type: 'success',
         });
         setManualModalOpen(false);
+        setGuardWatchlistAlert(null);
         setManualForm({
           fullName: '',
           phone: '',
@@ -214,13 +225,88 @@ export default function GuardPortalPage() {
         });
         fetchStats();
         setTimeout(() => setFeedbackMessage(null), 4000);
+      } else if (json.watchlistAlert) {
+        playTone('reject');
+        setGuardWatchlistAlert({
+          reason: json.watchlistReason,
+          description: json.watchlistDescription,
+          matchedName: json.matchedName,
+          matchType: json.matchType,
+          confidence: json.confidence,
+        });
+        setGuardShowOverrideInput(false);
+        setGuardOverrideJustification('');
       } else {
+        playTone('reject');
         alert(json.error || 'Failed to complete walk-in registration');
       }
     } catch {
       alert('Network error while processing manual registration');
     } finally {
       setManualLoading(false);
+    }
+  };
+
+  const handleGuardWatchlistDecision = async (decision: 'allow' | 'deny') => {
+    if (decision === 'allow' && (!guardOverrideJustification || guardOverrideJustification.trim().length < 10)) {
+      alert('Supervisor override requires a detailed justification (minimum 10 characters).');
+      return;
+    }
+
+    setGuardDecisionLoading(true);
+    try {
+      const res = await fetch('/api/walk-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...manualForm,
+          checkInImmediately: true,
+          watchlistDecision: decision,
+          watchlistJustification: decision === 'allow' ? guardOverrideJustification.trim() : undefined,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        if (json.denied) {
+          playTone('reject');
+          setFeedbackMessage({ text: json.error || 'Entry refused per security policy.', type: 'error' });
+          setGuardWatchlistAlert(null);
+          setGuardShowOverrideInput(false);
+          setManualModalOpen(false);
+          fetchStats();
+        } else {
+          alert(json.error || 'Security decision action failed.');
+        }
+      } else {
+        playTone('approve');
+        setFeedbackMessage({
+          text: `Visitor registered and checked in successfully (Supervisor Override logged). Pass: ${json.passNumber || json.registrationCode}`,
+          type: 'success',
+        });
+        setGuardWatchlistAlert(null);
+        setGuardShowOverrideInput(false);
+        setManualModalOpen(false);
+        setManualForm({
+          fullName: '',
+          phone: '',
+          location: '',
+          organisation: '',
+          hostName: '',
+          department: '',
+          visitPurpose: '',
+          visitorType: 'Official',
+          vehicleRegistration: '',
+          idType: '',
+          idNumber: '',
+        });
+        fetchStats();
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      }
+    } catch {
+      alert('Network error while processing security decision.');
+    } finally {
+      setGuardDecisionLoading(false);
     }
   };
 
@@ -648,7 +734,110 @@ export default function GuardPortalPage() {
                 </button>
               </div>
 
-              <form onSubmit={handleManualSubmit} className="space-y-3 text-xs">
+              {guardWatchlistAlert ? (
+                <div className="bg-red-50 border-2 border-red-500 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center gap-2.5 text-red-700">
+                    <AlertTriangle className="w-6 h-6 shrink-0 text-red-600" />
+                    <div>
+                      <h4 className="text-sm font-black text-red-900">WATCHLIST MATCH DETECTED</h4>
+                      <p className="text-[11px] text-red-600">Gate Security Protocol - Guard Action Required</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-3 border border-red-200 space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Visitor:</span>
+                      <span className="font-bold text-slate-900">{manualForm.fullName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Matched Entry:</span>
+                      <span className="font-bold text-amber-700">{guardWatchlistAlert.matchedName || 'Restricted Profile'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Match Basis:</span>
+                      <span className="font-bold uppercase text-red-600">
+                        {guardWatchlistAlert.matchType === 'both' ? 'Phone & Name' : guardWatchlistAlert.matchType === 'phone' ? 'Phone Match' : 'Name Similarity'}
+                        {guardWatchlistAlert.confidence ? ` (${Math.round(guardWatchlistAlert.confidence * 100)}%)` : ''}
+                      </span>
+                    </div>
+                    <div className="pt-1 border-t border-slate-100">
+                      <span className="text-slate-500 block">Restriction Reason:</span>
+                      <span className="font-semibold text-red-700">{guardWatchlistAlert.reason}</span>
+                      {guardWatchlistAlert.description && (
+                        <span className="text-[11px] text-slate-500 block mt-0.5 italic">{guardWatchlistAlert.description}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!guardShowOverrideInput ? (
+                    <div className="space-y-2 pt-1">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={guardDecisionLoading}
+                          onClick={() => handleGuardWatchlistDecision('deny')}
+                          className="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs transition flex items-center justify-center gap-1"
+                        >
+                          {guardDecisionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Deny Entry'}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={guardDecisionLoading}
+                          onClick={() => setGuardShowOverrideInput(true)}
+                          className="py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition flex items-center justify-center gap-1"
+                        >
+                          Supervisor Override
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setGuardWatchlistAlert(null)}
+                        className="w-full py-1.5 text-center text-[11px] text-slate-500 hover:text-slate-800"
+                      >
+                        Back to Form
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pt-1">
+                      <div className="bg-amber-100/60 border border-amber-300 rounded-lg p-2 text-[11px] text-amber-900">
+                        <p className="font-bold">Supervisor Authorization</p>
+                        <p>Type approval reason & supervisor name for audit trail.</p>
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Justification (min. 10 chars) *
+                        </label>
+                        <textarea
+                          value={guardOverrideJustification}
+                          onChange={(e) => setGuardOverrideJustification(e.target.value)}
+                          placeholder="e.g. Authorized by Shift Supervisor Osei after ID verification..."
+                          rows={2}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-900 focus:outline-hidden focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setGuardShowOverrideInput(false)}
+                          disabled={guardDecisionLoading}
+                          className="py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                        >
+                          Back
+                        </button>
+                        <button
+                          type="button"
+                          disabled={guardDecisionLoading || guardOverrideJustification.trim().length < 10}
+                          onClick={() => handleGuardWatchlistDecision('allow')}
+                          className="py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1"
+                        >
+                          {guardDecisionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirm Override'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <form onSubmit={handleManualSubmit} className="space-y-3 text-xs">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">Full Name *</label>
                   <input
@@ -776,6 +965,7 @@ export default function GuardPortalPage() {
                   </button>
                 </div>
               </form>
+              )}
             </div>
           </div>
         )}

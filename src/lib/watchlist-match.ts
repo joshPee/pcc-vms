@@ -50,12 +50,58 @@ function levenshtein(str1: string, str2: string): number {
   return dp[m][n];
 }
 
+export function normalizePhone(phone?: string | null): string {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('233') && digits.length === 12) {
+    return '0' + digits.slice(3);
+  }
+  return digits;
+}
+
+export function phoneMatches(phone1?: string | null, phone2?: string | null): boolean {
+  const p1 = normalizePhone(phone1);
+  const p2 = normalizePhone(phone2);
+  if (!p1 || !p2 || p1.length < 8 || p2.length < 8) return false;
+  return p1 === p2;
+}
+
 export type WatchlistEntry = {
   id: number;
   full_name: string;
+  phone?: string | null;
   reason: string;
   description?: string | null;
 };
+
+export interface WatchlistMatchResult {
+  entry: WatchlistEntry;
+  matchType: 'phone' | 'name' | 'both';
+  confidence: number;
+}
+
+export function evaluateWatchlistMatch(
+  visitor: { fullName: string; phone?: string | null },
+  entries: WatchlistEntry[],
+  nameThreshold = 0.75
+): WatchlistMatchResult | null {
+  for (const entry of entries) {
+    const isPhoneMatch = phoneMatches(visitor.phone, entry.phone);
+    const sim = nameSimilarity(visitor.fullName, entry.full_name);
+    const isNameMatch = sim >= nameThreshold;
+
+    if (isPhoneMatch && isNameMatch) {
+      return { entry, matchType: 'both', confidence: 1.0 };
+    }
+    if (isPhoneMatch) {
+      return { entry, matchType: 'phone', confidence: 0.95 };
+    }
+    if (isNameMatch) {
+      return { entry, matchType: 'name', confidence: sim };
+    }
+  }
+  return null;
+}
 
 export function findWatchlistMatches(
   visitorName: string,

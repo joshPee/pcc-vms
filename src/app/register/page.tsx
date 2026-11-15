@@ -111,7 +111,16 @@ export default function Register() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   
   // Watchlist alert & returning visitor
-  const [watchlistAlert, setWatchlistAlert] = useState<{ reason?: string; description?: string } | null>(null);
+  const [watchlistAlert, setWatchlistAlert] = useState<{
+    reason?: string;
+    description?: string;
+    matchedName?: string;
+    matchType?: string;
+    confidence?: number;
+  } | null>(null);
+  const [overrideJustification, setOverrideJustification] = useState('');
+  const [showOverrideInput, setShowOverrideInput] = useState(false);
+  const [decisionSubmitting, setDecisionSubmitting] = useState(false);
   const [returningVisitor, setReturningVisitor] = useState<{ visitCount: number; lastVisit?: string; lastHost?: string } | null>(null);
 
   // Voice dictation state
@@ -259,8 +268,20 @@ export default function Register() {
 
       if (!response.ok) {
         if (data.watchlistAlert) {
-          setWatchlistAlert({ reason: data.watchlistReason, description: data.watchlistDescription });
+          setWatchlistAlert({
+            reason: data.watchlistReason,
+            description: data.watchlistDescription,
+            matchedName: data.matchedName,
+            matchType: data.matchType,
+            confidence: data.confidence,
+          });
+          setShowOverrideInput(false);
+          setOverrideJustification('');
           setError('');
+        } else if (data.denied) {
+          setWatchlistAlert(null);
+          setShowOverrideInput(false);
+          setError(data.error || 'Visitor entry has been denied per security policy.');
         } else if (data.duplicate) {
           setDuplicateWarning(true);
           setPendingSubmission(data);
@@ -296,6 +317,69 @@ export default function Register() {
     }
   };
 
+  const handleWatchlistDecision = async (decision: 'allow' | 'deny') => {
+    if (decision === 'allow' && (!overrideJustification || overrideJustification.trim().length < 10)) {
+      alert('Supervisor override requires a detailed justification (minimum 10 characters).');
+      return;
+    }
+
+    setDecisionSubmitting(true);
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: fullName.trim(),
+          phone: phone.trim(),
+          location: location.trim() || 'Accra / PCC',
+          organisation: organisation.trim(),
+          visitorType: visitorType.trim() || 'Official',
+          idType: idType.trim() || null,
+          idNumber: idNumber.trim() || null,
+          personToVisit: personToVisit.trim(),
+          department: department.trim() || 'General',
+          visitPurpose: visitPurpose.trim(),
+          vehicleRegistration: vehicleRegistration.trim().toUpperCase() || null,
+          watchlistDecision: decision,
+          watchlistJustification: decision === 'allow' ? overrideJustification.trim() : undefined,
+          forceSubmit: true,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.denied) {
+          setWatchlistAlert(null);
+          setShowOverrideInput(false);
+          setError(data.error || 'Visitor entry has been officially denied.');
+        } else {
+          alert(data.error || 'Action failed.');
+        }
+      } else {
+        setWatchlistAlert(null);
+        setShowOverrideInput(false);
+        const passCode = data.passNumber || data.registrationCode;
+        const queryParams = new URLSearchParams({
+          code: passCode,
+          name: data.fullName || fullName.trim(),
+          host: personToVisit.trim(),
+          dept: department.trim() || 'General',
+          org: organisation.trim(),
+          purpose: visitPurpose.trim(),
+          type: visitorType,
+          status: 'APPROVED',
+          phone: phone.trim(),
+          vehicle: vehicleRegistration.trim(),
+        });
+        router.push(`/register/success?${queryParams.toString()}`);
+      }
+    } catch {
+      alert('Network error while processing security decision.');
+    } finally {
+      setDecisionSubmitting(false);
+    }
+  };
+
   if (status === 'loading' || status === 'unauthenticated') {
     return (
       <div className="min-h-screen bg-[#0B1E36] flex flex-col items-center justify-center text-white px-4">
@@ -310,28 +394,115 @@ export default function Register() {
   return (
     <div className="min-h-screen bg-[#FFFFFF] flex flex-col justify-between py-6 px-4 sm:px-6">
       <div className="w-full max-w-lg mx-auto">
-        {/* Watchlist Security Alert Modal */}
+        {/* Watchlist Security Alert Modal & Decision Flow */}
         {watchlistAlert && (
-          <div className="fixed inset-0 z-50 bg-red-950/95 flex flex-col items-center justify-center p-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center mb-4 animate-pulse">
-              <AlertCircle className="w-9 h-9 text-white" />
+          <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-[#0B1E36] border-2 border-red-500 rounded-2xl max-w-md w-full p-6 text-white shadow-2xl animate-in zoom-in-95">
+              <div className="flex items-center gap-3 mb-4 text-red-400">
+                <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-7 h-7 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black tracking-wide text-white">WATCHLIST MATCH DETECTED</h2>
+                  <p className="text-xs text-red-300 font-medium">Gate Security Protocol - Guard Action Required</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-900/80 rounded-xl p-3.5 border border-slate-700 space-y-2 mb-4 text-xs">
+                <div className="flex justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-slate-400">Visitor:</span>
+                  <span className="font-bold text-white">{fullName}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-slate-400">Matched Record:</span>
+                  <span className="font-bold text-amber-300">{watchlistAlert.matchedName || 'Watchlist Entry'}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-800 pb-1.5">
+                  <span className="text-slate-400">Match Basis:</span>
+                  <span className="font-bold uppercase text-red-400">
+                    {watchlistAlert.matchType === 'both' ? 'Phone & Name' : watchlistAlert.matchType === 'phone' ? 'Phone Match' : 'Name Similarity'}
+                    {watchlistAlert.confidence ? ` (${Math.round(watchlistAlert.confidence * 100)}%)` : ''}
+                  </span>
+                </div>
+                <div className="flex flex-col pt-1">
+                  <span className="text-slate-400 mb-0.5">Restriction Reason:</span>
+                  <span className="font-semibold text-red-200">{watchlistAlert.reason || 'Restricted entry policy'}</span>
+                  {watchlistAlert.description && (
+                    <span className="text-[11px] text-slate-400 mt-1 italic">{watchlistAlert.description}</span>
+                  )}
+                </div>
+              </div>
+
+              {!showOverrideInput ? (
+                <div className="space-y-2.5">
+                  <p className="text-xs text-slate-300 text-center font-medium">
+                    Do you want to refuse entry or initiate an authorized supervisor override?
+                  </p>
+                  <div className="grid grid-cols-2 gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      disabled={decisionSubmitting}
+                      onClick={() => handleWatchlistDecision('deny')}
+                      className="w-full py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      {decisionSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Deny Entry'}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={decisionSubmitting}
+                      onClick={() => setShowOverrideInput(true)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      Supervisor Override
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setWatchlistAlert(null)}
+                    className="w-full py-2 text-center text-[11px] text-slate-400 hover:text-white transition"
+                  >
+                    Dismiss Alert
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 text-xs text-amber-200">
+                    <p className="font-bold">Supervisor Authorization</p>
+                    <p className="text-[11px] text-amber-300/80">Type the reason and approving supervisor name. This is logged to the permanent audit trail.</p>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-300 mb-1">
+                      Justification (min. 10 chars) *
+                    </label>
+                    <textarea
+                      value={overrideJustification}
+                      onChange={(e) => setOverrideJustification(e.target.value)}
+                      placeholder="e.g. Authorized by Shift Supervisor Osei after physical ID inspection..."
+                      rows={3}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-xs text-white placeholder-slate-500 focus:outline-hidden focus:border-amber-400"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowOverrideInput(false)}
+                      disabled={decisionSubmitting}
+                      className="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={decisionSubmitting || overrideJustification.trim().length < 10}
+                      onClick={() => handleWatchlistDecision('allow')}
+                      className="py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 text-xs font-extrabold flex items-center justify-center gap-1"
+                    >
+                      {decisionSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Confirm & Register'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-            <h2 className="text-2xl font-black text-white mb-2">⚠ SECURITY RESTRICTION</h2>
-            <p className="text-red-200 text-sm font-semibold mb-1">Entry restricted by security policy</p>
-            {watchlistAlert.reason && (
-              <p className="text-red-300 text-xs mb-1">
-                Reason: <span className="font-bold text-white">{watchlistAlert.reason}</span>
-              </p>
-            )}
-            <p className="text-red-100 font-bold text-sm mb-6 mt-2">
-              Please see the Chief Security Officer at the Main Gate before entering.
-            </p>
-            <button
-              onClick={() => setWatchlistAlert(null)}
-              className="px-6 py-3 rounded-xl bg-white text-red-900 font-extrabold text-sm hover:bg-red-50 transition"
-            >
-              Close
-            </button>
           </div>
         )}
 

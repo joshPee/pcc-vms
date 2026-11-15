@@ -19,7 +19,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Implement brute-force protection and lockout thresholds for gate station accounts.
   - **Done when** rapid automated requests to auth and registration endpoints are blocked with 429 Too Many Requests.
 
-- [ ] **3. Define the guard-facing watchlist decision flow**
+- [x] **3. Define the guard-facing watchlist decision flow**
   - Match on normalised name plus phone number against active watchlist records.
   - When a guard enters visitor details that match a watchlist record, display a high-visibility alert banner on the guard terminal with the recorded reason and risk description.
   - Provide explicit **Allow Entry** and **Deny Entry** actions for the guard:

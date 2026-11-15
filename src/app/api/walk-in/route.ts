@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getUniquePassNumber } from '@/lib/pass-generator';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { evaluateWatchlistMatch, WatchlistEntry } from '@/lib/watchlist-match';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
       vehicleRegistration = null,
       isRecurring = false,
       checkInImmediately = true,
+      watchlistDecision,
+      watchlistJustification = '',
     } = body;
 
     // Validate input (Full name, phone, host, and purpose are required; ID and photo are strictly OPTIONAL)
@@ -86,23 +89,133 @@ export async function POST(request: NextRequest) {
     const guardName = session.user.name || 'Security Officer';
 
     // Check watchlist
+    let watchlistEntries: WatchlistEntry[] = [];
     try {
-      const watchlistEntries = await sql`
-        SELECT full_name, reason FROM watchlist WHERE is_active = true
+      const rows = await sql`
+        SELECT id, full_name, phone, reason, description FROM watchlist WHERE is_active = true
       `;
-      for (const entry of watchlistEntries) {
-        if (entry.full_name && trimmedName.toLowerCase().includes(entry.full_name.toLowerCase())) {
+      watchlistEntries = rows.map((r: any) => ({
+        id: Number(r.id),
+        full_name: String(r.full_name || ''),
+        phone: r.phone ? String(r.phone) : null,
+        reason: String(r.reason || ''),
+        description: r.description ? String(r.description) : null,
+      }));
+    } catch {
+      try {
+        const rows = await sql`
+          SELECT id, full_name, reason, description FROM watchlist WHERE is_active = true
+        `;
+        watchlistEntries = rows.map((r: any) => ({
+          id: Number(r.id),
+          full_name: String(r.full_name || ''),
+          phone: null,
+          reason: String(r.reason || ''),
+          description: r.description ? String(r.description) : null,
+        }));
+      } catch {
+        // ignore
+      }
+    }
+
+    const matchResult = evaluateWatchlistMatch(
+      { fullName: trimmedName, phone: trimmedPhone },
+      watchlistEntries
+    );
+
+    if (matchResult) {
+      if (watchlistDecision === 'deny') {
+        const passNumber = await getUniquePassNumber();
+        let rejectedId: number | null = null;
+        try {
+          const rejectedRow = await sql`
+            INSERT INTO participants (
+              registration_code, pass_number, full_name, organisation, position, phone, location,
+              host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+              vehicle_registration, is_recurring, registration_source,
+              participant_status, registration_status, approval_status,
+              check_in_status, created_at
+            )
+            VALUES (
+              ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+              ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+              ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+              'REJECTED', 'REJECTED', 'REJECTED',
+              'DENIED', CURRENT_TIMESTAMP
+            )
+            RETURNING id
+          `;
+          rejectedId = rejectedRow[0]?.id || null;
+        } catch { /* ignore */ }
+
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              ${rejectedId},
+              'WATCHLIST_DENIED',
+              ${hrUserId},
+              ${`WATCHLIST DENIED: Manual walk-in entry refused by guard ${guardName}. Matched: "${matchResult.entry.full_name}" (${matchResult.matchType}, confidence: ${Math.round(matchResult.confidence * 100)}%). Reason: ${matchResult.entry.reason || 'Restricted entry'}.`},
+              ${clientIp}
+            )
+          `;
+        } catch { /* ignore */ }
+
+        return NextResponse.json(
+          {
+            error: `Entry denied for ${trimmedName} per security policy (${matchResult.entry.reason || 'Watchlist restriction'}).`,
+            denied: true,
+            watchlistAlert: false,
+          },
+          { status: 403 }
+        );
+      } else if (watchlistDecision === 'allow') {
+        if (!watchlistJustification || watchlistJustification.trim().length < 10) {
           return NextResponse.json(
-            {
-              watchlistAlert: true,
-              error: `SECURITY ALERT: This visitor matches the watchlist. Reason: ${entry.reason}. Entry denied.`,
-            },
-            { status: 403 }
+            { error: 'Supervisor override requires a detailed justification (minimum 10 characters).' },
+            { status: 400 }
           );
         }
+
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              NULL,
+              'WATCHLIST_OVERRIDE',
+              ${hrUserId},
+              ${`WATCHLIST OVERRIDE by ${guardName} for manual walk-in "${trimmedName}". Justification: "${watchlistJustification.trim()}". Matched: "${matchResult.entry.full_name}" (${matchResult.matchType}).`},
+              ${clientIp}
+            )
+          `;
+        } catch { /* ignore */ }
+      } else {
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              NULL,
+              'WATCHLIST_ALERT',
+              ${hrUserId},
+              ${`WATCHLIST ALERT: Manual walk-in attempt for "${trimmedName}" (${trimmedPhone}) matched "${matchResult.entry.full_name}" (${matchResult.matchType}, confidence: ${Math.round(matchResult.confidence * 100)}%). Reason: ${matchResult.entry.reason || 'Restricted entry'}.`},
+              ${clientIp}
+            )
+          `;
+        } catch { /* ignore */ }
+
+        return NextResponse.json(
+          {
+            watchlistAlert: true,
+            error: `SECURITY ALERT: This visitor matches a restricted individual (${matchResult.entry.full_name}). Reason: ${matchResult.entry.reason || 'Security Restriction'}.`,
+            matchType: matchResult.matchType,
+            confidence: matchResult.confidence,
+            matchedName: matchResult.entry.full_name,
+            watchlistReason: matchResult.entry.reason,
+            watchlistDescription: matchResult.entry.description,
+          },
+          { status: 403 }
+        );
       }
-    } catch {
-      // ignore
     }
 
     // Generate unique pass number (e.g. PCC-V8K294)

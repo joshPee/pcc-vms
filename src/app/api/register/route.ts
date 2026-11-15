@@ -4,75 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getUniquePassNumber } from '@/lib/pass-generator';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
-
-// Simple fuzzy name matching function
-function calculateSimilarity(str1: string, str2: string): number {
-  const s1 = str1.toLowerCase().trim();
-  const s2 = str2.toLowerCase().trim();
-  
-  if (s1 === s2) return 1.0;
-  
-  const words1 = s1.split(/\s+/);
-  const words2 = s2.split(/\s+/);
-  
-  if (s1.includes(s2) || s2.includes(s1)) return 0.9;
-  
-  let matches = 0;
-  const maxWords = Math.max(words1.length, words2.length);
-  
-  for (const word1 of words1) {
-    for (const word2 of words2) {
-      if (word1 === word2 || 
-          word1.includes(word2) || 
-          word2.includes(word1) ||
-          levenshteinDistance(word1, word2) <= 2) {
-        matches++;
-        break;
-      }
-    }
-  }
-  
-  return matches / maxWords;
-}
-
-function levenshteinDistance(str1: string, str2: string): number {
-  const m = str1.length;
-  const n = str2.length;
-  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-  
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      if (str1[i - 1] === str2[j - 1]) {
-        dp[i][j] = dp[i - 1][j - 1];
-      } else {
-        dp[i][j] = 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-      }
-    }
-  }
-  
-  return dp[m][n];
-}
-
-// Watchlist / Blacklist Check
-async function checkWatchlist(fullName: string): Promise<{ flagged: boolean; reason?: string; description?: string }> {
-  try {
-    const watchlistEntries = await sql`
-      SELECT full_name, reason, description FROM watchlist WHERE is_active = true
-    `;
-    for (const entry of watchlistEntries) {
-      const similarity = calculateSimilarity(fullName, entry.full_name);
-      if (similarity >= 0.75) {
-        return { flagged: true, reason: entry.reason, description: entry.description };
-      }
-    }
-  } catch {
-    // watchlist table may not exist yet — fail silently
-  }
-  return { flagged: false };
-}
+import { evaluateWatchlistMatch, WatchlistEntry } from '@/lib/watchlist-match';
 
 // Returning visitor detection
 async function checkReturningVisitor(fullName: string, phone: string): Promise<{
@@ -150,6 +82,8 @@ export async function POST(request: NextRequest) {
       photoUrl = '',
       vehicleRegistration = '',
       forceSubmit = false,
+      watchlistDecision,
+      watchlistJustification = '',
     } = body;
 
     // Validate required fields (Full name, phone, person to visit, purpose)
@@ -181,25 +115,146 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Blacklist / Watchlist Check
-    const watchlistResult = await checkWatchlist(trimmedName);
-    if (watchlistResult.flagged) {
-      const clientIpWl = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+    let watchlistEntries: WatchlistEntry[] = [];
+    try {
+      const rows = await sql`
+        SELECT id, full_name, phone, reason, description FROM watchlist WHERE is_active = true
+      `;
+      watchlistEntries = rows.map((r: any) => ({
+        id: Number(r.id),
+        full_name: String(r.full_name || ''),
+        phone: r.phone ? String(r.phone) : null,
+        reason: String(r.reason || ''),
+        description: r.description ? String(r.description) : null,
+      }));
+    } catch {
+      // Fallback query in case phone column is not yet migrated
       try {
-        await sql`
-          INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
-          VALUES (NULL, 'WATCHLIST_ALERT', NULL, ${`WATCHLIST ALERT: Attempted registration by "${trimmedName}". Reason: ${watchlistResult.reason || 'N/A'}`}, ${clientIpWl})
+        const rows = await sql`
+          SELECT id, full_name, reason, description FROM watchlist WHERE is_active = true
         `;
-      } catch { /* ignore */ }
+        watchlistEntries = rows.map((r: any) => ({
+          id: Number(r.id),
+          full_name: String(r.full_name || ''),
+          phone: null,
+          reason: String(r.reason || ''),
+          description: r.description ? String(r.description) : null,
+        }));
+      } catch {
+        // Table may not exist yet in fresh environment
+      }
+    }
 
-      return NextResponse.json(
-        {
-          watchlistAlert: true,
-          error: `SECURITY ALERT: This visitor's name matches a restricted or blacklisted individual. Registration cannot proceed without supervisor authorization.`,
-          watchlistReason: watchlistResult.reason,
-          watchlistDescription: watchlistResult.description,
-        },
-        { status: 403 }
-      );
+    const matchResult = evaluateWatchlistMatch(
+      { fullName: trimmedName, phone: trimmedPhone },
+      watchlistEntries
+    );
+
+    if (matchResult) {
+      if (watchlistDecision === 'deny') {
+        // Guard confirmed denial of entry
+        const passNumber = await getUniquePassNumber();
+        let rejectedId: number | null = null;
+        try {
+          const rejectedRow = await sql`
+            INSERT INTO participants (
+              registration_code, pass_number, full_name, phone, location,
+              organisation, host_name, host_department, visit_purpose, visitor_type,
+              participant_status, registration_status, registration_source,
+              approval_status, approved_by, approved_at,
+              check_in_status, created_at
+            )
+            VALUES (
+              ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedPhone}, ${trimmedLocation},
+              ${trimmedOrg}, ${trimmedPersonToVisit}, ${trimmedDepartment}, ${trimmedVisitPurpose}, ${trimmedVisitorType},
+              'REJECTED', 'REJECTED', 'GUARD_STATION',
+              'REJECTED', ${guardUserId}, CURRENT_TIMESTAMP,
+              'DENIED', CURRENT_TIMESTAMP
+            )
+            RETURNING id
+          `;
+          rejectedId = rejectedRow[0]?.id || null;
+        } catch (rejErr) {
+          console.warn('Failed to insert rejected participant:', rejErr);
+        }
+
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              ${rejectedId},
+              'WATCHLIST_DENIED',
+              ${guardUserId},
+              ${`WATCHLIST DENIED: Entry refused by guard ${guardName}. Matched: "${matchResult.entry.full_name}" (${matchResult.matchType}, confidence: ${Math.round(matchResult.confidence * 100)}%). Reason: ${matchResult.entry.reason || 'Restricted entry'}.`},
+              ${clientIp}
+            )
+          `;
+        } catch (logErr) {
+          console.warn('Failed to log WATCHLIST_DENIED:', logErr);
+        }
+
+        return NextResponse.json(
+          {
+            error: `Entry denied for ${trimmedName} per security policy (${matchResult.entry.reason || 'Restricted individual'}).`,
+            denied: true,
+            watchlistAlert: false,
+          },
+          { status: 403 }
+        );
+      } else if (watchlistDecision === 'allow') {
+        if (!watchlistJustification || watchlistJustification.trim().length < 10) {
+          return NextResponse.json(
+            { error: 'Supervisor override requires a detailed justification (minimum 10 characters).' },
+            { status: 400 }
+          );
+        }
+
+        // Log the supervisor override audit record
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              NULL,
+              'WATCHLIST_OVERRIDE',
+              ${guardUserId},
+              ${`WATCHLIST OVERRIDE by ${guardName} for visitor "${trimmedName}". Justification: "${watchlistJustification.trim()}". Matched: "${matchResult.entry.full_name}" (${matchResult.matchType}).`},
+              ${clientIp}
+            )
+          `;
+        } catch (logErr) {
+          console.warn('Failed to log WATCHLIST_OVERRIDE:', logErr);
+        }
+        // Proceed with normal registration below
+      } else {
+        // Initial detection: log alert and prompt guard for decision
+        try {
+          await sql`
+            INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+            VALUES (
+              NULL,
+              'WATCHLIST_ALERT',
+              ${guardUserId},
+              ${`WATCHLIST ALERT: Registration attempt for "${trimmedName}" (${trimmedPhone}) matched "${matchResult.entry.full_name}" (${matchResult.matchType}, confidence: ${Math.round(matchResult.confidence * 100)}%). Reason: ${matchResult.entry.reason || 'Restricted entry'}.`},
+              ${clientIp}
+            )
+          `;
+        } catch (logErr) {
+          console.warn('Failed to log WATCHLIST_ALERT:', logErr);
+        }
+
+        return NextResponse.json(
+          {
+            watchlistAlert: true,
+            error: `SECURITY ALERT: This visitor matches a restricted individual (${matchResult.entry.full_name}). Reason: ${matchResult.entry.reason || 'Security Restriction'}.`,
+            matchType: matchResult.matchType,
+            confidence: matchResult.confidence,
+            matchedName: matchResult.entry.full_name,
+            watchlistReason: matchResult.entry.reason,
+            watchlistDescription: matchResult.entry.description,
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // 2. Duplicate Detection: Check if active/pending visitor with same phone exists today
