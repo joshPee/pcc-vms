@@ -68,6 +68,10 @@ function VisitorCheckOutContent() {
 
   // Guard Duty Settings
   const { data: session } = useSession();
+  const isGuard = session?.user?.role === 'security_officer' || session?.user?.role === 'supervisor';
+  const isAdmin = session?.user?.role === 'admin';
+  const returnHref = isGuard ? '/guard' : (isAdmin ? '/admin/dashboard' : '/');
+  const returnLabel = isGuard ? 'Guard Portal' : (isAdmin ? 'Dashboard' : 'Home');
   const currentShift = useMemo(() => {
     const hour = new Date().getHours();
     return hour >= 6 && hour < 18 ? 'Day Shift' : 'Night Shift';
@@ -248,11 +252,11 @@ function VisitorCheckOutContent() {
       if (directorySearch.trim()) {
         const q = directorySearch.toLowerCase().trim();
         const matchesName = visitor.full_name?.toLowerCase().includes(q);
-        const matchesCode = visitor.registration_code?.toLowerCase().includes(q);
-        const matchesVehicle = visitor.vehicle_registration?.toLowerCase().includes(q);
-        const matchesOrg = visitor.organisation?.toLowerCase().includes(q);
-        const matchesHost = visitor.host_name?.toLowerCase().includes(q);
-        const matchesPhone = visitor.phone?.toLowerCase().includes(q);
+        const matchesCode = (visitor.registration_code || '').toLowerCase().includes(q) || (visitor.pass_number || '').toLowerCase().includes(q);
+        const matchesVehicle = (visitor.vehicle_registration || '').toLowerCase().includes(q);
+        const matchesOrg = (visitor.organisation || '').toLowerCase().includes(q);
+        const matchesHost = (visitor.host_name || '').toLowerCase().includes(q);
+        const matchesPhone = (visitor.phone || '').toLowerCase().includes(q);
 
         if (!matchesName && !matchesCode && !matchesVehicle && !matchesOrg && !matchesHost && !matchesPhone) {
           return false;
@@ -300,11 +304,14 @@ function VisitorCheckOutContent() {
       const cleanUpper = clean.toUpperCase();
       const match = activeVisitors.find((v) => {
         const reg = (v.registration_code || '').toUpperCase();
+        const pass = (v.pass_number || '').toUpperCase();
         const veh = (v.vehicle_registration || '').toUpperCase();
         const name = (v.full_name || '').toUpperCase();
         return (
           reg === cleanUpper ||
           reg.replace('-', '') === cleanUpper.replace('-', '') ||
+          pass === cleanUpper ||
+          pass.replace('-', '') === cleanUpper.replace('-', '') ||
           veh === cleanUpper ||
           veh.replace(/\s+/g, '') === cleanUpper.replace(/\s+/g, '') ||
           name.includes(cleanUpper)
@@ -516,12 +523,12 @@ function VisitorCheckOutContent() {
           {/* Left: Clean single navigation & title */}
           <div className="flex items-center gap-2.5 min-w-0">
             <Link
-              href="/guard"
+              href={returnHref}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-[#0B1E36] text-xs font-bold transition border border-slate-200/90 shrink-0"
-              title="Return to Guard Dashboard"
+              title={`Return to ${returnLabel}`}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Dashboard</span>
+              <span>{returnLabel}</span>
             </Link>
 
             <div className="h-4 w-px bg-slate-200 shrink-0" />
@@ -1446,6 +1453,9 @@ function VisitorCheckOutContent() {
           <div className="flex items-center gap-4 text-slate-600 font-medium">
             <Link href="/register" className="hover:text-slate-900 transition">
               Visitor Check-in
+            </Link>
+            <Link href={returnHref} className="hover:text-slate-900 transition">
+              {returnLabel}
             </Link>
           </div>
         </div>

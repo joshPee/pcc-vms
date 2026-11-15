@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
       SELECT 
         id,
         registration_code,
+        COALESCE(pass_number, registration_code) as pass_number,
         full_name,
         organisation,
         position,
@@ -36,6 +37,8 @@ export async function GET(request: NextRequest) {
         vehicle_registration,
         check_in_status,
         check_in_date,
+        approval_status,
+        visitor_type,
         registration_source
       FROM participants
       WHERE (
@@ -53,7 +56,9 @@ export async function GET(request: NextRequest) {
       const paramNum = paramIndex++;
       return `(
         LOWER(registration_code) LIKE LOWER($${paramNum}) OR
+        LOWER(COALESCE(pass_number, '')) LIKE LOWER($${paramNum}) OR
         LOWER(REPLACE(registration_code, '-', '')) LIKE LOWER($${paramNum}) OR
+        LOWER(REPLACE(COALESCE(pass_number, ''), '-', '')) LIKE LOWER($${paramNum}) OR
         LOWER(full_name) LIKE LOWER($${paramNum}) OR
         LOWER(COALESCE(organisation, '')) LIKE LOWER($${paramNum}) OR
         LOWER(COALESCE(phone, '')) LIKE LOWER($${paramNum}) OR

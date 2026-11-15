@@ -7,6 +7,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { User, LogOut, Settings, Menu } from 'lucide-react';
+import CommandPalette from '@/components/CommandPalette';
 
 interface AdminTopBarProps {
   onMobileMenuToggle?: () => void;
@@ -93,6 +94,8 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        <CommandPalette />
+
         <div className="relative">
           <Button
             variant="ghost"

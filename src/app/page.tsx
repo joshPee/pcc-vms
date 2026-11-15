@@ -2,15 +2,29 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronRight, ChevronLeft, ShieldCheck, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react';
 import { CAROUSEL_SLIDES } from '@/lib/carousel-slides';
 
 export default function Home() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [activeSlide, setActiveSlide] = useState(0);
   const [hasScrolled, setHasScrolled] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Auto-redirect authenticated guards/supervisors back to the guard portal, and admins to admin dashboard
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user) {
+      const role = session.user.role;
+      if (role === 'security_officer' || role === 'supervisor') {
+        router.replace('/guard');
+      } else if (role === 'admin') {
+        router.replace('/admin/dashboard');
+      }
+    }
+  }, [status, session, router]);
 
   // Smoothly scroll to a specific slide
   const scrollToSlide = useCallback((index: number) => {
@@ -77,6 +91,19 @@ export default function Home() {
     };
   }, []);
 
+  // Prevent flash of public kiosk if a guard or admin is already authenticated
+  if (status === 'authenticated' && session?.user) {
+    const role = session.user.role;
+    if (role === 'security_officer' || role === 'supervisor') {
+      return (
+        <div className="h-dvh min-h-dvh w-full bg-[#0B1E36] flex flex-col items-center justify-center text-white px-4">
+          <div className="w-8 h-8 border-3 border-amber-400 border-t-transparent rounded-full animate-spin mb-3" />
+          <p className="text-xs font-bold text-slate-300 uppercase tracking-widest">Returning to Guard Portal...</p>
+        </div>
+      );
+    }
+  }
+
   return (
     <main
       className="h-dvh min-h-dvh w-full overflow-hidden flex flex-col justify-between"
@@ -107,16 +134,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {session?.user && (
-            <Link
-              href={session.user.role === 'security_officer' ? '/guard' : '/admin/dashboard'}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#123B70]/10 hover:bg-[#123B70]/20 border border-[#123B70]/20 text-[#123B70] text-xs font-bold transition shrink-0"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{session.user.role === 'security_officer' ? 'Guard Station →' : 'Admin Portal →'}</span>
-            </Link>
-          )}
         </header>
 
         {/* Carousel Area */}
@@ -258,11 +275,11 @@ export default function Home() {
         <footer
           className="flex-shrink-0 pt-2 pb-[max(14px,calc(env(safe-area-inset-bottom)+12px))]"
         >
-          <div className="flex flex-col sm:flex-row gap-2.5 w-full">
+          <div className="w-full">
             <Link
               href="/register"
               aria-label="Start visitor check-in process"
-              className="group flex-1 flex items-center justify-center gap-2 py-4 sm:py-4.5 min-h-[52px] rounded-2xl text-white font-semibold text-[15px] sm:text-[16px] transition-all duration-200 active:scale-[0.98] shadow-md hover:shadow-xl hover:brightness-105"
+              className="group w-full flex items-center justify-center gap-2 py-4 sm:py-4.5 min-h-[54px] rounded-2xl text-white font-semibold text-[15px] sm:text-[16px] transition-all duration-200 active:scale-[0.98] shadow-md hover:shadow-xl hover:brightness-105"
               style={{
                 backgroundColor: '#1a3a6e',
                 boxShadow: '0 4px 14px rgba(26, 58, 110, 0.28)',
@@ -271,26 +288,10 @@ export default function Home() {
               <span>Visitor Check-in</span>
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200 group-hover:translate-x-1" aria-hidden="true" />
             </Link>
-
-            <Link
-              href="/check-out"
-              aria-label="Go to visitor checkout page"
-              className="flex items-center justify-center gap-2 py-4 sm:py-4.5 min-h-[52px] px-5 rounded-2xl font-semibold text-[14px] sm:text-[15px] border-2 border-[#1a3a6e]/20 text-[#1a3a6e] bg-slate-50 hover:bg-[#1a3a6e]/5 transition-all duration-200 active:scale-[0.98]"
-            >
-              <LogOut className="w-4 h-4 text-[#1a3a6e]" aria-hidden="true" />
-              <span>Visitor Checkout</span>
-            </Link>
           </div>
 
           <p className="text-center text-[12px] sm:text-[12.5px] mt-2.5 text-[#556960]">
-            Leaving PCC? Present your code to security or{' '}
-            <Link
-              href="/check-out"
-              className="font-semibold underline decoration-[#1a3a6e]/40 hover:decoration-[#1a3a6e] transition-colors"
-              style={{ color: '#1a3a6e' }}
-            >
-              enter code to check out
-            </Link>
+            Leaving PCC? Return your visitor pass to the security guard at the gate.
           </p>
         </footer>
       </div>

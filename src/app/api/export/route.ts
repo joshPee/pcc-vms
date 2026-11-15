@@ -68,16 +68,19 @@ export async function GET(request: NextRequest) {
     // Full visitor log for the period
     const visitors = await sql`
       SELECT
-        p.registration_code            AS "Pass Code",
+        COALESCE(p.pass_number, p.registration_code) AS "Pass Code",
         p.full_name                    AS "Visitor Name",
         p.phone                        AS "Phone",
         p.organisation                 AS "Organisation",
+        p.visitor_type                 AS "Visitor Type",
         p.location                     AS "Coming From",
         p.host_name                    AS "Host / Person Visiting",
         p.host_department              AS "Department",
         p.visit_purpose                AS "Purpose of Visit",
         p.vehicle_registration         AS "Vehicle Reg",
+        p.approval_status              AS "Approval Status",
         p.check_in_status              AS "Status",
+        p.badge_number                 AS "Badge Number",
         p.check_in_date                AS "Check-In Time",
         p.check_out_date               AS "Check-Out Time",
         CASE

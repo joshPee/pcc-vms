@@ -1,31 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sql, pool } from '@/lib/db';
+import { sql } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
-function generateRegistrationCode(): string {
-  const randomNum = Math.floor(Math.random() * 9000) + 1000;
-  return `CTS-${randomNum}`;
-}
-
-async function getUniqueCode(): Promise<string> {
-  let code = generateRegistrationCode();
-  let attempts = 0;
-  const maxAttempts = 10;
-
-  while (attempts < maxAttempts) {
-    const existing = await sql`
-      SELECT registration_code FROM participants WHERE registration_code = ${code}
-    `;
-    if (existing.length === 0) {
-      return code;
-    }
-    code = generateRegistrationCode();
-    attempts++;
-  }
-
-  throw new Error('Could not generate unique registration code');
-}
+import { getUniquePassNumber } from '@/lib/pass-generator';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     if (!session?.user) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized. Guard or Admin login required.' },
         { status: 401 }
       );
     }
@@ -41,105 +18,121 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       fullName,
-      organisation,
-      position,
+      organisation = '',
+      position = 'Visitor',
       phone,
+      location = 'PCC Campus',
       hostName,
       department,
       visitPurpose,
-      vehicleRegistration,
+      visitorType = 'Official',
+      idType = null,
+      idNumber = null,
+      photoUrl = null,
+      vehicleRegistration = null,
       isRecurring = false,
-      checkInImmediately = false,
+      checkInImmediately = true,
     } = body;
 
-    // Validate input
-    if (!fullName || !organisation || !position) {
+    // Validate input (Full name, phone, host, and purpose are required; ID and photo are strictly OPTIONAL)
+    if (!fullName || !phone || !hostName || !visitPurpose) {
       return NextResponse.json(
-        { error: 'Full name, organisation, and position are required' },
+        { error: 'Full name, phone, person to visit, and purpose of visit are required.' },
         { status: 400 }
       );
     }
 
     const trimmedName = fullName.trim();
-    const trimmedOrg = organisation.trim();
-    const trimmedPos = position.trim();
-    const trimmedHost = hostName?.trim() || '';
-    const trimmedDept = department?.trim() || '';
-    const trimmedPurpose = visitPurpose?.trim() || '';
-    const trimmedVehicle = vehicleRegistration?.trim() || '';
+    const trimmedOrg = organisation?.trim() || '';
+    const trimmedPos = position?.trim() || 'Visitor';
+    const trimmedPhone = phone.trim();
+    const trimmedLocation = location?.trim() || 'PCC Campus';
+    const trimmedHost = hostName.trim();
+    const trimmedDept = department?.trim() || 'General';
+    const trimmedPurpose = visitPurpose.trim();
+    const trimmedVisitorType = visitorType?.trim() || 'Official';
+    const trimmedVehicle = vehicleRegistration?.trim().toUpperCase() || null;
+    const trimmedIdType = idType?.trim() || null;
+    const trimmedIdNumber = idNumber?.trim() || null;
+    const trimmedPhotoUrl = photoUrl?.trim() || null;
 
-    // Basic validation
-    if (trimmedName.length < 2 || trimmedOrg.length < 2 || trimmedPos.length < 2) {
+    if (trimmedName.length < 2) {
       return NextResponse.json(
-        { error: 'Each field must be at least 2 characters' },
+        { error: 'Full name must be at least 2 characters.' },
         { status: 400 }
       );
     }
-
-    if (/^\d+$/.test(trimmedName) || /^\d+$/.test(trimmedOrg) || /^\d+$/.test(trimmedPos)) {
-      return NextResponse.json(
-        { error: 'Numbers only are not allowed in any field' },
-        { status: 400 }
-      );
-    }
-
-    // Get first event or use NULL (no event required for walk-ins at PCC gate)
-    let eventId: number | null = null;
-    try {
-      const eventRes = await sql`SELECT id FROM events LIMIT 1`;
-      if (eventRes.length > 0) {
-        eventId = eventRes[0].id;
-      }
-    } catch {
-      // No events table entry — proceed without event association
-    }
-
-    // Generate unique registration code
-    const registrationCode = await getUniqueCode();
 
     const hrUserId = parseInt((session.user as any).id);
+    const guardName = session.user.name || 'Security Officer';
 
-    // Insert participant with all gate-relevant fields
+    // Check watchlist
+    try {
+      const watchlistEntries = await sql`
+        SELECT full_name, reason FROM watchlist WHERE is_active = true
+      `;
+      for (const entry of watchlistEntries) {
+        if (entry.full_name && trimmedName.toLowerCase().includes(entry.full_name.toLowerCase())) {
+          return NextResponse.json(
+            {
+              watchlistAlert: true,
+              error: `SECURITY ALERT: This visitor matches the watchlist. Reason: ${entry.reason}. Entry denied.`,
+            },
+            { status: 403 }
+          );
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    // Generate unique pass number (e.g. PCC-V8K294)
+    const passNumber = await getUniquePassNumber();
+
     let result;
     if (checkInImmediately) {
       result = await sql`
         INSERT INTO participants (
-          registration_code, full_name, organisation, position, phone,
-          host_name, host_department, visit_purpose, vehicle_registration,
-          is_recurring, event_id, registration_source,
-          participant_status, registration_status, check_in_status, check_in_date, checked_in_by
+          registration_code, pass_number, full_name, organisation, position, phone, location,
+          host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+          vehicle_registration, is_recurring, registration_source,
+          participant_status, registration_status, approval_status, approved_by, approved_at,
+          check_in_status, check_in_date, checked_in_by, created_at
         )
         VALUES (
-          ${registrationCode}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${phone || null},
-          ${trimmedHost || null}, ${trimmedDept || null}, ${trimmedPurpose || null}, ${trimmedVehicle || null},
-          ${isRecurring}, ${eventId}, 'WALK_IN',
-          'REGISTERED', 'REGISTERED', 'CHECKED_IN', CURRENT_TIMESTAMP, ${hrUserId}
+          ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+          ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+          ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+          'REGISTERED', 'REGISTERED', 'APPROVED', ${hrUserId}, CURRENT_TIMESTAMP,
+          'CHECKED_IN', CURRENT_TIMESTAMP, ${hrUserId}, CURRENT_TIMESTAMP
         )
-        RETURNING id, registration_code
+        RETURNING id, registration_code, pass_number
       `;
     } else {
       result = await sql`
         INSERT INTO participants (
-          registration_code, full_name, organisation, position, phone,
-          host_name, host_department, visit_purpose, vehicle_registration,
-          is_recurring, event_id, registration_source,
-          participant_status, registration_status, check_in_status
+          registration_code, pass_number, full_name, organisation, position, phone, location,
+          host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+          vehicle_registration, is_recurring, registration_source,
+          participant_status, registration_status, approval_status,
+          check_in_status, created_at
         )
         VALUES (
-          ${registrationCode}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${phone || null},
-          ${trimmedHost || null}, ${trimmedDept || null}, ${trimmedPurpose || null}, ${trimmedVehicle || null},
-          ${isRecurring}, ${eventId}, 'WALK_IN',
-          'REGISTERED', 'REGISTERED', 'NOT_CHECKED_IN'
+          ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+          ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+          ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+          'REGISTERED', 'REGISTERED', 'PENDING',
+          'NOT_CHECKED_IN', CURRENT_TIMESTAMP
         )
-        RETURNING id, registration_code
+        RETURNING id, registration_code, pass_number
       `;
     }
 
     const participantId = result[0].id;
+    const finalPassNumber = result[0].pass_number || result[0].registration_code;
     let checkInData = null;
 
     if (checkInImmediately) {
-      // Insert check_ins record
       try {
         const checkInResult = await sql`
           INSERT INTO check_ins (participant_id, user_id, check_in_time)
@@ -148,43 +141,36 @@ export async function POST(request: NextRequest) {
           RETURNING id, check_in_time
         `;
 
-        if (checkInResult.length > 0) {
-          // Log audit entry
-          const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
-          const guardUser = await sql`SELECT name FROM users WHERE id = ${hrUserId}`;
-          const guardDisplayName = guardUser[0]?.name || 'Security Officer';
+        const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+        await sql`
+          INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
+          VALUES (
+            ${participantId},
+            'CHECK_IN',
+            ${hrUserId},
+            ${`Guard-assisted walk-in check-in by ${guardName}. Pass: ${finalPassNumber}. Type: ${trimmedVisitorType}. Host: ${trimmedHost} (${trimmedDept}).`},
+            ${clientIp}
+          )
+        `;
 
-          try {
-            await sql`
-              INSERT INTO visitor_logs (participant_id, action, user_id, details, ip_address)
-              VALUES (
-                ${participantId},
-                'CHECK_IN',
-                ${hrUserId},
-                ${`Walk-in admin check-in by ${guardDisplayName}. Host: ${trimmedHost || 'N/A'} (${trimmedDept || 'N/A'}). Purpose: ${trimmedPurpose || 'N/A'}. Vehicle: ${trimmedVehicle || 'None'}.`},
-                ${clientIp}
-              )
-            `;
-          } catch (logErr) {
-            console.warn('Failed to write visitor_log for walk-in admin check-in:', logErr);
-          }
-
-          checkInData = {
-            check_in_time: checkInResult[0].check_in_time,
-            checked_in_by: guardDisplayName,
-          };
-        }
-      } catch (checkInError) {
-        console.error('Error during immediate walk-in check-in:', checkInError);
-        // Continue even if check-in fails — participant is registered
+        checkInData = {
+          check_in_time: checkInResult[0]?.check_in_time || new Date().toISOString(),
+          checked_in_by: guardName,
+        };
+      } catch (checkInErr) {
+        console.error('Error in walk-in immediate check-in:', checkInErr);
       }
     }
 
     return NextResponse.json({
       success: true,
-      registrationCode: result[0].registration_code,
+      passNumber: finalPassNumber,
+      registrationCode: finalPassNumber,
       participantId,
       checkInData,
+      message: checkInImmediately
+        ? 'Visitor registered and checked in successfully.'
+        : 'Visitor registration submitted in pending queue.',
     });
   } catch (error) {
     console.error('Walk-in registration error:', error);

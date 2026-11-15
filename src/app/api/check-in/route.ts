@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     try {
       // First check if participant exists and their current status
       const participant = await sql`
-        SELECT id, full_name, registration_code, check_in_status, participant_status, registration_status
+        SELECT id, full_name, registration_code, COALESCE(pass_number, registration_code) as pass_number, check_in_status, participant_status, registration_status, approval_status, rejection_reason
         FROM participants
         WHERE id = ${participantId}
       `;
@@ -44,8 +44,29 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Check approval workflow (Section 4 & Acceptance Tests 5, 6, 7)
+      if (participant[0].approval_status === 'REJECTED') {
+        return NextResponse.json(
+          { 
+            error: `Entry was REJECTED for this visitor. Reason: ${participant[0].rejection_reason || 'Rejected by security/host'}. Cannot check in.`,
+            approvalStatus: 'REJECTED'
+          },
+          { status: 403 }
+        );
+      }
+
+      if (participant[0].approval_status === 'PENDING') {
+        return NextResponse.json(
+          { 
+            error: 'Visitor approval is PENDING. A security guard or host must approve entry before check-in can proceed.',
+            approvalStatus: 'PENDING'
+          },
+          { status: 400 }
+        );
+      }
+
       // Only allow check-in for participants who have completed registration
-      if (participant[0].registration_status !== 'REGISTERED') {
+      if (participant[0].registration_status !== 'REGISTERED' && participant[0].participant_status !== 'REGISTERED') {
         return NextResponse.json(
           { error: 'Participant has not completed registration. Please complete registration first.' },
           { status: 400 }
@@ -93,7 +114,8 @@ export async function POST(request: NextRequest) {
         SET 
           check_in_status = 'CHECKED_IN',
           check_in_date = NOW(),
-          checked_in_by = ${hrUserId}
+          checked_in_by = ${hrUserId},
+          approval_status = 'APPROVED'
         WHERE id = ${participantId}
       `;
 
@@ -132,7 +154,8 @@ export async function POST(request: NextRequest) {
         check_in_time: checkInResult[0].check_in_time,
         checked_in_by: hrUser[0]?.name || 'HR Admin',
         participant_name: participant[0].full_name,
-        registration_code: participant[0].registration_code
+        registration_code: participant[0].registration_code,
+        pass_number: participant[0].pass_number
       });
 
     } catch (dbError) {

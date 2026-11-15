@@ -169,6 +169,7 @@ export async function GET(request: NextRequest) {
       SELECT 
         id,
         registration_code,
+        COALESCE(pass_number, registration_code) as pass_number,
         full_name,
         phone,
         organisation,
@@ -190,7 +191,7 @@ export async function GET(request: NextRequest) {
 
     const visitorLogs = logsResult.map((row: any) => ({
       id: row.id,
-      code: row.registration_code || `PCC-${row.id}`,
+      code: row.pass_number || row.registration_code || `PCC-${row.id}`,
       name: row.full_name,
       phone: row.phone || 'N/A',
       organisation: row.organisation || 'N/A',

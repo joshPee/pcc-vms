@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
@@ -21,7 +21,13 @@ import {
   Building,
   CheckCircle2,
   AlertTriangle,
-  Download,
+  UserPlus,
+  Check,
+  Loader2,
+  Sun,
+  Volume2,
+  VolumeX,
+  Printer,
 } from 'lucide-react';
 
 export default function GuardPortalPage() {
@@ -32,6 +38,60 @@ export default function GuardPortalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'visitors' | 'profile'>('home');
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Modern Ergonomics: Sunlight mode & Audio feedback
+  const [sunlightMode, setSunlightMode] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  const playTone = (type: 'approve' | 'reject') => {
+    if (!soundEnabled || typeof window === 'undefined') return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      if (type === 'approve') {
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } else if (type === 'reject') {
+        osc.frequency.setValueAtTime(220, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(150, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+    } catch {
+      // Audio not permitted without interaction
+    }
+  };
+
+  // Manual Walk-in Registration Modal (Section 17.B & 17.F)
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    fullName: '',
+    phone: '',
+    location: '',
+    organisation: '',
+    hostName: '',
+    department: '',
+    visitPurpose: '',
+    visitorType: 'Official',
+    vehicleRegistration: '',
+    idType: '',
+    idNumber: '',
+  });
+  const [manualLoading, setManualLoading] = useState(false);
 
   // Time & date
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -64,12 +124,14 @@ export default function GuardPortalPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Redirect to login if unauthenticated
+  // Redirect if unauthenticated or if admin (admins cannot access guard station portal)
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.replace('/admin/login');
+    } else if (status === 'authenticated' && session?.user?.role === 'admin') {
+      router.replace('/admin/dashboard');
     }
-  }, [status, router]);
+  }, [status, session, router]);
 
   // Fetch active visitors stats
   const fetchStats = async () => {
@@ -90,11 +152,13 @@ export default function GuardPortalPage() {
 
   useEffect(() => {
     fetchStats();
-    const interval = setInterval(fetchStats, 12000);
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Feature 2: Overstay alerts
+  // Overstay alerts
   const [overstayVisitors, setOverstayVisitors] = useState<any[]>([]);
   const fetchOverstay = async () => {
     try {
@@ -107,9 +171,58 @@ export default function GuardPortalPage() {
   };
   useEffect(() => {
     fetchOverstay();
-    const interval = setInterval(fetchOverstay, 120000); // every 2 min
+    const interval = setInterval(fetchOverstay, 120000);
     return () => clearInterval(interval);
   }, []);
+
+  // Guard Manual Walk-in Submit
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setManualLoading(true);
+
+    try {
+      const res = await fetch('/api/walk-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...manualForm,
+          checkInImmediately: true,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        playTone('approve');
+        setFeedbackMessage({
+          text: `Visitor registered and checked in successfully! Pass: ${json.passNumber || json.registrationCode}`,
+          type: 'success',
+        });
+        setManualModalOpen(false);
+        setManualForm({
+          fullName: '',
+          phone: '',
+          location: '',
+          organisation: '',
+          hostName: '',
+          department: '',
+          visitPurpose: '',
+          visitorType: 'Official',
+          vehicleRegistration: '',
+          idType: '',
+          idNumber: '',
+        });
+        fetchStats();
+        setTimeout(() => setFeedbackMessage(null), 4000);
+      } else {
+        alert(json.error || 'Failed to complete walk-in registration');
+      }
+    } catch {
+      alert('Network error while processing manual registration');
+    } finally {
+      setManualLoading(false);
+    }
+  };
 
   const guardName = session?.user?.name || 'Gate Officer';
   const roleDisplay =
@@ -139,6 +252,7 @@ export default function GuardPortalPage() {
       (v.full_name && v.full_name.toLowerCase().includes(q)) ||
       (v.host_name && v.host_name.toLowerCase().includes(q)) ||
       (v.registration_code && v.registration_code.toLowerCase().includes(q)) ||
+      (v.pass_number && v.pass_number.toLowerCase().includes(q)) ||
       (v.vehicle_registration && v.vehicle_registration.toLowerCase().includes(q)) ||
       (v.organisation && v.organisation.toLowerCase().includes(q))
     );
@@ -152,56 +266,113 @@ export default function GuardPortalPage() {
     );
   }
 
+  if (session?.user?.role === 'admin') {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center space-y-4 shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+            <Shield className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
+          <p className="text-sm text-slate-600">
+            The Guard Station Portal is designated for on-duty security officers at the gate. System Administrators do not have access to this portal.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/admin/dashboard"
+              className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl bg-[#123B70] text-white font-bold text-sm hover:bg-[#0C284E] transition"
+            >
+              Go to Admin Dashboard →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#EBF0F5] sm:py-6 flex justify-center selection:bg-amber-400 selection:text-slate-900 font-sans">
-      {/* Mobile container that mirrors mobile app shell */}
-      <div className="w-full max-w-md bg-[#F4F6F9] min-h-screen sm:min-h-[844px] sm:rounded-[36px] sm:shadow-2xl sm:border sm:border-slate-300/60 overflow-hidden flex flex-col justify-between relative">
+    <div className={`min-h-screen ${sunlightMode ? 'bg-slate-300 contrast-125' : 'bg-[#EBF0F5]'} sm:py-6 flex justify-center selection:bg-amber-400 selection:text-slate-900 font-sans`}>
+      <div className={`w-full max-w-md ${sunlightMode ? 'bg-white border-2 border-slate-950 sm:rounded-[36px] shadow-none' : 'bg-[#F4F6F9] sm:rounded-[36px] sm:shadow-2xl sm:border sm:border-slate-300/60'} min-h-screen sm:min-h-[844px] overflow-hidden flex flex-col justify-between relative`}>
         
         {/* Top Dark Navy Branded App Header */}
         <div className="bg-[#0B1E36] pt-6 pb-9 px-5 text-white">
           <div className="flex items-center justify-between">
-            {/* Logo + Titles */}
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-white shadow-sm flex items-center justify-center font-black text-[#0B1E36] text-sm tracking-tight shrink-0 p-1">
-                <img src="/pcc.png" alt="PCC" className="w-full h-full object-contain" onError={(e) => {
-                  // Fallback to text if image not found
-                  (e.target as HTMLElement).style.display = 'none';
-                }} />
-                <span className="pcc-text-fallback hidden font-black text-xs text-[#0B1E36]">PCC</span>
+                <img src="/pcc.png" alt="PCC" className="w-full h-full object-contain" />
               </div>
               <div>
                 <h1 className="text-base font-extrabold text-white leading-tight tracking-tight">
                   Pentecost Convention Centre
                 </h1>
                 <p className="text-xs text-blue-200/80 font-medium">
-                  Visitor Management
+                  Guard Station Terminal
                 </p>
               </div>
             </div>
 
-            {/* Profile Avatar Button */}
-            <button
-              onClick={() => setProfileOpen(true)}
-              className="w-10 h-10 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 active:scale-95 transition flex items-center justify-center text-white shrink-0"
-              aria-label="Guard Profile"
-            >
-              <User className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSoundEnabled(!soundEnabled)}
+                className={`w-9 h-9 rounded-full border transition flex items-center justify-center text-white ${
+                  soundEnabled ? 'bg-white/15 border-white/20' : 'bg-rose-500/30 border-rose-400 text-rose-200'
+                }`}
+                title={soundEnabled ? 'Mute chimes' : 'Enable chimes'}
+              >
+                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSunlightMode(!sunlightMode)}
+                className={`w-9 h-9 rounded-full border transition flex items-center justify-center ${
+                  sunlightMode ? 'bg-amber-400 text-slate-950 border-amber-300 font-bold' : 'bg-white/10 border-white/20 text-white'
+                }`}
+                title={sunlightMode ? 'Normal mode' : 'Sunlight / Outdoor high-contrast mode'}
+              >
+                <Sun className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="w-9 h-9 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 active:scale-95 transition flex items-center justify-center text-white shrink-0 ml-1"
+                aria-label="Guard Profile"
+              >
+                <User className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Content Body */}
         <div className="flex-1 px-4 -mt-5 space-y-3.5 pb-24 z-10 overflow-y-auto">
+          {feedbackMessage && (
+            <div
+              className={`p-3 rounded-2xl text-xs font-semibold flex items-center gap-2 animate-in fade-in ${
+                feedbackMessage.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                  : 'bg-rose-50 text-rose-800 border border-rose-300'
+              }`}
+            >
+              {feedbackMessage.type === 'success' ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span>{feedbackMessage.text}</span>
+            </div>
+          )}
+
           {/* Card 1: Guard Duty Card */}
           <div className="bg-white rounded-3xl p-5 shadow-[0_4px_20px_-2px_rgba(11,30,54,0.08)] border border-slate-100">
-            {/* Guard Info Row */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-13 h-13 rounded-full bg-[#0E5466] text-white flex items-center justify-center text-lg font-black shrink-0 shadow-inner">
                   {initials}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-slate-400">Welcome back</p>
+                  <p className="text-[11px] font-semibold text-slate-400">Welcome on post</p>
                   <h2 className="text-lg font-extrabold text-slate-900 leading-snug truncate">
                     {guardName}
                   </h2>
@@ -209,7 +380,6 @@ export default function GuardPortalPage() {
                 </div>
               </div>
 
-              {/* Status Badge */}
               <div className="shrink-0">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -218,9 +388,7 @@ export default function GuardPortalPage() {
               </div>
             </div>
 
-            {/* Shift & Duty Point Pills */}
             <div className="grid grid-cols-2 gap-2.5 mt-4 pt-4 border-t border-slate-100">
-              {/* Shift Pill */}
               <div className="bg-[#F8FAFC] rounded-2xl p-3 border border-slate-100 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-slate-200/60 flex items-center justify-center text-slate-700 shrink-0">
                   <Clock className="w-4 h-4" />
@@ -238,7 +406,6 @@ export default function GuardPortalPage() {
                 </div>
               </div>
 
-              {/* Duty Point Pill */}
               <div className="bg-[#F8FAFC] rounded-2xl p-3 border border-slate-100 flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0B1E36] flex items-center justify-center shrink-0">
                   <MapPin className="w-4 h-4 text-[#0B1E36]" />
@@ -251,14 +418,14 @@ export default function GuardPortalPage() {
                     Main Gate
                   </span>
                   <span className="text-[10px] text-emerald-600 font-semibold block">
-                    Active Station
+                    Terminal 1
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Live Visitors on Premises */}
+          {/* Live Visitors on Premises Card */}
           <button
             onClick={() => setActiveTab('visitors')}
             className="w-full text-left bg-white rounded-3xl p-4 sm:p-5 shadow-[0_2px_12px_-2px_rgba(11,30,54,0.06)] border border-slate-100 flex items-center justify-between hover:border-slate-200 transition active:scale-[0.99] group"
@@ -288,22 +455,17 @@ export default function GuardPortalPage() {
             </div>
           </button>
 
-          {/* Card 3: Two Big Primary Action Cards (Side-by-side) */}
+          {/* Two Primary Action Cards (Side-by-side) */}
           <div className="grid grid-cols-2 gap-3.5">
-            {/* Action 1: Check In */}
+            {/* Check In Action */}
             <Link
               href="/register"
-              className="bg-[#007A4D] hover:bg-[#006C44] active:scale-[0.98] transition-all duration-150 rounded-3xl p-4 sm:p-5 text-white flex flex-col justify-between aspect-[3/4] min-h-[200px] shadow-lg shadow-[#007A4D]/25 relative overflow-hidden group"
+              className="bg-[#007A4D] hover:bg-[#006C44] active:scale-[0.98] transition-all rounded-3xl p-4 sm:p-5 text-white flex flex-col justify-between aspect-[3/4] min-h-[190px] shadow-lg shadow-[#007A4D]/25 relative overflow-hidden group"
             >
-              {/* Subtle decorative glow */}
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none" />
-
-              {/* Top-left entrance arrow icon box */}
               <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white group-hover:scale-105 transition">
                 <LogIn className="w-6 h-6" />
               </div>
-
-              {/* Bottom text */}
               <div>
                 <h3 className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight">
                   Check In
@@ -314,20 +476,15 @@ export default function GuardPortalPage() {
               </div>
             </Link>
 
-            {/* Action 2: Check Out */}
+            {/* Check Out Action */}
             <Link
               href="/check-out"
-              className="bg-[#B84A0A] hover:bg-[#A33F06] active:scale-[0.98] transition-all duration-150 rounded-3xl p-4 sm:p-5 text-white flex flex-col justify-between aspect-[3/4] min-h-[200px] shadow-lg shadow-[#B84A0A]/25 relative overflow-hidden group"
+              className="bg-[#B84A0A] hover:bg-[#A33F06] active:scale-[0.98] transition-all rounded-3xl p-4 sm:p-5 text-white flex flex-col justify-between aspect-[3/4] min-h-[190px] shadow-lg shadow-[#B84A0A]/25 relative overflow-hidden group"
             >
-              {/* Subtle decorative glow */}
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-white/10 rounded-full blur-xl pointer-events-none" />
-
-              {/* Top-left exit arrow icon box */}
               <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white group-hover:scale-105 transition">
                 <LogOut className="w-6 h-6" />
               </div>
-
-              {/* Bottom text */}
               <div>
                 <h3 className="text-xl sm:text-2xl font-black text-white leading-tight tracking-tight">
                   Check Out
@@ -339,7 +496,33 @@ export default function GuardPortalPage() {
             </Link>
           </div>
 
-          {/* Feature 2: Overstay Alert Card */}
+          {/* Quick Guard Actions Row */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Guard-assisted Walk-in Modal Button */}
+            <button
+              type="button"
+              onClick={() => setManualModalOpen(true)}
+              className="flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-bold text-[#123B70] bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition active:scale-[0.98]"
+            >
+              <UserPlus className="w-4 h-4 text-[#123B70]" />
+              <span>Manual Walk-in</span>
+            </button>
+
+            {/* On-Site Visitors Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab('visitors');
+                fetchStats();
+              }}
+              className="flex items-center justify-center gap-2 py-3 px-3 rounded-2xl text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition active:scale-[0.98]"
+            >
+              <Users className="w-4 h-4 text-emerald-600" />
+              <span>On-Site ({activeCount ?? 0})</span>
+            </button>
+          </div>
+
+          {/* Overstay Alerts Card */}
           {overstayVisitors.length > 0 && (
             <div className="bg-amber-50 border-2 border-amber-400 rounded-3xl p-4 shadow-sm">
               <div className="flex items-center gap-2.5 mb-2.5">
@@ -348,7 +531,7 @@ export default function GuardPortalPage() {
                 </div>
                 <div>
                   <p className="text-xs font-black text-amber-900 uppercase tracking-wider">Overstay Alert</p>
-                  <p className="text-[10px] text-amber-700">{overstayVisitors.length} visitor{overstayVisitors.length !== 1 ? 's' : ''} may need follow-up</p>
+                  <p className="text-[10px] text-amber-700">{overstayVisitors.length} visitor{overstayVisitors.length !== 1 ? 's' : ''} on site 4+ hours</p>
                 </div>
               </div>
               <div className="space-y-1.5">
@@ -358,27 +541,23 @@ export default function GuardPortalPage() {
                       <p className="text-xs font-bold text-slate-900 truncate">{v.full_name}</p>
                       <p className="text-[10px] text-slate-500">{Math.round(v.minutes_on_site)}m on site · {v.host_name || 'N/A'}</p>
                     </div>
-                    <a
+                    <Link
                       href={`/check-out?code=${encodeURIComponent(v.registration_code || '')}`}
                       className="ml-2 shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200 transition"
                     >
                       Check Out
-                    </a>
+                    </Link>
                   </div>
                 ))}
-                {overstayVisitors.length > 3 && (
-                  <p className="text-[10px] text-amber-700 text-center font-semibold pt-0.5">+{overstayVisitors.length - 3} more — see On-Site directory</p>
-                )}
               </div>
             </div>
           )}
 
-          {/* Supervisor / Admin quick switch (if applicable) */}
           {isAdminOrSupervisor && (
             <div className="pt-1">
               <Link
                 href="/admin/dashboard"
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs transition"
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 shadow-2xs transition"
               >
                 <LayoutDashboard className="w-4 h-4 text-[#0B1E36]" />
                 <span>Admin Management Dashboard</span>
@@ -387,10 +566,8 @@ export default function GuardPortalPage() {
           )}
         </div>
 
-
         {/* Bottom Navigation Bar */}
-        <nav className="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-6 py-2.5 z-20 flex items-center justify-around">
-          {/* Home Tab */}
+        <nav className="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-6 py-2.5 z-20 flex items-center justify-around">
           <button
             onClick={() => {
               setActiveTab('home');
@@ -411,11 +588,12 @@ export default function GuardPortalPage() {
             <span className="text-[11px]">Home</span>
           </button>
 
-          {/* Visitors Tab */}
+          {/* On-Premises Visitors Tab */}
           <button
             onClick={() => {
               setActiveTab('visitors');
               setProfileOpen(false);
+              fetchStats();
             }}
             className={`flex flex-col items-center gap-1 transition ${
               activeTab === 'visitors' && !profileOpen
@@ -430,8 +608,11 @@ export default function GuardPortalPage() {
                   {activeCount}
                 </span>
               )}
+              {activeTab === 'visitors' && !profileOpen && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#0B1E36]" />
+              )}
             </div>
-            <span className="text-[11px]">Visitors</span>
+            <span className="text-[11px]">On-Site</span>
           </button>
 
           {/* Profile Tab */}
@@ -450,10 +631,158 @@ export default function GuardPortalPage() {
           </button>
         </nav>
 
+        {/* Manual Walk-In Registration Modal (Guard-Assisted) */}
+        {manualModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-3xl p-5 max-w-md w-full max-h-[90vh] overflow-y-auto space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between border-b pb-3">
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900">Manual Visitor Registration</h3>
+                  <p className="text-xs text-slate-500">Guard-assisted registration for walk-in arrivals</p>
+                </div>
+                <button
+                  onClick={() => setManualModalOpen(false)}
+                  className="p-1 rounded-full text-slate-400 hover:bg-slate-100"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleManualSubmit} className="space-y-3 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={manualForm.fullName}
+                    onChange={(e) => setManualForm({ ...manualForm, fullName: e.target.value })}
+                    placeholder="Visitor's complete name"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      value={manualForm.phone}
+                      onChange={(e) => setManualForm({ ...manualForm, phone: e.target.value })}
+                      placeholder="024..."
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Category *</label>
+                    <select
+                      value={manualForm.visitorType}
+                      onChange={(e) => setManualForm({ ...manualForm, visitorType: e.target.value })}
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-medium"
+                    >
+                      <option value="Official">Official</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Contractor">Contractor</option>
+                      <option value="Guest">Guest</option>
+                      <option value="Delivery">Delivery</option>
+                      <option value="VIP">VIP</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Person / Host to Visit *</label>
+                  <input
+                    type="text"
+                    required
+                    value={manualForm.hostName}
+                    onChange={(e) => setManualForm({ ...manualForm, hostName: e.target.value })}
+                    placeholder="Staff name or office"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Department</label>
+                    <input
+                      type="text"
+                      value={manualForm.department}
+                      onChange={(e) => setManualForm({ ...manualForm, department: e.target.value })}
+                      placeholder="e.g. Administration"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Vehicle Plate (if driving)</label>
+                    <input
+                      type="text"
+                      value={manualForm.vehicleRegistration}
+                      onChange={(e) => setManualForm({ ...manualForm, vehicleRegistration: e.target.value.toUpperCase() })}
+                      placeholder="e.g. GW 4821-22"
+                      className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Purpose of Visit *</label>
+                  <input
+                    type="text"
+                    required
+                    value={manualForm.visitPurpose}
+                    onChange={(e) => setManualForm({ ...manualForm, visitPurpose: e.target.value })}
+                    placeholder="Reason for visiting"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                  <div>
+                    <label className="font-bold text-slate-500 block mb-1">ID Type (Optional)</label>
+                    <input
+                      type="text"
+                      value={manualForm.idType}
+                      onChange={(e) => setManualForm({ ...manualForm, idType: e.target.value })}
+                      placeholder="e.g. Ghana Card"
+                      className="w-full p-2 rounded-xl border border-slate-200 bg-slate-50 text-[11px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-slate-500 block mb-1">ID Number (Optional)</label>
+                    <input
+                      type="text"
+                      value={manualForm.idNumber}
+                      onChange={(e) => setManualForm({ ...manualForm, idNumber: e.target.value })}
+                      placeholder="Optional number"
+                      className="w-full p-2 rounded-xl border border-slate-200 bg-slate-50 text-[11px]"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={manualLoading}
+                    className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2"
+                  >
+                    {manualLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    <span>Authorise & Check In Immediately</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Visitors Overlay Sheet */}
         {activeTab === 'visitors' && !profileOpen && (
           <div className="absolute inset-0 bg-[#F4F6F9] z-30 flex flex-col animate-in fade-in duration-200">
-            {/* Header */}
             <div className="bg-[#0B1E36] text-white pt-6 pb-4 px-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -462,20 +791,30 @@ export default function GuardPortalPage() {
                     {activeVisitors.length} currently checked in
                   </p>
                 </div>
-                <button
-                  onClick={() => setActiveTab('home')}
-                  className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition active:scale-95"
+                    title="Print On-Site List"
+                  >
+                    <Printer className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('home')}
+                    className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition active:scale-95"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
-              {/* Search Bar */}
               <div className="mt-3.5 relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search by name, code, vehicle, host..."
+                  placeholder="Search by name, pass #, vehicle, host..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-white text-slate-900 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-slate-400"
@@ -483,7 +822,6 @@ export default function GuardPortalPage() {
               </div>
             </div>
 
-            {/* Visitors List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2.5 pb-24">
               {filteredVisitors.length === 0 ? (
                 <div className="text-center py-12 text-slate-400">
@@ -516,12 +854,12 @@ export default function GuardPortalPage() {
                         {visitor.organisation ? ` • ${visitor.organisation}` : ''}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-1">
-                        In: {visitor.check_in_date ? new Date(visitor.check_in_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today'}
+                        Pass: <span className="font-mono font-bold text-[#123B70]">{visitor.pass_number || visitor.registration_code}</span> · In: {visitor.check_in_date ? new Date(visitor.check_in_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today'}
                       </p>
                     </div>
 
                     <Link
-                      href={`/check-out?code=${encodeURIComponent(visitor.registration_code || '')}`}
+                      href={`/check-out?code=${encodeURIComponent(visitor.pass_number || visitor.registration_code || '')}`}
                       className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200 flex items-center gap-1 transition"
                     >
                       <LogOut className="w-3.5 h-3.5" />
@@ -548,7 +886,6 @@ export default function GuardPortalPage() {
                 </button>
               </div>
 
-              {/* Guard Avatar & Basic info */}
               <div className="flex items-center gap-3.5 pt-1">
                 <div className="w-14 h-14 rounded-full bg-[#0E5466] text-white flex items-center justify-center text-xl font-black shrink-0">
                   {initials}
@@ -563,7 +900,6 @@ export default function GuardPortalPage() {
                 </div>
               </div>
 
-              {/* Duty Details */}
               <div className="bg-slate-50 rounded-2xl p-4 space-y-2 border border-slate-100 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Current Shift</span>
@@ -583,7 +919,6 @@ export default function GuardPortalPage() {
                 </div>
               </div>
 
-              {/* Admin Dashboard button */}
               {isAdminOrSupervisor && (
                 <Link
                   href="/admin/dashboard"
@@ -594,7 +929,6 @@ export default function GuardPortalPage() {
                 </Link>
               )}
 
-              {/* Sign Out Button */}
               <button
                 onClick={() => signOut({ callbackUrl: '/admin/login' })}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition active:scale-[0.99]"

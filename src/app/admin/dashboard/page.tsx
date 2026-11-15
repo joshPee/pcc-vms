@@ -18,18 +18,23 @@ import {
   Sparkles,
   ChevronRight,
   ShieldAlert,
+  AlertOctagon,
+  UserCheck,
+  XCircle,
 } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 async function getDashboardStats() {
   if (!sql) {
-    console.warn('Database connection not available');
     return {
+      totalVisitorsToday: 0,
       visitorsInside: 0,
       todayCheckIns: 0,
       todayCheckOuts: 0,
       expectedVisitors: 0,
+      pendingApprovals: 0,
+      deniedEntries: 0,
       recentActivity: [],
       peakHours: [],
     };
@@ -38,35 +43,38 @@ async function getDashboardStats() {
   try {
     const today = new Date().toISOString().split('T')[0];
 
-    const visitorsInsideResult = await sql`
-      SELECT COUNT(*) as count
-      FROM participants
-      WHERE check_in_status = 'CHECKED_IN'
-    `;
-    const visitorsInside = parseInt(visitorsInsideResult[0]?.count || '0');
+    const [
+      totalTodayRes,
+      insideRes,
+      checkInsRes,
+      checkOutsRes,
+      expectedRes,
+      pendingRes,
+      deniedRes,
+    ] = await Promise.all([
+      // Total Visitors Registered Today
+      sql`SELECT COUNT(*) as count FROM participants WHERE DATE(created_at) = ${today}`,
+      // Currently Inside (Checked in but not checked out)
+      sql`SELECT COUNT(*) as count FROM participants WHERE check_in_status = 'CHECKED_IN'`,
+      // Check-ins today
+      sql`SELECT COUNT(*) as count FROM participants WHERE DATE(check_in_date) = ${today}`,
+      // Checked out today
+      sql`SELECT COUNT(*) as count FROM participants WHERE check_in_status = 'CHECKED_OUT' AND DATE(check_out_date) = ${today}`,
+      // Expected visitors
+      sql`SELECT COUNT(*) as count FROM participants WHERE participant_status = 'EXPECTED' OR (registration_status = 'REGISTERED' AND check_in_status = 'NOT_CHECKED_IN' AND (approval_status IS NULL OR approval_status = 'APPROVED'))`,
+      // Pending Approvals
+      sql`SELECT COUNT(*) as count FROM participants WHERE approval_status = 'PENDING'`,
+      // Denied Entries
+      sql`SELECT COUNT(*) as count FROM participants WHERE approval_status = 'REJECTED' AND DATE(COALESCE(rejected_at, created_at)) = ${today}`,
+    ]);
 
-    const todayCheckInsResult = await sql`
-      SELECT COUNT(*) as count
-      FROM participants
-      WHERE DATE(check_in_date) = ${today}
-    `;
-    const todayCheckIns = parseInt(todayCheckInsResult[0]?.count || '0');
-
-    const todayCheckOutsResult = await sql`
-      SELECT COUNT(*) as count
-      FROM participants
-      WHERE check_in_status = 'CHECKED_OUT'
-      AND DATE(check_out_date) = ${today}
-    `;
-    const todayCheckOuts = parseInt(todayCheckOutsResult[0]?.count || '0');
-
-    const expectedVisitorsResult = await sql`
-      SELECT COUNT(*) as count
-      FROM participants
-      WHERE participant_status = 'REGISTERED'
-      AND check_in_status = 'NOT_CHECKED_IN'
-    `;
-    const expectedVisitors = parseInt(expectedVisitorsResult[0]?.count || '0');
+    const totalVisitorsToday = parseInt(totalTodayRes[0]?.count || '0');
+    const visitorsInside = parseInt(insideRes[0]?.count || '0');
+    const todayCheckIns = parseInt(checkInsRes[0]?.count || '0');
+    const todayCheckOuts = parseInt(checkOutsRes[0]?.count || '0');
+    const expectedVisitors = parseInt(expectedRes[0]?.count || '0');
+    const pendingApprovals = parseInt(pendingRes[0]?.count || '0');
+    const deniedEntries = parseInt(deniedRes[0]?.count || '0');
 
     const recentActivityResult = await sql`
       SELECT
@@ -74,13 +82,14 @@ async function getDashboardStats() {
         p.full_name,
         p.organisation,
         p.check_in_status,
+        p.approval_status,
         p.check_in_date,
         p.check_out_date,
+        p.created_at,
         p.host_name,
-        p.registration_code
+        COALESCE(p.pass_number, p.registration_code) as registration_code
       FROM participants p
-      WHERE p.check_in_status IN ('CHECKED_IN', 'CHECKED_OUT')
-      ORDER BY COALESCE(p.check_out_date, p.check_in_date) DESC
+      ORDER BY COALESCE(p.check_out_date, p.check_in_date, p.created_at) DESC
       LIMIT 8
     `;
     const recentActivity = recentActivityResult.map((row: any) => ({
@@ -88,9 +97,10 @@ async function getDashboardStats() {
       fullName: row.full_name,
       organisation: row.organisation,
       status: row.check_in_status,
+      approvalStatus: row.approval_status,
       hostName: row.host_name,
       code: row.registration_code,
-      date: row.check_out_date || row.check_in_date,
+      date: row.check_out_date || row.check_in_date || row.created_at,
     }));
 
     const peakHoursResult = await sql`
@@ -118,20 +128,26 @@ async function getDashboardStats() {
     }));
 
     return {
+      totalVisitorsToday,
       visitorsInside,
       todayCheckIns,
       todayCheckOuts,
       expectedVisitors,
+      pendingApprovals,
+      deniedEntries,
       recentActivity,
       peakHours,
     };
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
     return {
+      totalVisitorsToday: 0,
       visitorsInside: 0,
       todayCheckIns: 0,
       todayCheckOuts: 0,
       expectedVisitors: 0,
+      pendingApprovals: 0,
+      deniedEntries: 0,
       recentActivity: [],
       peakHours: [],
     };
@@ -156,7 +172,7 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Modern Dashboard Header */}
+      {/* Operations Command Header */}
       <div className="relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-blue-50/20 to-amber-50/30 p-5 sm:p-6 rounded-3xl border border-slate-200 shadow-xs">
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
@@ -169,7 +185,7 @@ export default async function Dashboard() {
             Security & Visitor Overview
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Pentecost Convention Centre • Live gate activity & premises analytics
+            Pentecost Convention Centre • Live gate activity & premises control
           </p>
         </div>
 
@@ -180,96 +196,152 @@ export default async function Dashboard() {
           </div>
 
           <Link
-            href="/check-out"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#123B70] hover:bg-[#0C284E] active:bg-[#081e3d] text-white font-bold shadow-md shadow-[#123B70]/20 transition hover:-translate-y-0.5"
+            href="/admin/emergency"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold shadow-md shadow-rose-600/20 transition hover:-translate-y-0.5"
           >
-            <ShieldCheck className="w-4 h-4 text-[#E5A823]" />
-            <span>Gate Terminal View →</span>
+            <AlertOctagon className="w-4 h-4 text-white" />
+            <span>Emergency Evacuation Roster</span>
+          </Link>
+
+          <Link
+            href="/admin/visitors"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#123B70] hover:bg-[#0C284E] text-white font-bold shadow-md shadow-[#123B70]/20 transition hover:-translate-y-0.5"
+          >
+            <Users className="w-4 h-4 text-[#E5A823]" />
+            <span>Visitors Directory →</span>
           </Link>
         </div>
       </div>
 
-      {/* Enhanced Summary Cards Section */}
+      {/* 6 Required Statistics Indicators (Section 6) */}
       <div>
         <div className="flex items-center justify-between mb-3 px-1">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[#C89B3C]" />
-            <span>Key Real-Time Indicators</span>
+            <span>Standard Security Indicators (VMS Specification)</span>
           </h2>
           <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            <span>Live Sync</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Real-Time Sync</span>
           </span>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 lg:gap-5">
-          <StatCard
-            label="Total Visitors"
-            value={stats.visitorsInside}
-            iconName="package"
-            variant="blue"
-            href="/check-out"
-            trend={stats.visitorsInside > 0 ? `${stats.visitorsInside} On Site` : 'All Cleared'}
-            footerAvatars={['I', 'S', 'A']}
-            footerText={`${stats.visitorsInside} on premises`}
-            chartData={[30, 45, 25, 60, 50, 75, 40, 65, 35, 55, 40, 70, 25, 45, 60, 40]}
-          />
-          <StatCard
-            label="Currently Checked In"
-            value={stats.todayCheckIns}
-            live={true}
-            iconName="arrow"
-            variant="indigo"
-            href="/admin/check-in"
-            trend="On Schedule"
-            footerText={`${stats.todayCheckIns} gate arrivals`}
-            chartData={[20, 35, 55, 40, 70, 60, 50, 40, 65, 75, 60, 50, 20, 30, 60, 55]}
-          />
-          <StatCard
-            label="Departures Cleared"
-            value={stats.todayCheckOuts}
-            iconName="users"
-            variant="teal"
-            href="/admin/check-out"
-            trend={stats.todayCheckOuts > 0 ? `${stats.todayCheckOuts} Cleared` : '0% Processed'}
-            footerAvatars={['G', 'E', 'Q']}
-            footerText={`${stats.todayCheckOuts} exited today`}
-            chartData={[25, 40, 60, 75, 65, 50, 45, 30, 55, 60, 45, 35, 20, 40, 60, 50]}
-          />
-          <StatCard
-            label="Today's Activity"
-            value={stats.expectedVisitors}
-            live={true}
-            iconName="history"
-            variant="purple"
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {/* 1. Total Visitors Today */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+            <span className="text-[10.5px] uppercase font-bold text-slate-400 block tracking-wider">
+              Total Today
+            </span>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+              {stats.totalVisitorsToday}
+            </p>
+            <span className="text-[10px] text-slate-500 block mt-1">
+              Registered today
+            </span>
+          </div>
+
+          {/* 2. Currently Inside */}
+          <Link
+            href="/admin/emergency"
+            className="bg-white rounded-2xl p-4 border-2 border-emerald-400 shadow-sm hover:border-emerald-500 transition group block"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10.5px] uppercase font-bold text-emerald-700 tracking-wider">
+                Currently Inside
+              </span>
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <p className="text-2xl sm:text-3xl font-black text-emerald-800 mt-1">
+              {stats.visitorsInside}
+            </p>
+            <span className="text-[10px] text-emerald-600 block mt-1 font-semibold group-hover:underline">
+              On premises · View →
+            </span>
+          </Link>
+
+          {/* 3. Expected Visitors */}
+          <Link
             href="/admin/expected-attendees"
-            trend="Live Today"
-            footerText={`${stats.todayCheckIns} arrived · ${stats.todayCheckOuts} cleared`}
-            chartData={[20, 45, 25, 25, 50, 65, 40, 55, 45, 60, 40, 65, 35, 70, 50, 40]}
-          />
+            className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs hover:border-blue-400 transition group block"
+          >
+            <span className="text-[10.5px] uppercase font-bold text-slate-400 tracking-wider">
+              Expected
+            </span>
+            <p className="text-2xl sm:text-3xl font-black text-[#123B70] mt-1">
+              {stats.expectedVisitors}
+            </p>
+            <span className="text-[10px] text-blue-600 block mt-1 font-medium group-hover:underline">
+              Scheduled arrivals
+            </span>
+          </Link>
+
+          {/* 4. Check-Ins Today */}
+          <Link
+            href="/admin/visitors"
+            className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs hover:border-[#123B70]/40 transition group block"
+          >
+            <span className="text-[10.5px] uppercase font-bold text-slate-400 tracking-wider">
+              Check-Ins
+            </span>
+            <p className="text-2xl sm:text-3xl font-black text-[#123B70] mt-1">
+              {stats.todayCheckIns}
+            </p>
+            <span className="text-[10px] text-blue-600 block mt-1 font-semibold group-hover:underline">
+              Arrivals processed
+            </span>
+          </Link>
+
+          {/* 5. Checked Out */}
+          <Link
+            href="/check-out"
+            className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs hover:border-slate-300 transition group block"
+          >
+            <span className="text-[10.5px] uppercase font-bold text-slate-400 tracking-wider">
+              Checked Out
+            </span>
+            <p className="text-2xl sm:text-3xl font-black text-slate-800 mt-1">
+              {stats.todayCheckOuts}
+            </p>
+            <span className="text-[10px] text-slate-500 block mt-1">
+              Departures cleared
+            </span>
+          </Link>
+
+          {/* 6. Denied Entries */}
+          <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs">
+            <span className="text-[10.5px] uppercase font-bold text-rose-500 tracking-wider">
+              Denied Entries
+            </span>
+            <p className="text-2xl sm:text-3xl font-black text-rose-700 mt-1">
+              {stats.deniedEntries}
+            </p>
+            <span className="text-[10px] text-rose-500 block mt-1">
+              Rejected visits
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Two Column Grid: Recent Activity & Peak Traffic */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Recent Activity (7 cols) */}
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+        <div className="lg:col-span-7 bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-[#123B70] dark:text-blue-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-[#123B70] flex items-center justify-center">
                 <Clock className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900">
                   Live Gate Activity
                 </h3>
-                <p className="text-[11px] text-slate-400">Recent check-in and check-out events</p>
+                <p className="text-[11px] text-slate-400">Recent registrations, check-in, and departure events</p>
               </div>
             </div>
 
             <Link
               href="/admin/visitor-history"
-              className="text-xs font-semibold text-[#123B70] dark:text-blue-400 hover:underline flex items-center gap-0.5"
+              className="text-xs font-semibold text-[#123B70] hover:underline flex items-center gap-0.5"
             >
               Full Log <ChevronRight className="w-3.5 h-3.5" />
             </Link>
@@ -280,14 +352,15 @@ export default async function Dashboard() {
               No visitor activity recorded yet today.
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <div className="divide-y divide-slate-100">
               {stats.recentActivity.map((activity: any, index: number) => {
                 const isCheckedIn = activity.status === 'CHECKED_IN';
+                const isPending = activity.approvalStatus === 'PENDING';
+                const isRejected = activity.approvalStatus === 'REJECTED';
                 const timeStr = activity.date
                   ? new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   : '--:--';
 
-                // Initial avatar
                 const initials = (activity.fullName || 'Guest')
                   .split(' ')
                   .map((n: string) => n[0])
@@ -298,14 +371,18 @@ export default async function Dashboard() {
                 return (
                   <div
                     key={index}
-                    className="py-3 sm:py-3.5 flex items-center justify-between gap-3 group hover:bg-slate-50/60 dark:hover:bg-slate-850/50 rounded-2xl px-2 transition"
+                    className="py-3 sm:py-3.5 flex items-center justify-between gap-3 group hover:bg-slate-50/60 rounded-2xl px-2 transition"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div
                         className={`w-9 h-9 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0 ${
                           isCheckedIn
-                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                            : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                            ? 'bg-emerald-500/10 text-emerald-700'
+                            : isPending
+                            ? 'bg-amber-500/10 text-amber-700'
+                            : isRejected
+                            ? 'bg-rose-500/10 text-rose-700'
+                            : 'bg-slate-500/10 text-slate-700'
                         }`}
                       >
                         {initials}
@@ -313,18 +390,18 @@ export default async function Dashboard() {
 
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                             {activity.fullName}
                           </p>
                           {activity.code && (
-                            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                            <span className="font-mono text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-semibold">
                               {activity.code}
                             </span>
                           )}
                         </div>
                         <p className="text-[11px] text-slate-400 truncate mt-0.5">
                           {activity.organisation ? `${activity.organisation} • ` : ''}
-                          {activity.hostName ? `Host: ${activity.hostName}` : 'General Entry'}
+                          {activity.hostName ? `Host: ${activity.hostName}` : 'General Visit'}
                         </p>
                       </div>
                     </div>
@@ -333,11 +410,21 @@ export default async function Dashboard() {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-semibold border ${
                           isCheckedIn
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800'
-                            : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : isPending
+                            ? 'bg-amber-50 text-amber-800 border-amber-300'
+                            : isRejected
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-slate-50 text-slate-700 border-slate-200'
                         }`}
                       >
-                        {isCheckedIn ? 'Checked In' : 'Checked Out'}
+                        {isCheckedIn
+                          ? 'Inside'
+                          : isPending
+                          ? 'Registered'
+                          : isRejected
+                          ? 'Rejected'
+                          : 'Checked Out'}
                       </span>
                       <p className="text-[10.5px] font-mono text-slate-400 mt-1">{timeStr}</p>
                     </div>
@@ -351,14 +438,14 @@ export default async function Dashboard() {
         {/* Peak Hours & Quick Operational Links (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Peak Hours Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900">
                     Peak Gate Traffic
                   </h3>
                   <p className="text-[11px] text-slate-400">Busiest arrival hours (Last 7 days)</p>
@@ -373,7 +460,7 @@ export default async function Dashboard() {
                 {stats.peakHours.map((peak: any, idx: number) => (
                   <div key={idx} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      <span className="font-semibold text-slate-700">
                         {peak.timeLabel}
                       </span>
                       <span className="font-mono font-bold text-[#123B70]">
@@ -381,7 +468,6 @@ export default async function Dashboard() {
                       </span>
                     </div>
 
-                    {/* Visual Progress Bar */}
                     <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-[#123B70] to-[#E5A823]"
@@ -395,27 +481,42 @@ export default async function Dashboard() {
           </div>
 
           {/* Quick Direct Actions Card */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
+          <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Frequent Actions
+                Security Shortcuts
               </h3>
               <span className="w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <Link
-                href="/admin/check-in"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
+                href="/admin/visitors"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-[#123B70]/5 hover:bg-[#123B70]/10 border border-[#123B70]/15 transition group"
               >
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-[#123B70] flex items-center justify-center shrink-0">
-                  <LogIn className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-xl bg-[#123B70]/15 text-[#123B70] flex items-center justify-center shrink-0">
+                  <UserCheck className="w-4 h-4" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
-                    Check In Visitor
+                    Visitors Directory
                   </p>
-                  <p className="text-[10.5px] text-slate-400 truncate">Process arrival</p>
+                  <p className="text-[10.5px] text-slate-500 truncate">Search & manage visitors</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/admin/emergency"
+                className="flex items-center gap-3 p-3 rounded-2xl bg-rose-50/50 hover:bg-rose-100/60 border border-rose-200/80 transition group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-800 flex items-center justify-center shrink-0">
+                  <AlertOctagon className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-rose-900 group-hover:text-rose-950 transition">
+                    Emergency Evacuation
+                  </p>
+                  <p className="text-[10.5px] text-rose-700 truncate">Print headcount</p>
                 </div>
               </Link>
 
@@ -430,22 +531,7 @@ export default async function Dashboard() {
                   <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
                     Gate Checkout
                   </p>
-                  <p className="text-[10.5px] text-slate-400 truncate">Enter code / scan</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/admin/visitors"
-                className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-[#123B70]/10 border border-slate-200/60 transition group hover:-translate-y-0.5"
-              >
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center shrink-0">
-                  <Users className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
-                    Visitors List
-                  </p>
-                  <p className="text-[10.5px] text-slate-400 truncate">Search directory</p>
+                  <p className="text-[10.5px] text-slate-400 truncate">Scan / enter code</p>
                 </div>
               </Link>
 
@@ -460,7 +546,7 @@ export default async function Dashboard() {
                   <p className="text-xs font-bold text-slate-900 group-hover:text-[#123B70] transition">
                     Reports & Export
                   </p>
-                  <p className="text-[10.5px] text-slate-400 truncate">Analytics data</p>
+                  <p className="text-[10.5px] text-slate-400 truncate">PDF / CSV analytics</p>
                 </div>
               </Link>
             </div>

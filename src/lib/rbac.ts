@@ -14,12 +14,16 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
 };
 
 export const PAGE_PERMISSIONS: Record<string, UserRole[]> = {
+  // Guard Station - only security officers and supervisors on duty at the gate (not admin)
+  '/guard': ['security_officer', 'supervisor'],
+
   // Dashboard - accessible by all
   '/admin/dashboard': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   
   // Visitors section - accessible by all
   '/admin/check-in': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   '/admin/visitors': ['security_officer', 'supervisor', 'sector_head', 'admin'],
+  '/admin/emergency': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   '/admin/pre-registration': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   '/admin/visitor-history': ['security_officer', 'supervisor', 'sector_head', 'admin'],
   '/admin/check-out': ['security_officer', 'supervisor', 'sector_head', 'admin'],

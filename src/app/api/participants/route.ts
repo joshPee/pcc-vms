@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
                   LOWER(p.organisation) LIKE LOWER($${paramNum}) OR
                   LOWER(p.phone) LIKE LOWER($${paramNum}) OR
                   LOWER(p.email) LIKE LOWER($${paramNum}) OR
-                  LOWER(p.registration_code) LIKE LOWER($${paramNum}))`;
+                  LOWER(p.registration_code) LIKE LOWER($${paramNum}) OR
+                  LOWER(COALESCE(p.pass_number, '')) LIKE LOWER($${paramNum}))`;
         }).join(' AND ');
         
         query += ` AND (${searchConditions})`;

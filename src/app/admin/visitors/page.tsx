@@ -44,7 +44,8 @@ export default function VisitorsPage() {
     visitor.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     visitor.organisation?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     visitor.phone?.includes(searchQuery) ||
-    visitor.registration_code?.toLowerCase().includes(searchQuery.toLowerCase())
+    visitor.registration_code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    visitor.pass_number?.toLowerCase().includes(searchQuery.toLowerCase())
   ) : [];
 
   const getPaginatedData = (data: any[]) => {
@@ -62,7 +63,13 @@ export default function VisitorsPage() {
     setCurrentPage(page);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, approvalStatus?: string) => {
+    if (approvalStatus === 'REJECTED') {
+      return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">Rejected</Badge>;
+    }
+    if (approvalStatus === 'PENDING') {
+      return <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Pending</Badge>;
+    }
     switch (status) {
       case 'CHECKED_IN':
         return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Checked In</Badge>;
@@ -168,42 +175,72 @@ export default function VisitorsPage() {
                     {filteredVisitors.length === 0 ? (
                       <p className="text-sm text-gray-500 text-center py-4">No visitors found</p>
                     ) : (
-                      <table className="w-full">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Org</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Host</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dept</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purpose</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {paginatedVisitors.map((visitor) => (
-                            <tr key={visitor.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.registration_code}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.full_name}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_name}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_department}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.visit_purpose}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
-                              <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_out_date) || '-'}</td>
-                            </tr>
+                      <>
+                        {/* Mobile Card Layout */}
+                        <div className="md:hidden space-y-2.5">
+                          {paginatedVisitors.map((v) => (
+                            <div key={v.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono font-bold text-xs text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200">
+                                  {v.pass_number || v.registration_code}
+                                </span>
+                                {getStatusBadge(v.check_in_status, v.approval_status)}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900 text-sm">{v.full_name}</p>
+                                {v.organisation && <p className="text-xs text-slate-500">{v.organisation}</p>}
+                              </div>
+                              <div className="text-xs text-slate-600 space-y-1 pt-1.5 border-t border-slate-200/60">
+                                <p>Host: <strong className="text-slate-800">{v.host_name || 'General Entry'}</strong> {v.host_department ? `(${v.host_department})` : ''}</p>
+                                <p className="text-slate-500">Purpose: {v.visit_purpose || 'N/A'}</p>
+                                <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px] text-slate-500">
+                                  {v.phone && <span>📞 {v.phone}</span>}
+                                  {v.vehicle_registration && <span className="bg-slate-200 px-1.5 py-0.5 rounded text-slate-800 font-bold">🚗 {v.vehicle_registration}</span>}
+                                  {v.check_in_date && <span>🕒 In: {formatCheckInTime(v.check_in_date)}</span>}
+                                </div>
+                              </div>
+                            </div>
                           ))}
-                        </tbody>
-                      </table>
+                        </div>
+
+                        {/* Desktop Table Layout */}
+                        <table className="w-full hidden md:table">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Org</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Host</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dept</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purpose</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {paginatedVisitors.map((visitor) => (
+                              <tr key={visitor.id} className="hover:bg-gray-50">
+                                <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.pass_number || visitor.registration_code}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.full_name}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_name}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_department}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.visit_purpose}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
+                                <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status, visitor.approval_status)}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_out_date) || '-'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
                     )}
                   </div>
                   {totalPages > 1 && (
@@ -261,52 +298,91 @@ export default function VisitorsPage() {
                     {currentlyInside.length === 0 ? (
                       <p className="text-sm text-gray-500 text-center py-4">No visitors currently on site</p>
                     ) : (
-                      <table className="w-full">
-                        <thead className="bg-green-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Org</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Host</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dept</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purpose</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {paginatedCurrentlyInside.map((visitor) => (
-                            <tr key={visitor.id} className="hover:bg-green-50">
-                              <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.registration_code}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
+                      <>
+                        {/* Mobile Card Layout */}
+                        <div className="md:hidden space-y-2.5">
+                          {paginatedCurrentlyInside.map((v) => (
+                            <div key={v.id} className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono font-bold text-xs text-emerald-800 bg-white px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                                  {v.pass_number || v.registration_code}
+                                </span>
+                                <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 text-xs">
+                                  Inside
+                                </Badge>
+                              </div>
+                              <div>
                                 <div className="flex items-center gap-2">
-                                  {visitor.full_name}
-                                  {visitor.is_recurring && (
-                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                                      <Repeat className="w-3 h-3 mr-1" />
+                                  <p className="font-bold text-slate-900 text-sm">{v.full_name}</p>
+                                  {v.is_recurring && (
+                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-[10px]">
                                       Recurring
                                     </Badge>
                                   )}
                                 </div>
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_name}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_department}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.visit_purpose}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
-                              <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDuration(visitor.check_in_date, visitor.check_out_date)}</td>
-                            </tr>
+                                {v.organisation && <p className="text-xs text-slate-500">{v.organisation}</p>}
+                              </div>
+                              <div className="text-xs text-slate-600 space-y-1 pt-1.5 border-t border-emerald-200/60">
+                                <p>Host: <strong className="text-slate-800">{v.host_name || 'General Entry'}</strong> {v.host_department ? `(${v.host_department})` : ''}</p>
+                                <p className="text-slate-500">Purpose: {v.visit_purpose || 'N/A'}</p>
+                                <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px] text-slate-600">
+                                  {v.phone && <span>📞 {v.phone}</span>}
+                                  {v.vehicle_registration && <span className="bg-white px-1.5 py-0.5 rounded border border-emerald-200 text-slate-800 font-bold">🚗 {v.vehicle_registration}</span>}
+                                  <span>⏳ {formatDuration(v.check_in_date, v.check_out_date)}</span>
+                                </div>
+                              </div>
+                            </div>
                           ))}
-                        </tbody>
-                      </table>
+                        </div>
+
+                        {/* Desktop Table Layout */}
+                        <table className="w-full hidden md:table">
+                          <thead className="bg-green-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Org</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Host</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dept</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purpose</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {paginatedCurrentlyInside.map((visitor) => (
+                              <tr key={visitor.id} className="hover:bg-green-50">
+                                <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.pass_number || visitor.registration_code}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  <div className="flex items-center gap-2">
+                                    {visitor.full_name}
+                                    {visitor.is_recurring && (
+                                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                                        <Repeat className="w-3 h-3 mr-1" />
+                                        Recurring
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_name}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_department}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.visit_purpose}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
+                                <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDuration(visitor.check_in_date, visitor.check_out_date)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
                     )}
                   </div>
                   {Math.ceil(currentlyInside.length / itemsPerPage) > 1 && (
@@ -379,54 +455,94 @@ export default function VisitorsPage() {
                     {visitorHistory.length === 0 ? (
                       <p className="text-sm text-gray-500 text-center py-4">No visitor history available</p>
                     ) : (
-                      <table className="w-full">
-                        <thead className="bg-amber-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Org</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Host</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dept</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purpose</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {paginatedVisitorHistory.map((visitor) => (
-                            <tr key={visitor.id} className="hover:bg-amber-50">
-                              <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.registration_code}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">
+                      <>
+                        {/* Mobile Card Layout */}
+                        <div className="md:hidden space-y-2.5">
+                          {paginatedVisitorHistory.map((v) => (
+                            <div key={v.id} className="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono font-bold text-xs text-amber-900 bg-white px-2.5 py-0.5 rounded-lg border border-amber-200">
+                                  {v.pass_number || v.registration_code}
+                                </span>
+                                <Badge className="bg-amber-100 text-amber-800 border-amber-300 text-xs">
+                                  Checked Out
+                                </Badge>
+                              </div>
+                              <div>
                                 <div className="flex items-center gap-2">
-                                  {visitor.full_name}
-                                  {visitor.is_recurring && (
-                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
-                                      <Repeat className="w-3 h-3 mr-1" />
+                                  <p className="font-bold text-slate-900 text-sm">{v.full_name}</p>
+                                  {v.is_recurring && (
+                                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-[10px]">
                                       Recurring
                                     </Badge>
                                   )}
                                 </div>
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_name}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_department}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.visit_purpose}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
-                              <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_out_date) || '-'}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{formatDuration(visitor.check_in_date, visitor.check_out_date)}</td>
-                            </tr>
+                                {v.organisation && <p className="text-xs text-slate-500">{v.organisation}</p>}
+                              </div>
+                              <div className="text-xs text-slate-600 space-y-1 pt-1.5 border-t border-amber-200/60">
+                                <p>Host: <strong className="text-slate-800">{v.host_name || 'General Entry'}</strong> {v.host_department ? `(${v.host_department})` : ''}</p>
+                                <p className="text-slate-500">Purpose: {v.visit_purpose || 'N/A'}</p>
+                                <div className="flex flex-wrap items-center gap-2 pt-1 font-mono text-[11px] text-slate-600">
+                                  {v.phone && <span>📞 {v.phone}</span>}
+                                  {v.vehicle_registration && <span className="bg-white px-1.5 py-0.5 rounded border border-amber-200 text-slate-800 font-bold">🚗 {v.vehicle_registration}</span>}
+                                  <span>🕒 Out: {formatDateTime(v.check_out_date)}</span>
+                                  <span>⏳ {formatDuration(v.check_in_date, v.check_out_date)}</span>
+                                </div>
+                              </div>
+                            </div>
                           ))}
-                        </tbody>
-                      </table>
+                        </div>
+
+                        {/* Desktop Table Layout */}
+                        <table className="w-full hidden md:table">
+                          <thead className="bg-amber-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Code</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Location</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Org</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Host</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dept</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Purpose</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Vehicle</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-in</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Check-out</th>
+                              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Duration</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {paginatedVisitorHistory.map((visitor) => (
+                              <tr key={visitor.id} className="hover:bg-amber-50">
+                                <td className="px-4 py-3 text-sm font-medium text-blue-700">{visitor.pass_number || visitor.registration_code}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  <div className="flex items-center gap-2">
+                                    {visitor.full_name}
+                                    {visitor.is_recurring && (
+                                      <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
+                                        <Repeat className="w-3 h-3 mr-1" />
+                                        Recurring
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.phone}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.location}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.organisation}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_name}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.host_department}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.visit_purpose}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{visitor.vehicle_registration || '-'}</td>
+                                <td className="px-4 py-3 text-sm">{getStatusBadge(visitor.check_in_status)}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_in_date) || '-'}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDateTime(visitor.check_out_date) || '-'}</td>
+                                <td className="px-4 py-3 text-sm text-gray-900">{formatDuration(visitor.check_in_date, visitor.check_out_date)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
                     )}
                   </div>
                   {Math.ceil(visitorHistory.length / itemsPerPage) > 1 && (

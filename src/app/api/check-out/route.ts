@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
         id, 
         full_name, 
         registration_code, 
+        COALESCE(pass_number, registration_code) as pass_number,
         check_in_status, 
         check_in_date,
         organisation,
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
         phone
       FROM participants
       WHERE LOWER(registration_code) = LOWER(${cleanCode})
+         OR LOWER(COALESCE(pass_number, registration_code)) = LOWER(${cleanCode})
          OR LOWER(vehicle_registration) = LOWER(${cleanCode})
       LIMIT 1
     `;
@@ -138,12 +140,14 @@ export async function POST(request: NextRequest) {
     const checkOutTime = checkOutResult[0]?.check_out_time || new Date().toISOString();
 
     // Update participant status
+    const isBadgeReturned = badgeReturned !== false;
     await sql`
       UPDATE participants
       SET 
         check_in_status = 'CHECKED_OUT',
         check_out_date = NOW(),
-        check_out_by = ${hrUserId}
+        check_out_by = ${hrUserId},
+        badge_returned = ${isBadgeReturned}
       WHERE id = ${visitor.id}
     `;
 
@@ -174,6 +178,7 @@ export async function POST(request: NextRequest) {
       participant_id: visitor.id,
       participant_name: visitor.full_name,
       registration_code: visitor.registration_code,
+      pass_number: visitor.pass_number || visitor.registration_code,
       organisation: visitor.organisation,
       host_name: visitor.host_name,
       host_department: visitor.host_department,

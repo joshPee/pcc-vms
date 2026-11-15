@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Shield,
   Building,
+  AlertOctagon,
 } from 'lucide-react';
 import { canAccessPage, type UserRole } from '@/lib/rbac';
 
@@ -50,6 +51,13 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
       { href: '/admin/visitors', label: 'Visitors Directory', icon: Users },
+      {
+        href: '/admin/emergency',
+        label: 'Emergency Headcount',
+        icon: AlertOctagon,
+        badge: 'Live',
+        badgeColor: 'bg-rose-50 text-rose-700 border border-rose-300',
+      },
       { href: '/admin/expected-attendees', label: 'Expected Attendees', icon: CalendarCheck },
     ],
   },
