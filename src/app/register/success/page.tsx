@@ -31,6 +31,7 @@ function RegistrationSuccessContent() {
   const returnLabel = isGuard ? 'Done / Return to Guard Portal' : (isAdmin ? 'Done / Return to Dashboard' : 'Done / Return Home');
 
   const [registrationCode, setRegistrationCode] = useState('');
+  const [passToken, setPassToken] = useState('');
   const [participantName, setParticipantName] = useState('');
   const [hostName, setHostName] = useState('');
   const [department, setDepartment] = useState('');
@@ -51,6 +52,7 @@ function RegistrationSuccessContent() {
 
   useEffect(() => {
     const code = searchParams.get('code') || '';
+    const token = searchParams.get('token') || code;
     const name = searchParams.get('name') || '';
     const host = searchParams.get('host') || '';
     const dept = searchParams.get('dept') || '';
@@ -62,6 +64,9 @@ function RegistrationSuccessContent() {
     if (code) {
       setRegistrationCode(code);
     }
+    if (token) {
+      setPassToken(token);
+    }
     if (name) setParticipantName(decodeURIComponent(name));
     if (host) setHostName(decodeURIComponent(host));
     if (dept) setDepartment(decodeURIComponent(dept));
@@ -70,8 +75,9 @@ function RegistrationSuccessContent() {
     if (type) setVisitorType(decodeURIComponent(type));
     if (st) setStatus(st.toUpperCase());
 
-    if (code) {
-      QRCode.toDataURL(code, {
+    const qrPayload = token || code;
+    if (qrPayload) {
+      QRCode.toDataURL(qrPayload, {
         width: 320,
         margin: 1,
         color: {
@@ -202,6 +208,9 @@ function RegistrationSuccessContent() {
             )}
             <p className="text-[9.5px] text-stone-500 font-bold tracking-wider mt-1 uppercase">
               Present At Gate Reader
+            </p>
+            <p className="text-[8.5px] text-stone-400 font-semibold tracking-tight">
+              128-bit Cryptographic Token
             </p>
           </div>
 

@@ -61,27 +61,54 @@ export async function POST(request: NextRequest) {
 
     const cleanCode = registrationCode.trim();
 
-    // Check if participant exists
-    const participant = await sql`
-      SELECT 
-        id, 
-        full_name, 
-        registration_code, 
-        COALESCE(pass_number, registration_code) as pass_number,
-        check_in_status, 
-        check_in_date,
-        organisation,
-        position,
-        host_name,
-        host_department,
-        vehicle_registration,
-        phone
-      FROM participants
-      WHERE LOWER(registration_code) = LOWER(${cleanCode})
-         OR LOWER(COALESCE(pass_number, registration_code)) = LOWER(${cleanCode})
-         OR LOWER(vehicle_registration) = LOWER(${cleanCode})
-      LIMIT 1
-    `;
+    // Check if participant exists by pass_token (QR scan), pass_number, registration_code, or vehicle plate
+    let participant = [];
+    try {
+      participant = await sql`
+        SELECT 
+          id, 
+          full_name, 
+          registration_code, 
+          COALESCE(pass_number, registration_code) as pass_number,
+          pass_token,
+          check_in_status, 
+          check_in_date,
+          organisation,
+          position,
+          host_name,
+          host_department,
+          vehicle_registration,
+          phone
+        FROM participants
+        WHERE LOWER(pass_token) = LOWER(${cleanCode})
+           OR LOWER(registration_code) = LOWER(${cleanCode})
+           OR LOWER(COALESCE(pass_number, registration_code)) = LOWER(${cleanCode})
+           OR LOWER(vehicle_registration) = LOWER(${cleanCode})
+        LIMIT 1
+      `;
+    } catch {
+      // Fallback if pass_token column does not exist yet
+      participant = await sql`
+        SELECT 
+          id, 
+          full_name, 
+          registration_code, 
+          COALESCE(pass_number, registration_code) as pass_number,
+          check_in_status, 
+          check_in_date,
+          organisation,
+          position,
+          host_name,
+          host_department,
+          vehicle_registration,
+          phone
+        FROM participants
+        WHERE LOWER(registration_code) = LOWER(${cleanCode})
+           OR LOWER(COALESCE(pass_number, registration_code)) = LOWER(${cleanCode})
+           OR LOWER(vehicle_registration) = LOWER(${cleanCode})
+        LIMIT 1
+      `;
+    }
 
     if (participant.length === 0) {
       return NextResponse.json(

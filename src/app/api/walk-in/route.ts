@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { getUniquePassNumber } from '@/lib/pass-generator';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { evaluateWatchlistMatch, WatchlistEntry } from '@/lib/watchlist-match';
+import { generatePassToken } from '@/lib/pass-token';
 
 export async function POST(request: NextRequest) {
   try {
@@ -218,50 +219,92 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate unique pass number (e.g. PCC-V8K294)
+    // Generate unique pass number and unguessable 128-bit pass token
     const passNumber = await getUniquePassNumber();
+    const passToken = generatePassToken();
 
     let result;
     if (checkInImmediately) {
-      result = await sql`
-        INSERT INTO participants (
-          registration_code, pass_number, full_name, organisation, position, phone, location,
-          host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
-          vehicle_registration, is_recurring, registration_source,
-          participant_status, registration_status, approval_status, approved_by, approved_at,
-          check_in_status, check_in_date, checked_in_by, created_at
-        )
-        VALUES (
-          ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
-          ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
-          ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
-          'REGISTERED', 'REGISTERED', 'APPROVED', ${hrUserId}, CURRENT_TIMESTAMP,
-          'CHECKED_IN', CURRENT_TIMESTAMP, ${hrUserId}, CURRENT_TIMESTAMP
-        )
-        RETURNING id, registration_code, pass_number
-      `;
+      try {
+        result = await sql`
+          INSERT INTO participants (
+            registration_code, pass_number, pass_token, full_name, organisation, position, phone, location,
+            host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+            vehicle_registration, is_recurring, registration_source,
+            participant_status, registration_status, approval_status, approved_by, approved_at,
+            check_in_status, check_in_date, checked_in_by, created_at
+          )
+          VALUES (
+            ${passNumber}, ${passNumber}, ${passToken}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+            ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+            ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+            'REGISTERED', 'REGISTERED', 'APPROVED', ${hrUserId}, CURRENT_TIMESTAMP,
+            'CHECKED_IN', CURRENT_TIMESTAMP, ${hrUserId}, CURRENT_TIMESTAMP
+          )
+          RETURNING id, registration_code, pass_number, pass_token
+        `;
+      } catch {
+        result = await sql`
+          INSERT INTO participants (
+            registration_code, pass_number, full_name, organisation, position, phone, location,
+            host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+            vehicle_registration, is_recurring, registration_source,
+            participant_status, registration_status, approval_status, approved_by, approved_at,
+            check_in_status, check_in_date, checked_in_by, created_at
+          )
+          VALUES (
+            ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+            ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+            ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+            'REGISTERED', 'REGISTERED', 'APPROVED', ${hrUserId}, CURRENT_TIMESTAMP,
+            'CHECKED_IN', CURRENT_TIMESTAMP, ${hrUserId}, CURRENT_TIMESTAMP
+          )
+          RETURNING id, registration_code, pass_number
+        `;
+      }
     } else {
-      result = await sql`
-        INSERT INTO participants (
-          registration_code, pass_number, full_name, organisation, position, phone, location,
-          host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
-          vehicle_registration, is_recurring, registration_source,
-          participant_status, registration_status, approval_status,
-          check_in_status, created_at
-        )
-        VALUES (
-          ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
-          ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
-          ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
-          'REGISTERED', 'REGISTERED', 'PENDING',
-          'NOT_CHECKED_IN', CURRENT_TIMESTAMP
-        )
-        RETURNING id, registration_code, pass_number
-      `;
+      try {
+        result = await sql`
+          INSERT INTO participants (
+            registration_code, pass_number, pass_token, full_name, organisation, position, phone, location,
+            host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+            vehicle_registration, is_recurring, registration_source,
+            participant_status, registration_status, approval_status,
+            check_in_status, created_at
+          )
+          VALUES (
+            ${passNumber}, ${passNumber}, ${passToken}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+            ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+            ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+            'REGISTERED', 'REGISTERED', 'PENDING',
+            'NOT_CHECKED_IN', CURRENT_TIMESTAMP
+          )
+          RETURNING id, registration_code, pass_number, pass_token
+        `;
+      } catch {
+        result = await sql`
+          INSERT INTO participants (
+            registration_code, pass_number, full_name, organisation, position, phone, location,
+            host_name, host_department, visit_purpose, visitor_type, id_type, id_number, photo_url,
+            vehicle_registration, is_recurring, registration_source,
+            participant_status, registration_status, approval_status,
+            check_in_status, created_at
+          )
+          VALUES (
+            ${passNumber}, ${passNumber}, ${trimmedName}, ${trimmedOrg}, ${trimmedPos}, ${trimmedPhone}, ${trimmedLocation},
+            ${trimmedHost}, ${trimmedDept}, ${trimmedPurpose}, ${trimmedVisitorType}, ${trimmedIdType}, ${trimmedIdNumber}, ${trimmedPhotoUrl},
+            ${trimmedVehicle}, ${isRecurring}, 'WALK_IN',
+            'REGISTERED', 'REGISTERED', 'PENDING',
+            'NOT_CHECKED_IN', CURRENT_TIMESTAMP
+          )
+          RETURNING id, registration_code, pass_number
+        `;
+      }
     }
 
     const participantId = result[0].id;
     const finalPassNumber = result[0].pass_number || result[0].registration_code;
+    const finalPassToken = result[0].pass_token || passToken;
     let checkInData = null;
 
     if (checkInImmediately) {
@@ -297,6 +340,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       passNumber: finalPassNumber,
+      passToken: finalPassToken,
       registrationCode: finalPassNumber,
       participantId,
       checkInData,

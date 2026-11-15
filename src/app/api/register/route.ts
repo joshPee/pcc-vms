@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { getUniquePassNumber } from '@/lib/pass-generator';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { evaluateWatchlistMatch, WatchlistEntry } from '@/lib/watchlist-match';
+import { generatePassToken } from '@/lib/pass-token';
 
 // Returning visitor detection
 async function checkReturningVisitor(fullName: string, phone: string): Promise<{
@@ -299,68 +300,132 @@ export async function POST(request: NextRequest) {
     // 3. Returning visitor check
     const returningInfo = await checkReturningVisitor(trimmedName, trimmedPhone);
 
-    // 4. Generate unique non-sequential pass number (format PCC-V8K294)
+    // 4. Generate unique non-sequential pass number and unguessable 128-bit QR pass token
     const passNumber = await getUniquePassNumber();
+    const passToken = generatePassToken();
 
     // 5. Insert new visitor directly as APPROVED & CHECKED_IN (Confirmed with host at gate by guard)
-    const result = await sql`
-      INSERT INTO participants (
-        registration_code,
-        pass_number,
-        full_name,
-        phone,
-        location,
-        organisation,
-        host_name,
-        host_department,
-        visit_purpose,
-        visitor_type,
-        id_type,
-        id_number,
-        photo_url,
-        vehicle_registration,
-        participant_status,
-        registration_status,
-        registration_source,
-        approval_status,
-        approved_by,
-        approved_at,
-        check_in_status,
-        check_in_date,
-        checked_in_by,
-        created_at
-      )
-      VALUES (
-        ${passNumber},
-        ${passNumber},
-        ${trimmedName},
-        ${trimmedPhone},
-        ${trimmedLocation},
-        ${trimmedOrg},
-        ${trimmedPersonToVisit},
-        ${trimmedDepartment},
-        ${trimmedVisitPurpose},
-        ${trimmedVisitorType},
-        ${trimmedIdType},
-        ${trimmedIdNumber},
-        ${trimmedPhotoUrl},
-        ${trimmedVehicleRegistration},
-        'REGISTERED',
-        'REGISTERED',
-        'GUARD_STATION',
-        'APPROVED',
-        ${guardUserId},
-        CURRENT_TIMESTAMP,
-        'CHECKED_IN',
-        CURRENT_TIMESTAMP,
-        ${guardUserId},
-        CURRENT_TIMESTAMP
-      )
-      RETURNING id, registration_code, pass_number
-    `;
+    let result;
+    try {
+      result = await sql`
+        INSERT INTO participants (
+          registration_code,
+          pass_number,
+          pass_token,
+          full_name,
+          phone,
+          location,
+          organisation,
+          host_name,
+          host_department,
+          visit_purpose,
+          visitor_type,
+          id_type,
+          id_number,
+          photo_url,
+          vehicle_registration,
+          participant_status,
+          registration_status,
+          registration_source,
+          approval_status,
+          approved_by,
+          approved_at,
+          check_in_status,
+          check_in_date,
+          checked_in_by,
+          created_at
+        )
+        VALUES (
+          ${passNumber},
+          ${passNumber},
+          ${passToken},
+          ${trimmedName},
+          ${trimmedPhone},
+          ${trimmedLocation},
+          ${trimmedOrg},
+          ${trimmedPersonToVisit},
+          ${trimmedDepartment},
+          ${trimmedVisitPurpose},
+          ${trimmedVisitorType},
+          ${trimmedIdType},
+          ${trimmedIdNumber},
+          ${trimmedPhotoUrl},
+          ${trimmedVehicleRegistration},
+          'REGISTERED',
+          'REGISTERED',
+          'GUARD_STATION',
+          'APPROVED',
+          ${guardUserId},
+          CURRENT_TIMESTAMP,
+          'CHECKED_IN',
+          CURRENT_TIMESTAMP,
+          ${guardUserId},
+          CURRENT_TIMESTAMP
+        )
+        RETURNING id, registration_code, pass_number, pass_token
+      `;
+    } catch {
+      // Fallback if pass_token column does not exist yet
+      result = await sql`
+        INSERT INTO participants (
+          registration_code,
+          pass_number,
+          full_name,
+          phone,
+          location,
+          organisation,
+          host_name,
+          host_department,
+          visit_purpose,
+          visitor_type,
+          id_type,
+          id_number,
+          photo_url,
+          vehicle_registration,
+          participant_status,
+          registration_status,
+          registration_source,
+          approval_status,
+          approved_by,
+          approved_at,
+          check_in_status,
+          check_in_date,
+          checked_in_by,
+          created_at
+        )
+        VALUES (
+          ${passNumber},
+          ${passNumber},
+          ${trimmedName},
+          ${trimmedPhone},
+          ${trimmedLocation},
+          ${trimmedOrg},
+          ${trimmedPersonToVisit},
+          ${trimmedDepartment},
+          ${trimmedVisitPurpose},
+          ${trimmedVisitorType},
+          ${trimmedIdType},
+          ${trimmedIdNumber},
+          ${trimmedPhotoUrl},
+          ${trimmedVehicleRegistration},
+          'REGISTERED',
+          'REGISTERED',
+          'GUARD_STATION',
+          'APPROVED',
+          ${guardUserId},
+          CURRENT_TIMESTAMP,
+          'CHECKED_IN',
+          CURRENT_TIMESTAMP,
+          ${guardUserId},
+          CURRENT_TIMESTAMP
+        )
+        RETURNING id, registration_code, pass_number
+      `;
+    }
 
     const participantId = result[0].id;
     const finalPassNumber = result[0].pass_number || result[0].registration_code;
+    const finalPassToken = result[0].pass_token || passToken;
 
     // 6. Record immediate check-in attributed to guard
     try {
@@ -392,6 +457,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       passNumber: finalPassNumber,
+      passToken: finalPassToken,
       registrationCode: finalPassNumber,
       participantId: participantId,
       fullName: trimmedName,

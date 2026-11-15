@@ -296,8 +296,10 @@ export default function Register() {
         }
 
         const passCode = data.passNumber || data.registrationCode;
+        const passToken = data.passToken || passCode;
         const queryParams = new URLSearchParams({
           code: passCode,
+          token: passToken,
           name: data.fullName || fullName.trim(),
           host: personToVisit.trim(),
           dept: department.trim() || 'General',
@@ -359,8 +361,10 @@ export default function Register() {
         setWatchlistAlert(null);
         setShowOverrideInput(false);
         const passCode = data.passNumber || data.registrationCode;
+        const passToken = data.passToken || passCode;
         const queryParams = new URLSearchParams({
           code: passCode,
+          token: passToken,
           name: data.fullName || fullName.trim(),
           host: personToVisit.trim(),
           dept: department.trim() || 'General',

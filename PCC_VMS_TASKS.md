@@ -27,7 +27,7 @@ Instructions for the coding agent. Before starting any task, read the current co
     - Denying entry records a `REJECTED` visit that increments the Denied Entries KPI.
   - **Done when** every watchlist match requires an explicit guard decision with an audit trail entry.
 
-- [ ] **4. Unguessable QR tokens**
+- [x] **4. Unguessable QR tokens**
   - Add a `pass_token` column holding a cryptographically random 128-bit hex string/UUID. Keep the short human-readable pass number for manual display.
   - The printed/digital pass QR encodes `pass_token`. Check-out validates via `pass_token` or pass number.
   - **Done when** knowing one visitor pass number cannot produce a valid checkout QR code.
