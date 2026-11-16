@@ -183,10 +183,11 @@ export default function AdminLogin() {
       </div>
 
       {showToast && (
-        <Toast variant="success" className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-bold">Authentication successful! Opening dashboard...</span>
-        </Toast>
+        <Toast
+          variant="success"
+          title="Authentication Successful"
+          description="Security credentials verified. Launching Admin Dashboard..."
+        />
       )}
     </div>
   );

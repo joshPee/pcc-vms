@@ -169,10 +169,11 @@ export default function GuardLogin() {
       </div>
 
       {showToast && (
-        <Toast variant="success" className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-bold">Officer Authorized! Opening Gate Terminal...</span>
-        </Toast>
+        <Toast
+          variant="success"
+          title="Security Clearance Verified"
+          description="Officer authorized. Opening Gate Station Terminal..."
+        />
       )}
     </div>
   );

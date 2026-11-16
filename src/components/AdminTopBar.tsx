@@ -7,6 +7,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Settings } from 'lucide-react';
 import CommandPalette from '@/components/CommandPalette';
+import { LogoutConfirmationDialog } from '@/components/LogoutConfirmationDialog';
 
 interface AdminTopBarProps {
   onMobileMenuToggle?: () => void;
@@ -14,6 +15,8 @@ interface AdminTopBarProps {
 
 export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [userName, setUserName] = useState('');
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -38,76 +41,91 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
     fetchUser();
   }, [session]);
 
-  const handleSignOut = () => {
-    setShowProfileMenu(false);
-    signOut({ callbackUrl: '/admin/login', redirect: true });
+  const handleConfirmSignOut = async () => {
+    setSigningOut(true);
+    await signOut({ callbackUrl: '/admin/login', redirect: true });
   };
 
   if (pathname === '/admin/login') return null;
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-3 lg:px-6">
-      <div className="flex items-center gap-3 min-w-0">
-        <Link href="/admin/dashboard" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="h-10 w-10 flex items-center justify-center p-0.5 rounded-xl bg-white shadow-xs group-hover:scale-105 transition">
-            <img src="/pcc.png" alt="PCC Logo" className="object-contain w-full h-full" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-[#123B70] leading-none">PCC-VMS</p>
-            <p className="text-[10.5px] text-muted-foreground font-medium mt-0.5">Admin Management</p>
-          </div>
-        </Link>
-        <div className="hidden md:flex items-center text-sm text-muted-foreground ml-4 truncate">
-          <span>Good morning Admin</span>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2 shrink-0">
-        <CommandPalette />
-
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="h-9 w-9 p-0 rounded-full hover:bg-slate-100 flex items-center justify-center"
-            aria-label="User Profile"
-          >
-            <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[#123B70]">
-              <User className="h-4 w-4" />
+    <>
+      <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-slate-200 z-50 flex items-center justify-between px-3 lg:px-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/admin/dashboard" className="flex items-center gap-2.5 shrink-0 group">
+            <div className="h-10 w-10 flex items-center justify-center p-0.5 rounded-xl bg-white shadow-xs group-hover:scale-105 transition">
+              <img src="/pcc.png" alt="PCC Logo" className="object-contain w-full h-full" />
             </div>
-          </Button>
-
-          {showProfileMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-sm font-medium text-foreground truncate">{userName || 'Admin'}</p>
-                  <p className="text-xs text-muted-foreground">Administrator</p>
-                </div>
-                <div className="p-2 space-y-1">
-                  <Link
-                    href="/admin/settings"
-                    className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100 rounded-md"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Link>
-                  <button
-                    onClick={handleSignOut}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Log out
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+            <div>
+              <p className="text-sm font-bold text-[#123B70] leading-none">PCC-VMS</p>
+              <p className="text-[10.5px] text-muted-foreground font-medium mt-0.5">Admin Management</p>
+            </div>
+          </Link>
+          <div className="hidden md:flex items-center text-sm text-muted-foreground ml-4 truncate">
+            <span>Good morning Admin</span>
+          </div>
         </div>
-      </div>
-    </header>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <CommandPalette />
+
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="h-9 w-9 p-0 rounded-full hover:bg-slate-100 flex items-center justify-center"
+              aria-label="User Profile"
+            >
+              <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[#123B70]">
+                <User className="h-4 w-4" />
+              </div>
+            </Button>
+
+            {showProfileMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-3 py-2 border-b border-slate-100">
+                    <p className="text-sm font-medium text-foreground truncate">{userName || 'Admin'}</p>
+                    <p className="text-xs text-muted-foreground">Administrator</p>
+                  </div>
+                  <div className="p-2 space-y-1">
+                    <Link
+                      href="/admin/settings"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100 rounded-md transition"
+                      onClick={() => setShowProfileMenu(false)}
+                    >
+                      <Settings className="h-4 w-4" />
+                      Settings
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        setShowLogoutModal(true);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full transition text-left cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Confirmation Dialog */}
+      <LogoutConfirmationDialog
+        open={showLogoutModal}
+        loading={signingOut}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleConfirmSignOut}
+        title="Sign Out of Admin Portal"
+        description="Are you sure you want to log out of the administration console? Any unsaved edits will be discarded."
+      />
+    </>
   );
 }

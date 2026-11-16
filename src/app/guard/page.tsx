@@ -30,6 +30,8 @@ import {
   Printer,
 } from 'lucide-react';
 
+import { LogoutConfirmationDialog } from '@/components/LogoutConfirmationDialog';
+
 export default function GuardPortalPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -38,6 +40,8 @@ export default function GuardPortalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'visitors' | 'profile'>('home');
   const [profileOpen, setProfileOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
@@ -1120,8 +1124,9 @@ export default function GuardPortalPage() {
               )}
 
               <button
-                onClick={() => signOut({ callbackUrl: '/admin/login' })}
-                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition active:scale-[0.99]"
+                type="button"
+                onClick={() => setShowLogoutDialog(true)}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold border border-rose-200 transition active:scale-[0.99] cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out / End Shift
@@ -1129,6 +1134,19 @@ export default function GuardPortalPage() {
             </div>
           </div>
         )}
+
+        {/* Guard Station Logout Confirmation Modal */}
+        <LogoutConfirmationDialog
+          open={showLogoutDialog}
+          loading={loggingOut}
+          onClose={() => setShowLogoutDialog(false)}
+          onConfirm={async () => {
+            setLoggingOut(true);
+            await signOut({ callbackUrl: '/guard/login' });
+          }}
+          title="End Guard Shift & Sign Out"
+          description="Are you sure you want to end your current duty shift? Please ensure any pending visitor physical passes have been handed over to the incoming officer."
+        />
 
       </div>
     </div>
