@@ -80,7 +80,7 @@ Instructions for the coding agent. Before starting any task, read the current co
 - [x] **12. Timezone correctness**
   - Force explicit `Africa/Accra` (GMT) timezone resolution across shift detection, "Today" KPI counts, check-in timestamps, and analytical reports.
 
-- [ ] **13. Real-time sync transparency**
+- [x] **13. Real-time sync transparency**
   - Ensure emergency roll call and guard on-site headcount display a clear "Last updated: HH:MM:SS" sync indicator alongside the 10-second polling pulse.
 
 ---
