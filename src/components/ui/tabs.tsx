@@ -17,6 +17,7 @@ interface TabsListProps {
 interface TabsTriggerProps {
   value: string;
   children: React.ReactNode;
+  className?: string;
 }
 
 interface TabsContentProps {
@@ -46,18 +47,19 @@ const TabsList: React.FC<TabsListProps> = ({ children, className = '' }) => {
   );
 };
 
-const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children }) => {
+const TabsTrigger: React.FC<TabsTriggerProps> = ({ value, children, className = '' }) => {
   const { value: selectedValue, onValueChange } = React.useContext(TabsContext);
   const isActive = selectedValue === value;
 
   return (
     <button
+      type="button"
       onClick={() => onValueChange(value)}
       className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 disabled:pointer-events-none disabled:opacity-50 ${
         isActive
           ? 'bg-white text-gray-900 shadow-sm'
           : 'text-gray-500 hover:text-gray-900'
-      }`}
+      } ${className}`}
     >
       {children}
     </button>
