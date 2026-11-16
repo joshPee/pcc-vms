@@ -5,40 +5,18 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { User, LogOut, Settings, Menu } from 'lucide-react';
+import { User, LogOut, Settings } from 'lucide-react';
 import CommandPalette from '@/components/CommandPalette';
 
 interface AdminTopBarProps {
   onMobileMenuToggle?: () => void;
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrator',
-  security_officer: 'Security Officer',
-  supervisor: 'Supervisor',
-  sector_head: 'Sector Head',
-};
-
-function formatRole(role?: string): string {
-  if (!role) return 'Staff';
-  return ROLE_LABELS[role] || role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [greeting, setGreeting] = useState('');
   const [userName, setUserName] = useState('');
-  const [userRole, setUserRole] = useState('');
   const pathname = usePathname();
   const { data: session } = useSession();
-
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 17) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
-  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -46,16 +24,13 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
         const response = await fetch('/api/users/me');
         if (response.ok) {
           const data = await response.json();
-          setUserName(data.name || session?.user?.name || 'Staff');
-          setUserRole(formatRole(data.role || session?.user?.role));
+          setUserName(data.name || session?.user?.name || 'Admin');
         } else if (session?.user) {
-          setUserName(session.user.name || 'Staff');
-          setUserRole(formatRole(session.user.role));
+          setUserName(session.user.name || 'Admin');
         }
       } catch {
         if (session?.user) {
-          setUserName(session.user.name || 'Staff');
-          setUserRole(formatRole(session.user.role));
+          setUserName(session.user.name || 'Admin');
         }
       }
     };
@@ -82,14 +57,8 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
             <p className="text-[10.5px] text-muted-foreground font-medium mt-0.5">Admin Management</p>
           </div>
         </Link>
-        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground ml-4 truncate">
-          <span>{greeting},</span>
-          <span className="font-medium text-foreground truncate">{userName || '...'}</span>
-          {userRole && (
-            <Badge variant="outline" className="text-[10px] border-[#123B70]/20 text-[#123B70] shrink-0">
-              {userRole}
-            </Badge>
-          )}
+        <div className="hidden md:flex items-center text-sm text-muted-foreground ml-4 truncate">
+          <span>Good morning Admin</span>
         </div>
       </div>
 
@@ -101,12 +70,12 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
             variant="ghost"
             size="sm"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="h-8 px-2 gap-1.5"
+            className="h-9 w-9 p-0 rounded-full hover:bg-slate-100 flex items-center justify-center"
+            aria-label="User Profile"
           >
-            <User className="h-3.5 w-3.5 text-[#123B70]" />
-            <span className="text-xs font-semibold text-slate-800 truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[140px]">
-              {userName || 'Account'}
-            </span>
+            <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-[#123B70]">
+              <User className="h-4 w-4" />
+            </div>
           </Button>
 
           {showProfileMenu && (
@@ -114,8 +83,8 @@ export default function AdminTopBar({ onMobileMenuToggle }: AdminTopBarProps) {
               <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
               <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
                 <div className="px-3 py-2 border-b border-slate-100">
-                  <p className="text-sm font-medium text-foreground truncate">{userName}</p>
-                  <p className="text-xs text-muted-foreground">{userRole}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{userName || 'Admin'}</p>
+                  <p className="text-xs text-muted-foreground">Administrator</p>
                 </div>
                 <div className="p-2 space-y-1">
                   <Link
