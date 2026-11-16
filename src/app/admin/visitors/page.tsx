@@ -142,13 +142,61 @@ export default function VisitorsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const todayFormatted = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date());
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header with Title and Unified Toolbar matching Dashboard */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl bg-white border border-slate-200 shadow-2xs">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Visitors Master Directory
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            Real-time on-premises headcount, completed exits, and verified visitor audit records
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+            <Clock className="w-3.5 h-3.5 text-[#123B70]" />
+            <span>{todayFormatted}</span>
+          </div>
+
+          <Button
+            onClick={() => {
+              setLoading(true);
+              fetchVisitors();
+            }}
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-xl font-semibold border-slate-200"
+          >
+            <Clock className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+
+          <Button
+            onClick={() => handleExportCSV(allVisitors)}
+            size="sm"
+            className="bg-[#123B70] hover:bg-[#0C284E] text-white font-bold h-9 rounded-xl shadow-xs"
+          >
+            <Download className="w-3.5 h-3.5 mr-1.5 text-[#E5A823]" />
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All Visitors</TabsTrigger>
-          <TabsTrigger value="inside">Active Visitors</TabsTrigger>
-          <TabsTrigger value="history">Visitor History</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 max-w-md h-11 p-1 bg-slate-100 rounded-2xl">
+          <TabsTrigger value="all" className="rounded-xl text-xs font-bold">All Visitors ({allVisitors.length})</TabsTrigger>
+          <TabsTrigger value="inside" className="rounded-xl text-xs font-bold">Active ({currentlyInside.length})</TabsTrigger>
+          <TabsTrigger value="history" className="rounded-xl text-xs font-bold">History ({visitorHistory.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
