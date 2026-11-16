@@ -1,12 +1,13 @@
 {
-  "name": "PCC Visitor Check-in",
-  "short_name": "PCC Check-in",
-  "description": "Visitor management system for Pentecost Convention Center",
-  "start_url": "/register",
+  "name": "PCC Gate Station Terminal",
+  "short_name": "PCC Gate",
+  "description": "Pentecost Convention Centre Guard Station & Gate Operations Terminal",
+  "start_url": "/guard",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#1a3a6e",
-  "orientation": "portrait",
+  "background_color": "#0B1528",
+  "theme_color": "#123B70",
+  "orientation": "any",
   "icons": [
     {
       "src": "/pcc.png",
@@ -15,7 +16,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
-  "scope": "/",
+  "categories": ["business", "security", "utilities"],
   "prefer_related_applications": false
 }

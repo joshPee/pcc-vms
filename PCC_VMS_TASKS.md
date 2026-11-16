@@ -70,7 +70,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Overstay alerts on `/guard` evaluate based on category threshold (e.g. Contractors vs. Guest House guests).
   - Multi-day visits do not trigger daily overstay warnings.
 
-- [ ] **11. Offline-capable guard station terminal**
+- [x] **11. Offline-capable guard station terminal**
   - Convert `/guard` and `/check-out` into a Progressive Web App (PWA).
   - Service worker caches application shell and current on-site visitor roster.
   - Offline check-ins and check-outs are stored in an IndexedDB queue with idempotency keys and synchronized automatically upon network restoration.
