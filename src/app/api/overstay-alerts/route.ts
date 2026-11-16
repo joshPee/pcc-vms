@@ -1,39 +1,76 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
+import { DEFAULT_CATEGORY_RULES, evaluateOverstay, VisitorCategoryRule } from '@/lib/overstay';
 
 export const dynamic = 'force-dynamic';
 
-// Visitors are considered overstay after 4 hours on premises (or past expected_departure)
-const OVERSTAY_THRESHOLD_MINUTES = 240;
-
 export async function GET() {
   try {
-    const overstay = await sql`
+    if (!sql) {
+      return NextResponse.json({ error: 'Database connection not available' }, { status: 500 });
+    }
+
+    // 1. Fetch category rules from database (fallback to defaults if table or rows missing)
+    let customRules: Record<string, VisitorCategoryRule> = {};
+    try {
+      const rows = await sql`
+        SELECT name, overstay_minutes, multi_day
+        FROM visitor_categories
+      `;
+      for (const r of rows) {
+        customRules[String(r.name).toLowerCase()] = {
+          name: String(r.name),
+          overstay_minutes: Number(r.overstay_minutes) || 240,
+          multi_day: Boolean(r.multi_day),
+        };
+      }
+    } catch {
+      customRules = DEFAULT_CATEGORY_RULES;
+    }
+
+    // 2. Query checked-in visitors
+    const activeVisitors = await sql`
       SELECT
         p.id,
         p.full_name,
+        COALESCE(p.pass_number, p.registration_code) as pass_number,
         p.registration_code,
         p.organisation,
         p.host_name,
         p.host_department,
         p.vehicle_registration,
         p.phone,
+        p.visitor_type,
         p.check_in_date,
-        p.expected_departure,
-        EXTRACT(EPOCH FROM (NOW() - p.check_in_date)) / 60 AS minutes_on_site
+        p.expected_departure
       FROM participants p
       WHERE p.check_in_status = 'CHECKED_IN'
         AND p.check_in_date IS NOT NULL
-        AND (
-          -- Either past expected departure time
-          (p.expected_departure IS NOT NULL AND NOW() > p.expected_departure)
-          -- Or over the default threshold with no expected departure set
-          OR (p.expected_departure IS NULL AND EXTRACT(EPOCH FROM (NOW() - p.check_in_date)) / 60 >= ${OVERSTAY_THRESHOLD_MINUTES})
-        )
       ORDER BY p.check_in_date ASC
     `;
 
-    return NextResponse.json(overstay, {
+    // 3. Filter using category-aware evaluation
+    const overstayList = activeVisitors
+      .map((p: any) => {
+        const evaluation = evaluateOverstay({
+          checkInDate: p.check_in_date,
+          expectedDeparture: p.expected_departure,
+          visitorType: p.visitor_type,
+          customRules,
+        });
+
+        return {
+          ...p,
+          minutes_on_site: evaluation.minutesOnSite,
+          threshold_minutes: evaluation.thresholdMinutes,
+          is_overstay: evaluation.isOverstay,
+          multi_day_exempt: evaluation.multiDayExempt,
+          overstay_reason: evaluation.reason || null,
+        };
+      })
+      .filter((p: any) => p.is_overstay);
+
+    return NextResponse.json(overstayList, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
         'Pragma': 'no-cache',

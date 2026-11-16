@@ -65,7 +65,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Group roll call print and CSV export into clear sections: Visitors, On-Duty Staff, Guest House Occupants.
   - Confirm with facility management where internal staff presence is sourced.
 
-- [ ] **10. Per-category overstay rules**
+- [x] **10. Per-category overstay rules**
   - Add `overstay_minutes` and a `multi_day` boolean flag to visitor categories (default: 240 mins).
   - Overstay alerts on `/guard` evaluate based on category threshold (e.g. Contractors vs. Guest House guests).
   - Multi-day visits do not trigger daily overstay warnings.
