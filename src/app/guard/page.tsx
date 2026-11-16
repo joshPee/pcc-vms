@@ -137,7 +137,7 @@ export default function GuardPortalPage() {
   // Redirect if unauthenticated or if admin (admins cannot access guard station portal)
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.replace('/admin/login');
+      router.replace('/guard/login');
     } else if (status === 'authenticated' && session?.user?.role === 'admin') {
       router.replace('/admin/dashboard');
     }
