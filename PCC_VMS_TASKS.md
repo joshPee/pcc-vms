@@ -77,7 +77,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Display a live offline indicator and pending-sync queue badge on the guard portal.
   - **Done when** guards can process visitor entry and exit during network interruptions without duplicate records.
 
-- [ ] **12. Timezone correctness**
+- [x] **12. Timezone correctness**
   - Force explicit `Africa/Accra` (GMT) timezone resolution across shift detection, "Today" KPI counts, check-in timestamps, and analytical reports.
 
 - [ ] **13. Real-time sync transparency**
