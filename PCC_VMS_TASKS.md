@@ -60,7 +60,7 @@ Instructions for the coding agent. Before starting any task, read the current co
   - Skip visitors marked multi-day or guest house residents (see task 10).
   - **Done when** the active grounds count reliably resets to genuinely present overnight occupants each morning.
 
-- [ ] **9. Complete grounds evacuation roll call**
+- [x] **9. Complete grounds evacuation roll call**
   - Include staff on duty and registered guest house residents into the emergency headcount roster.
   - Group roll call print and CSV export into clear sections: Visitors, On-Duty Staff, Guest House Occupants.
   - Confirm with facility management where internal staff presence is sourced.
