@@ -7,8 +7,6 @@ import {
   LayoutDashboard,
   Users,
   LayoutGrid,
-  CalendarCheck,
-  History,
   ShieldAlert,
   UserCog,
   Car,
@@ -21,7 +19,8 @@ import {
   ScrollText,
   Search,
   X,
-  ShieldCheck,
+  AlertOctagon,
+  Clock,
   Sparkles,
 } from 'lucide-react';
 import { canAccessPage, type UserRole } from '@/lib/rbac';
@@ -51,6 +50,22 @@ const ALL_MODULES: MenuModule[] = [
     description: 'Master list of registered participants and visitors',
     icon: Users,
     color: 'bg-blue-50 text-blue-700 border-blue-200',
+    category: 'Visitor Operations',
+  },
+  {
+    href: '/admin/attendance',
+    label: 'Live Attendance',
+    description: 'Monitor on-premises visitors and run checkout reconciliation',
+    icon: Clock,
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    category: 'Visitor Operations',
+  },
+  {
+    href: '/admin/emergency',
+    label: 'Emergency Evacuation',
+    description: 'Real-time roll call across Visitors, Guest House & Staff',
+    icon: AlertOctagon,
+    color: 'bg-rose-50 text-rose-700 border-rose-200',
     category: 'Visitor Operations',
   },
   {
@@ -150,9 +165,12 @@ const ALL_MODULES: MenuModule[] = [
   },
 ];
 
+// Expanded primary bar: Dashboard, Visitors, Watchlist, Evacuation, More
 const PRIMARY_BAR_ITEMS = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/visitors', label: 'Visitors', icon: Users },
+  { href: '/admin/watchlist', label: 'Watchlist', icon: ShieldAlert },
+  { href: '/admin/emergency', label: 'Evac Roster', icon: AlertOctagon },
 ];
 
 export default function AdminBottomBar() {
@@ -194,7 +212,6 @@ export default function AdminBottomBar() {
     };
   }, [moreModalOpen]);
 
-  // Is current path one of the primary 4 or in the "More..." menu?
   const isPrimaryActive = PRIMARY_BAR_ITEMS.some((item) => item.href === pathname);
   const isMoreActive = !isPrimaryActive && pathname.startsWith('/admin');
 
@@ -217,9 +234,9 @@ export default function AdminBottomBar() {
       {/* Floating Bottom Navigation Bar (Mobile & Tablet Only) */}
       <nav
         aria-label="Admin Navigation"
-        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-8px_30px_rgba(18,59,112,0.08)] py-1.5 px-3 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-[0_-8px_30px_rgba(18,59,112,0.08)] py-1.5 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))]"
       >
-        <div className="max-w-md mx-auto flex items-center justify-around">
+        <div className="max-w-lg mx-auto flex items-center justify-between">
           {PRIMARY_BAR_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -227,27 +244,43 @@ export default function AdminBottomBar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-200 group ${
+                className={`relative flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group ${
                   isActive ? 'text-[#123B70] font-black' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 {/* Active Indicator Capsule */}
                 <div
-                  className={`w-11 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+                  className={`w-10 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                     isActive
-                      ? 'bg-[#123B70] text-white shadow-md shadow-[#123B70]/25 scale-105'
+                      ? item.href === '/admin/emergency'
+                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30 scale-105'
+                        : item.href === '/admin/watchlist'
+                        ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30 scale-105'
+                        : 'bg-[#123B70] text-white shadow-md shadow-[#123B70]/25 scale-105'
                       : 'group-hover:bg-slate-100'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 transition-transform ${isActive ? 'text-[#E5A823]' : ''}`} />
+                  <Icon
+                    className={`w-4 h-4 transition-transform ${
+                      isActive ? 'text-white' : ''
+                    }`}
+                  />
                 </div>
-                <span className="text-[10px] font-bold tracking-tight mt-1">
+                <span className="text-[9.5px] font-bold tracking-tight mt-1 truncate max-w-[64px] text-center">
                   {item.label}
                 </span>
 
                 {/* Subtle active pip */}
                 {isActive && (
-                  <span className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-[#E5A823]" />
+                  <span
+                    className={`absolute -bottom-1 w-1.5 h-1.5 rounded-full ${
+                      item.href === '/admin/emergency'
+                        ? 'bg-rose-600'
+                        : item.href === '/admin/watchlist'
+                        ? 'bg-amber-500'
+                        : 'bg-[#E5A823]'
+                    }`}
+                  />
                 )}
               </Link>
             );
@@ -257,12 +290,12 @@ export default function AdminBottomBar() {
           <button
             type="button"
             onClick={() => setMoreModalOpen(true)}
-            className={`relative flex flex-col items-center justify-center py-1 px-2.5 rounded-2xl transition-all duration-200 group cursor-pointer ${
+            className={`relative flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-2xl transition-all duration-200 group cursor-pointer ${
               isMoreActive || moreModalOpen ? 'text-[#123B70] font-black' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             <div
-              className={`w-11 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
+              className={`w-10 h-8 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                 isMoreActive || moreModalOpen
                   ? 'bg-[#123B70] text-white shadow-md shadow-[#123B70]/25 scale-105'
                   : 'group-hover:bg-slate-100'
@@ -270,8 +303,8 @@ export default function AdminBottomBar() {
             >
               <LayoutGrid className={`w-4 h-4 ${isMoreActive || moreModalOpen ? 'text-[#E5A823]' : ''}`} />
             </div>
-            <span className="text-[10px] font-bold tracking-tight mt-1">
-              More...
+            <span className="text-[9.5px] font-bold tracking-tight mt-1">
+              More
             </span>
 
             {isMoreActive && (
