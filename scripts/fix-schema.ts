@@ -84,3 +84,4 @@ main()
     console.error('\n❌ Migration error:', e.message || e);
     process.exit(1);
   });
+

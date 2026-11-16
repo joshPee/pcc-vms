@@ -17,3 +17,4 @@ ALTER TABLE watchlist ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
 
 -- 5. Make organisation nullable (guards register walk-ins who may have no org)
 ALTER TABLE participants ALTER COLUMN organisation DROP NOT NULL;
+

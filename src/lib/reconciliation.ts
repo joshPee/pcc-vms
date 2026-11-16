@@ -85,3 +85,4 @@ export function filterEligibleForReconciliation(
 ): VisitorRecord[] {
   return visitors.filter((v) => isEligibleForAutoCheckout(v, cutoffTime));
 }
+

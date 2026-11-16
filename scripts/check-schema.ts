@@ -7,34 +7,24 @@ const pool = new pg.Pool({
 async function main() {
   const client = await pool.connect();
   try {
-    // Check columns on participants table
-    const cols = await client.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name='participants' ORDER BY ordinal_position`);
-    console.log('PARTICIPANTS COLUMNS:');
-    cols.rows.forEach((c: any) => console.log(' ', c.column_name, ':', c.data_type));
+    const users = await client.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name='users' ORDER BY ordinal_position`);
+    console.log('USERS COLUMNS:', users.rows.map((c:any)=>c.column_name).join(', '));
 
-    // Check constraints on participants
-    const cons = await client.query(`SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid='participants'::regclass`);
-    console.log('\nPARTICIPANTS CONSTRAINTS:');
-    cons.rows.forEach((c: any) => console.log(' ', c.conname, ':', c.def));
+    const cats = await client.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_name='visitor_categories' ORDER BY ordinal_position`);
+    console.log('VISITOR_CATEGORIES COLUMNS:', cats.rows.map((c:any)=>c.column_name).join(', '));
 
-    // Check visitor_logs constraints
-    const lcons = await client.query(`SELECT conname, pg_get_constraintdef(oid) as def FROM pg_constraint WHERE conrelid='visitor_logs'::regclass`);
-    console.log('\nVISITOR_LOGS CONSTRAINTS:');
-    lcons.rows.forEach((c: any) => console.log(' ', c.conname, ':', c.def));
+    // Sample users data
+    const sample = await client.query(`SELECT id, name, role, shift, is_active FROM users LIMIT 10`);
+    console.log('SAMPLE USERS:');
+    sample.rows.forEach((u:any) => console.log(' ', JSON.stringify(u)));
 
-    // Check watchlist columns
-    const wcols = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name='watchlist' ORDER BY ordinal_position`);
-    console.log('\nWATCHLIST COLUMNS:', wcols.rows.map((c: any) => c.column_name).join(', '));
-
+    // Sample visitor_categories
+    const vcSample = await client.query(`SELECT * FROM visitor_categories LIMIT 10`);
+    console.log('SAMPLE VISITOR_CATEGORIES:');
+    vcSample.rows.forEach((v:any) => console.log(' ', JSON.stringify(v)));
   } finally {
     client.release();
     await pool.end();
   }
 }
-
-main()
-  .then(() => process.exit(0))
-  .catch(e => {
-    console.error('ERROR:', e.message || e);
-    process.exit(1);
-  });
+main().then(()=>process.exit(0)).catch(e=>{console.error('ERR:',e.message);process.exit(1);});
