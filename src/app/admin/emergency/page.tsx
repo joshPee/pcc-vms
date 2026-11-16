@@ -14,6 +14,7 @@ import {
   Maximize2,
   Minimize2,
   Shield,
+  Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -354,6 +355,13 @@ export default function EmergencyHeadcountPage() {
     window.location.href = '/api/emergency?format=csv';
   };
 
+  const todayFormatted = new Intl.DateTimeFormat('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date());
+
   const filterVisitors = (list: Visitor[]) => {
     if (!search.trim()) return list;
     const q = search.toLowerCase();
@@ -415,44 +423,53 @@ export default function EmergencyHeadcountPage() {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 print:hidden">
+        {/* Action Buttons Toolbar: Consistent layout matching dashboard */}
+        <div className="flex flex-wrap items-center gap-2 text-xs relative z-10 print:hidden">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 text-white font-semibold border border-white/20">
+            <Calendar className="w-3.5 h-3.5 text-rose-200" />
+            <span>{todayFormatted}</span>
+          </div>
+
           <Button
             onClick={fetchEmergencyData}
             variant="outline"
             size="sm"
-            className="bg-white/10 hover:bg-white/20 text-white border-white/30 h-10"
+            className="bg-white/10 hover:bg-white/20 text-white border-white/30 h-9 rounded-xl font-medium"
           >
-            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+
           <Button
             onClick={handleExportCSV}
             variant="outline"
             size="sm"
-            className="bg-white text-rose-800 hover:bg-rose-50 border-white h-10 font-bold"
+            className="bg-white text-rose-800 hover:bg-rose-50 border-white h-9 rounded-xl font-bold shadow-xs"
           >
-            <Download className="w-4 h-4 mr-1.5" />
+            <Download className="w-3.5 h-3.5 mr-1.5" />
             Export CSV
           </Button>
+
           <Button
             onClick={() => setIsCommandMode(!isCommandMode)}
             size="sm"
-            className="bg-slate-900 hover:bg-slate-800 text-white font-bold h-10 border border-slate-700 shadow-md"
+            className="bg-slate-900 hover:bg-slate-800 text-white font-bold h-9 rounded-xl border border-slate-700 shadow-xs"
           >
             {isCommandMode ? (
-              <Minimize2 className="w-4 h-4 mr-1.5" />
+              <Minimize2 className="w-3.5 h-3.5 mr-1.5" />
             ) : (
-              <Maximize2 className="w-4 h-4 mr-1.5" />
+              <Maximize2 className="w-3.5 h-3.5 mr-1.5" />
             )}
             {isCommandMode ? 'Exit Command View' : 'Command View'}
           </Button>
+
           <Button
             onClick={handlePrint}
             size="sm"
-            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black h-10 shadow-md"
+            className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black h-9 rounded-xl shadow-xs"
           >
-            <Printer className="w-4 h-4 mr-1.5" />
-            Print Evacuation Sheet
+            <Printer className="w-3.5 h-3.5 mr-1.5" />
+            Print Evac Sheet
           </Button>
         </div>
       </div>
